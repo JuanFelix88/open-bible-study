@@ -37,3 +37,7 @@ body {
 .animate-show-from-top {
   animation: show-from-top 0.08s ease-in-out;
 }
+
+.hide-buttons > .control-buttons {
+  display: none;
+}
