@@ -2,6 +2,7 @@
 import ArrowLeftIconImage from "@/assets/icons/arrow-left.svg";
 import ArrowRightIconImage from "@/assets/icons/arrow-right.svg";
 import HomeIconImage from "@/assets/icons/home.svg";
+import { BooksAndChapters } from "@/definitions/BooksAndChapters";
 import type { Chapter } from "@/types/Chapter";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,7 +11,9 @@ import { MouseEvent, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
 export default function Reader() {
-  const { ref: refHeader, inView: inViewHeader } = useInView({ threshold: 0.3 });
+  const { ref: refHeader, inView: inViewHeader } = useInView({
+    threshold: 0.3,
+  });
   const searchParams = useSearchParams();
   const bookAbbr = searchParams.get("book") || "";
   const versionAbbr = searchParams.get("version") || "";
@@ -49,6 +52,14 @@ export default function Reader() {
       setChapter(null);
       setSelectedVerse(null);
     }
+  }
+
+  function handleCompare(verseIndex: number) {
+    router.push(
+      `/reader/compare?book=${bookAbbr}&chapter=${chapterNumber}&verse=${
+        verseIndex + 1
+      }`
+    );
   }
 
   useEffect(() => {
@@ -171,7 +182,7 @@ export default function Reader() {
         </div>
       </div>
       {chapter?.book.chapter.verses.map((verse, index) => (
-        <p
+        <div
           key={index}
           id={(index + 1).toString()}
           className={
@@ -187,19 +198,26 @@ export default function Reader() {
           {verse}
           <div className="control-buttons absolute left-0 -bottom-9 z-30 rounded-sm bg-amber-200  border-amber-700 border border-dashed p-1 w-full gap-2 flex">
             <button className="border rounded-sm px-[3px] border-dashed border-gray-400 text-sm bg-gray-100 flex">
-              [1] Add ref.
+              <span className="hidden sm:inline mr-1">[1]</span>
+              Add ref.
             </button>
             <button className="border rounded-sm px-[3px] border-dashed border-gray-400 text-sm bg-gray-100 flex">
-              [2] Start devot.
+              <span className="hidden sm:inline mr-1">[2]</span>
+              Start devot.
             </button>
             <button className="border rounded-sm px-[3px] border-dashed border-gray-400 text-sm bg-gray-100 flex">
-              [3] Mark color
+              <span className="hidden sm:inline mr-1">[3]</span>
+              Mark color
             </button>
-            <button className="border rounded-sm px-[3px] border-dashed border-gray-400 text-sm bg-gray-100 flex">
-              [4] Compare
+            <button
+              className="border rounded-sm px-[3px] border-dashed border-gray-400 text-sm bg-gray-100 flex"
+              onClick={() => handleCompare(index)}
+            >
+              <span className="hidden sm:inline mr-1">[4]</span>
+              Compare
             </button>
           </div>
-        </p>
+        </div>
       ))}
     </div>
   );
