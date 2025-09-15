@@ -16,5 +16,6 @@ export class BibleVersions {
     BibleVersion.from('/assets/versions/NVI.json', 'Nova Versão Internacional', 'NVI'),
     BibleVersion.from('/assets/versions/NVT.json', 'Nova Versão Transformadora', 'NVT'),
     BibleVersion.from('/assets/versions/TB.json', 'Tradução Brasileira', 'TB'),
+    BibleVersion.from('/assets/versions/BLIVRE.json', 'Bíblia Livre', 'BLIVRE'),
   ];
 }
