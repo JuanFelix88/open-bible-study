@@ -1,12 +1,8 @@
 "use client";
 import type { BibleVersionObject } from "@/types/BibleVersion";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import BibleIcon from "./favicon.ico";
-import Image from "next/image";
-
-// export const metadata = {
-//   title: "Temperamentos aplicados",
-// };
 
 interface Book {
   abbr: string;

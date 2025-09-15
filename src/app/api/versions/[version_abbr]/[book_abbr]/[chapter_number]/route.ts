@@ -3,25 +3,8 @@ import { ModArray } from "@/utils/ModArray";
 import { Params, ParamType } from "@/utils/Params";
 import { ResponseError } from "@/utils/ResponseError";
 import { NextRequest, NextResponse } from "next/server";
-
-interface LinkToChapter {
-  abbrev: string;
-  numChapter: number;
-}
-
-export interface Chapter {
-  version: string;
-  book: {
-    name: string;
-    abbrev: string;
-    chapter: {
-      number: number;
-      verses: string[];
-    };
-  };
-  previous: LinkToChapter | null;
-  next: LinkToChapter | null;
-}
+import { LinkToChapter } from '@/types/LinkToChapter';
+import { Chapter } from '@/types/Chapter';
 
 export async function GET(
   req: NextRequest,

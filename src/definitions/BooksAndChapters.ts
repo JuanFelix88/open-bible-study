@@ -1,7 +1,8 @@
 import { RawBibleVersionData } from '@/types/RawBibleVersion';
+import { StaticClass } from '@/types/StaticClass';
 import { ModArray } from "@/utils/ModArray";
 
-export class BooksAndChapters {
+export class BooksAndChapters extends StaticClass {
   private static defaultVersion = "NVI";
   public static async getBooks(): Promise<
     { abbr: string; name: string; numChapters: number }[]

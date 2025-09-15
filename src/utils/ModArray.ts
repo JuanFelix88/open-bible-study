@@ -1,4 +1,6 @@
-export class ModArray {
+import { StaticClass } from '@/types/StaticClass';
+
+export class ModArray extends StaticClass {
   public static findFrom<T>(
     obj: object,
     predicate: (value: T, index: number, array: T[]) => boolean
