@@ -51,7 +51,7 @@ export async function GET(
         name: book.name,
         chapter: {
           number: chapterNumber,
-          verses: [book.chapters[chapterNumber - 1]?.at(verseNumber - 1)!]
+          verses: [book.chapters[chapterNumber - 1]!.at(verseNumber - 1)!]
         }
       },
       previous: null,

@@ -24,7 +24,7 @@ export default function Reader() {
       .then((response) => response.json())
       .then((data) => setVerseVersions(data))
       .catch((error) => console.error("Error fetching verse versions:", error));
-  }, []);
+  }, [bookAbbr, chapterNumber, verseNumber]);
 
   function handleOnPrevious() {
     router.back();
@@ -60,17 +60,18 @@ export default function Reader() {
           </div>
         </div>
       </div>
-      <hr className='mt-18 opacity-0' />
+      <hr className="mt-18 opacity-0" />
       {verseVersions.map((verse, index) => (
         <div
           key={index}
           id={(index + 1).toString()}
-          className="cursor-cell mt-1 text-lg hover:bg-gray-300 select-none rounded-md px-1 py-[2px] hide-buttons"
+          className="cursor-cell mt-3 text-lg hover:bg-gray-300 select-none rounded-md px-1 py-[2px] hide-buttons border-b border-b-gray-400 border-dashed"
         >
-          <h2 className='text-xl font-medium italic'>{verse.version}</h2>
+          <h2 className="text-xl font-medium italic">{verse.version}</h2>
           <sup className="font-bold border rounded-sm px-[2px]  border-dashed border-gray-400">
-            {index + 1}
-          </sup>{" "}
+            {verse.book.name} {verse.book.chapter.number}:{verseNumber}
+          </sup>
+          <br />
           {verse.book.chapter.verses.at(0) || "..."}
         </div>
       ))}

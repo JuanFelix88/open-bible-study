@@ -2,7 +2,6 @@
 import ArrowLeftIconImage from "@/assets/icons/arrow-left.svg";
 import ArrowRightIconImage from "@/assets/icons/arrow-right.svg";
 import HomeIconImage from "@/assets/icons/home.svg";
-import { BooksAndChapters } from "@/definitions/BooksAndChapters";
 import type { Chapter } from "@/types/Chapter";
 import Image from "next/image";
 import Link from "next/link";
@@ -71,7 +70,7 @@ export default function Reader() {
     fetch(`/api/versions/${versionAbbr}/${bookAbbr}/${chapterNumber}`)
       .then((response) => response.json())
       .then((data) => setChapter(data));
-  }, [bookAbbr, chapterNumber]);
+  }, [bookAbbr, chapterNumber, versionAbbr]);
 
   const selectedBook = books.find((b) => b.abbr === bookAbbr) || null;
 
@@ -197,16 +196,16 @@ export default function Reader() {
           </sup>{" "}
           {verse}
           <div className="control-buttons absolute left-0 -bottom-9 z-30 rounded-sm bg-amber-200  border-amber-700 border border-dashed p-1 w-full gap-2 flex">
-            <button className="border rounded-sm px-[3px] border-dashed border-gray-400 text-sm bg-gray-100 flex">
-              <span className="hidden sm:inline mr-1">[1]</span>
+            <button className="flex items-center border rounded-sm px-[3px] border-dashed border-gray-400 text-sm bg-gray-100">
+              <span className="hidden sm:inline mr-1 text-[0.7rem]">[1]</span>
               Add ref.
             </button>
-            <button className="border rounded-sm px-[3px] border-dashed border-gray-400 text-sm bg-gray-100 flex">
-              <span className="hidden sm:inline mr-1">[2]</span>
+            <button className="flex items-center border rounded-sm px-[3px] border-dashed border-gray-400 text-sm bg-gray-100">
+              <span className="hidden sm:inline mr-1 text-[0.7rem]">[2]</span>
               Start devot.
             </button>
-            <button className="border rounded-sm px-[3px] border-dashed border-gray-400 text-sm bg-gray-100 flex">
-              <span className="hidden sm:inline mr-1">[3]</span>
+            <button className="flex items-center border rounded-sm px-[3px] border-dashed border-gray-400 text-sm bg-gray-100">
+              <span className="hidden sm:inline mr-1 text-[0.7rem]">[3]</span>
               Mark color
             </button>
             <button
