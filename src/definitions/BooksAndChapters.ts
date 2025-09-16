@@ -1,12 +1,11 @@
+import { BookInfo } from '@/types/BookInfo';
 import { RawBibleVersionData } from '@/types/RawBibleVersion';
 import { StaticClass } from '@/types/StaticClass';
 import { ModArray } from "@/utils/ModArray";
 
 export class BooksAndChapters extends StaticClass {
   private static defaultVersion = "NVI";
-  public static async getBooks(): Promise<
-    { abbr: string; name: string; numChapters: number }[]
-  > {
+  public static async getBooks(): Promise<BookInfo[]> {
     const data = (await import(
       `@/assets/versions/${this.defaultVersion.toUpperCase()}.json`
     ).catch(() => null)) as RawBibleVersionData | null;

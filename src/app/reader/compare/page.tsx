@@ -1,9 +1,10 @@
 "use client";
 import ArrowLeftIconImage from "@/assets/icons/arrow-left.svg";
 import type { Chapter } from "@/types/Chapter";
+import { ThrowByResponse } from "@/utils/ThrowByResponse";
+import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
 
 export default function Reader() {
   const router = useRouter();
@@ -15,16 +16,20 @@ export default function Reader() {
   const verseNumber = searchParams.get("verse")
     ? parseInt(searchParams.get("verse")!, 10)
     : null;
-  const [verseVersions, setVerseVersions] = useState<Chapter[]>([]);
+  const { data: verseVersions, isLoading: isLoadingVerseVersions } = useQuery({
+    queryKey: ["compare", bookAbbr, chapterNumber, verseNumber],
+    queryFn: async () => {
+      const versesCompareResponse = await fetch(
+        `/api/versions/compare/${bookAbbr}/${chapterNumber}/${verseNumber}`
+      );
 
-  useEffect(() => {
-    if (!bookAbbr || !chapterNumber || !verseNumber) return;
+      await ThrowByResponse.throwsIfNotOk(versesCompareResponse);
 
-    fetch(`/api/versions/compare/${bookAbbr}/${chapterNumber}/${verseNumber}`)
-      .then((response) => response.json())
-      .then((data) => setVerseVersions(data))
-      .catch((error) => console.error("Error fetching verse versions:", error));
-  }, [bookAbbr, chapterNumber, verseNumber]);
+      const chapterData = await versesCompareResponse.json();
+
+      return chapterData as Chapter[];
+    },
+  });
 
   function handleOnPrevious() {
     router.back();
@@ -36,7 +41,7 @@ export default function Reader() {
         <div className="flex items-center">
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold">
-              {verseVersions.at(0)?.book.name || "..."}
+              {verseVersions?.at(0)?.book.name || "..."}
             </h1>
             <h2 className="text-sm font-bold opacity-70">
               {chapterNumber ? `Chapter ${chapterNumber}` : "..."}
@@ -61,7 +66,23 @@ export default function Reader() {
         </div>
       </div>
       <hr className="mt-18 opacity-0" />
-      {verseVersions.map((verse, index) => (
+
+      {/* Loading verses */}
+      {isLoadingVerseVersions && (
+        <div className="flex flex-col gap-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex flex-col gap-1">
+              <div className="w-10/12 h-6 rounded-sm bg-slate-700/30 animate-pulse mb-1" />
+              <div className="w-full h-6 rounded-sm bg-slate-700/30 animate-pulse mb-1" />
+              <div className="w-3/6 h-6 rounded-sm bg-slate-700/30 animate-pulse mb-1" />
+              <div className="w-5/6 h-6 rounded-sm bg-slate-700/30 animate-pulse mb-1" />
+              <div className="w-2/6 h-6 rounded-sm bg-slate-700/30 animate-pulse mb-1" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {verseVersions?.map((verse, index) => (
         <div
           key={index}
           id={(index + 1).toString()}
