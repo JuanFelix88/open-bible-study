@@ -1,10 +1,10 @@
+import { BibleVersions } from "@/definitions/BibleVersions";
 import { Chapter } from "@/types/Chapter";
 import { RawBibleVersionData } from "@/types/RawBibleVersion";
 import { ModArray } from "@/utils/ModArray";
 import { Params, ParamType } from "@/utils/Params";
 import { ResponseError } from "@/utils/ResponseError";
 import { NextRequest, NextResponse } from "next/server";
-import { BibleVersions } from "@/definitions/BibleVersions";
 
 export async function GET(
   req: NextRequest,
@@ -30,34 +30,42 @@ export async function GET(
   if (verseNumberError) return ResponseError.asError(verseNumberError);
   if (chapterNumberError) return ResponseError.asError(chapterNumberError);
 
-  const versions  = await Promise.all(
+  const versions = await Promise.all(
     BibleVersions.versions.map(async (version) => {
       return {
-        raw: (await import(`@/assets/versions/${version.abbreviation.toUpperCase()}.json`)) as RawBibleVersionData[],
-        version
-      }
+        raw: (await import(
+          `@/assets/versions/${version.abbreviation.toUpperCase()}.json`
+        )) as RawBibleVersionData[],
+        version,
+      };
     })
   );
 
-  const verseVersions = versions.map(({ raw, version}) => {
-    const book = ModArray.findFrom<RawBibleVersionData[never]>(raw, book => book.abbrev.toLowerCase() === bookAbbr.toLowerCase())
+  const verseVersions = versions.map(({ raw, version }) => {
+    const book = ModArray.findFrom<RawBibleVersionData[never]>(
+      raw,
+      (book) => book.abbrev.toLowerCase() === bookAbbr.toLowerCase()
+    );
 
-    if (!book) throw new Error(`Book with abbreviation ${bookAbbr} not found in version ${version}`)
+    if (!book)
+      throw new Error(
+        `Book with abbreviation ${bookAbbr} not found in version ${version}`
+      );
 
     return {
       version: version.abbreviation,
-      book: { 
+      book: {
         abbrev: book.abbrev,
         name: book.name,
         chapter: {
           number: chapterNumber,
-          verses: [book.chapters[chapterNumber - 1]!.at(verseNumber - 1)!]
-        }
+          verses: [book.chapters[chapterNumber - 1]!.at(verseNumber - 1)!],
+        },
       },
       previous: null,
-      next: null
-    } satisfies Chapter
-  })
+      next: null,
+    } satisfies Chapter;
+  });
 
   return NextResponse.json(verseVersions);
 }
