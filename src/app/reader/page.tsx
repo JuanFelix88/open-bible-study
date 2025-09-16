@@ -6,7 +6,7 @@ import type { Chapter } from "@/types/Chapter";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { MouseEvent, useEffect, useState } from "react";
+import { MouseEvent, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
 export default function Reader() {
@@ -19,6 +19,7 @@ export default function Reader() {
   const chapterNumber = searchParams.get("chapter")
     ? parseInt(searchParams.get("chapter")!, 10)
     : null;
+  const refSelected = useRef<HTMLDivElement>(null);
 
   const [books, setBooks] = useState<any[]>([]);
   const [chapter, setChapter] = useState<Chapter | null>(null);
@@ -61,6 +62,36 @@ export default function Reader() {
     );
   }
 
+  function handleOnKeyDown(event: KeyboardEvent) {
+    const selected = document.querySelector(
+      "div:has(.control-buttons):not(.hidden-buttons)"
+    );
+
+    if (!selected) return;
+
+    if (event.key === "1") {
+      event.preventDefault();
+      return;
+    }
+
+    if (event.key === "2") {
+      event.preventDefault();
+      return;
+    }
+
+    if (event.key === "3") {
+      event.preventDefault();
+      return;
+    }
+
+    if (event.key === "4") {
+      event.preventDefault();
+      const verseIndex = parseInt(refSelected.current?.id ?? "1", 10);
+      handleCompare(verseIndex - 1);
+      return;
+    }
+  }
+
   useEffect(() => {
     fetch("/api/books")
       .then((response) => response.json())
@@ -71,6 +102,13 @@ export default function Reader() {
       .then((response) => response.json())
       .then((data) => setChapter(data));
   }, [bookAbbr, chapterNumber, versionAbbr]);
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleOnKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleOnKeyDown);
+    };
+  }, []);
 
   const selectedBook = books.find((b) => b.abbr === bookAbbr) || null;
 
@@ -184,6 +222,7 @@ export default function Reader() {
         <div
           key={index}
           id={(index + 1).toString()}
+          ref={selectedVerse === index + 1 ? refSelected : null}
           className={
             selectedVerse === index + 1
               ? "cursor-cell mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-amber-100 underline underline-offset-2 decoration-dashed decoration-amber-700 relative"
