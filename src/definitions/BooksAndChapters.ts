@@ -1,23 +1,23 @@
-import { BookInfo } from '@/types/BookInfo';
-import { RawBibleVersionData } from '@/types/RawBibleVersion';
-import { StaticClass } from '@/types/StaticClass';
+import { BookInfo } from "@/entities/BookInfo";
+import { RawBibleVersionData } from "@/entities/RawBibleVersion";
+import { StaticClass } from "@/entities/StaticClass";
 import { ModArray } from "@/utils/ModArray";
 
 export class BooksAndChapters extends StaticClass {
   private static defaultVersion = "NVI";
   public static async getBooks(): Promise<BookInfo[]> {
-    const data = (await import(
-      `@/assets/versions/${this.defaultVersion.toUpperCase()}.json`
-    ).catch(() => null)) as RawBibleVersionData | null;
+    const data = (await import(`@/assets/versions/partitions/meta.json`).catch(
+      () => null
+    )) as BookInfo[] | null;
 
     if (!data) {
       throw new Error(`Version ${this.defaultVersion} not found in get Books`);
     }
 
-    return ModArray.mapFrom(data, (book: RawBibleVersionData[0]) => ({
-      abbr: book.abbrev,
+    return ModArray.mapFrom(data, (book: BookInfo) => ({
+      abbr: book.abbr,
       name: book.name,
-      numChapters: book.chapters?.length ?? 0,
+      numChapters: book.numChapters,
     })).filter((book) => !!book.abbr);
   }
 

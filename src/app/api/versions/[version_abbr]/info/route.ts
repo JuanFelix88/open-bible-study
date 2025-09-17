@@ -1,4 +1,4 @@
-import { RawBibleVersionData } from '@/types/RawBibleVersion';
+import { RawBibleVersionData } from '@/entities/RawBibleVersion';
 import { Params } from "@/utils/Params";
 import { ResponseError } from "@/utils/ResponseError";
 import { NextRequest, NextResponse } from "next/server";

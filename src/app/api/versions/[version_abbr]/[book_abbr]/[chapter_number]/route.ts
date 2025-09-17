@@ -1,10 +1,8 @@
-import { RawBibleVersionData } from '@/types/RawBibleVersion';
-import { ModArray } from "@/utils/ModArray";
+import { BibleVersionsRepository } from "@/repositories/BibleVersionsRepository";
+import { FnNormalizer } from "@/utils/FnNormalizer";
 import { Params, ParamType } from "@/utils/Params";
 import { ResponseError } from "@/utils/ResponseError";
 import { NextRequest, NextResponse } from "next/server";
-import { LinkToChapter } from '@/types/LinkToChapter';
-import { Chapter } from '@/types/Chapter';
 
 export async function GET(
   req: NextRequest,
@@ -29,67 +27,32 @@ export async function GET(
   if (bookAbbrError) return ResponseError.asError(bookAbbrError);
   if (chapterNumberError) return ResponseError.asError(chapterNumberError);
 
-  const data = (await import(
-    `@/assets/versions/${abbrVersion.toUpperCase()}.json`
-  ).catch(() => null)) as RawBibleVersionData | null;
-
-  if (!data) {
-    return ResponseError.asError(`Version ${abbrVersion} not found`, 404);
-  }
-
-  const book = ModArray.findFrom(
-    data,
-    (book: RawBibleVersionData[0]) =>
-      book.abbrev.toUpperCase() === bookAbbr.toUpperCase()
+  const { data: chapter, error: chapterError } = await FnNormalizer.fun(
+    BibleVersionsRepository.getChapterWithVersion(
+      abbrVersion,
+      bookAbbr,
+      chapterNumber
+    )
   );
 
-  if (!book) {
-    return ResponseError.asError(`Book ${bookAbbr} not found`, 404);
+  if (
+    chapterError instanceof Error &&
+    /not found/i.test(chapterError.message)
+  ) {
+    return ResponseError.asError(
+      `Chapter [${bookAbbr.toUpperCase()} ${chapterNumber}] not found in version [${abbrVersion.toUpperCase()}].`,
+      404
+    );
   }
 
-  const chapter = book.chapters[chapterNumber - 1];
-
-  if (!chapter) {
-    return ResponseError.asError(`Chapter ${chapterNumber} not found`, 404);
+  if (!!chapterError) {
+    return ResponseError.asError(
+      `Error fetching chapter: ${
+        chapterError?.message ?? "Unknown error"
+      }`,
+      400
+    );
   }
 
-  const bookIndex = ModArray.indexOfFrom(data, book);
-
-  const isLastChapter = chapterNumber === book.chapters.length;
-  const isFirstChapter = chapterNumber === 1;
-
-  const previousBook = bookIndex > 0 ? data[bookIndex - 1] : null;
-  const nextBook = bookIndex < data.length - 1 ? data[bookIndex + 1] : null;
-
-  let previous: LinkToChapter | null = null;
-  let next: LinkToChapter | null = null;
-
-  if (isFirstChapter && previousBook) {
-    previous = {
-      abbrev: previousBook.abbrev,
-      numChapter: previousBook.chapters.length,
-    };
-  } else if (!isFirstChapter) {
-    previous = { abbrev: book.abbrev, numChapter: chapterNumber - 1 };
-  }
-
-  if (isLastChapter && nextBook) {
-    next = { abbrev: nextBook.abbrev, numChapter: 1 };
-  } else if (!isLastChapter) {
-    next = { abbrev: book.abbrev, numChapter: chapterNumber + 1 };
-  }
-
-  return NextResponse.json({
-    version: abbrVersion,
-    book: {
-      name: book.name,
-      abbrev: book.abbrev,
-      chapter: {
-        number: chapterNumber,
-        verses: chapter,
-      },
-    },
-    previous,
-    next,
-  } satisfies Chapter);
+  return NextResponse.json(chapter);
 }

@@ -1,4 +1,4 @@
-import { BibleVersion } from "@/types/BibleVersion";
+import { BibleVersion } from "@/entities/BibleVersion";
 
 export class BibleVersions {
   // prettier-ignore

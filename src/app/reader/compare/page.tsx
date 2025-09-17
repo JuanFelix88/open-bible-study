@@ -1,6 +1,6 @@
 "use client";
 import ArrowLeftIconImage from "@/assets/icons/arrow-left.svg";
-import type { Chapter } from "@/types/Chapter";
+import type { Chapter } from "@/entities/Chapter";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";

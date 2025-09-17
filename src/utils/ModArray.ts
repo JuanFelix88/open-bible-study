@@ -1,4 +1,4 @@
-import { StaticClass } from '@/types/StaticClass';
+import { StaticClass } from '@/entities/StaticClass';
 
 export class ModArray extends StaticClass {
   public static findFrom<T>(

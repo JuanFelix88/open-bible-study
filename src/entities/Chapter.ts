@@ -1,4 +1,4 @@
-import { LinkToChapter } from "@/types/LinkToChapter";
+import { LinkToChapter } from "@/entities/LinkToChapter";
 import { Nullable } from './Nullable';
 
 export interface Chapter {

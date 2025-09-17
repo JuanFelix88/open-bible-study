@@ -1,7 +1,5 @@
-import { BibleVersions } from "@/definitions/BibleVersions";
-import { Chapter } from "@/types/Chapter";
-import { RawBibleVersionData } from "@/types/RawBibleVersion";
-import { ModArray } from "@/utils/ModArray";
+import { BibleVersionsRepository } from "@/repositories/BibleVersionsRepository";
+import { FnNormalizer } from "@/utils/FnNormalizer";
 import { Params, ParamType } from "@/utils/Params";
 import { ResponseError } from "@/utils/ResponseError";
 import { NextRequest, NextResponse } from "next/server";
@@ -30,42 +28,25 @@ export async function GET(
   if (verseNumberError) return ResponseError.asError(verseNumberError);
   if (chapterNumberError) return ResponseError.asError(chapterNumberError);
 
-  const versions = await Promise.all(
-    BibleVersions.versions.map(async (version) => {
-      return {
-        raw: (await import(
-          `@/assets/versions/${version.abbreviation.toUpperCase()}.json`
-        )) as RawBibleVersionData[],
-        version,
-      };
-    })
+  const { data, error } = await FnNormalizer.fun(
+    BibleVersionsRepository.getAllVersionsWithVerse(
+      bookAbbr,
+      chapterNumber,
+      verseNumber
+    )
   );
 
-  const verseVersions = versions.map(({ raw, version }) => {
-    const book = ModArray.findFrom<RawBibleVersionData[never]>(
-      raw,
-      (book) => book.abbrev.toLowerCase() === bookAbbr.toLowerCase()
-    );
+  if (error instanceof Error && /not found/i.test(error.message)) {
+    return ResponseError.asError("Verse not founded", 404);
+  }
 
-    if (!book)
-      throw new Error(
-        `Book with abbreviation ${bookAbbr} not found in version ${version}`
-      );
+  if (error instanceof Error) {
+    return ResponseError.asError(error.message);
+  }
 
-    return {
-      version: version.abbreviation,
-      book: {
-        abbrev: book.abbrev,
-        name: book.name,
-        chapter: {
-          number: chapterNumber,
-          verses: [book.chapters[chapterNumber - 1]!.at(verseNumber - 1)!],
-        },
-      },
-      previous: null,
-      next: null,
-    } satisfies Chapter;
-  });
+  if (!!error) {
+    return ResponseError.asError("An unexpected error occurred", 500);
+  }
 
-  return NextResponse.json(verseVersions);
+  return NextResponse.json(data);
 }

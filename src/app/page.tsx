@@ -1,5 +1,5 @@
 "use client";
-import type { BibleVersionObject } from "@/types/BibleVersion";
+import type { BibleVersionObject } from "@/entities/BibleVersion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import BibleIcon from "./favicon.ico";

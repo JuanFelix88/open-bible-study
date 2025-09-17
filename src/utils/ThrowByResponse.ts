@@ -1,4 +1,4 @@
-import { StaticClass } from "@/types/StaticClass";
+import { StaticClass } from "@/entities/StaticClass";
 
 export class ThrowByResponse extends StaticClass {
   public static async throwsIfNotOk(response: Response) {

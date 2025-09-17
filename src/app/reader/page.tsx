@@ -2,8 +2,8 @@
 import ArrowLeftIconImage from "@/assets/icons/arrow-left.svg";
 import ArrowRightIconImage from "@/assets/icons/arrow-right.svg";
 import HomeIconImage from "@/assets/icons/home.svg";
-import { BookInfo } from "@/types/BookInfo";
-import type { Chapter } from "@/types/Chapter";
+import { BookInfo } from "@/entities/BookInfo";
+import type { Chapter } from "@/entities/Chapter";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
