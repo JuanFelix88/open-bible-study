@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "pnpm run parts && next dev --turbopack",
-    "build": "next build",
+    "build": "npm run parts && next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
