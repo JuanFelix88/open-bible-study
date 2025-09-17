@@ -35,7 +35,7 @@ export default function Home() {
   }&chapter=${selectedChapter || ""}`;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-24">
+    <div className="flex min-h-screen flex-col items-center justify-center py-24 px-12 sm:px-24">
       <Image
         src={BibleIcon}
         alt="Bible Icon"
@@ -43,8 +43,8 @@ export default function Home() {
         height={64}
         className="mb-2"
       />
-      <h1 className="text-4xl font-bold">Open Bible Study</h1>
-      <p className="mt-4 text-lg">Explore texts in depth.</p>
+      <h1 className="text-4xl font-bold text-center">Open Bible Study</h1>
+      <p className="mt-4 text-lg text-center">Explore texts in depth.</p>
 
       <select
         autoFocus
@@ -103,7 +103,7 @@ export default function Home() {
       </select>
 
       <a
-        className="rounded-md border bg-gray-200 border-gray-300 p-2 mt-4 w-full hover:border-gray-600 max-w-sm"
+        className="flex justify-center items-center rounded-md border bg-gray-200 border-gray-300 p-2 mt-4 w-full hover:border-gray-600 max-w-sm"
         href={hrefStartReading}
       >
         Start reading

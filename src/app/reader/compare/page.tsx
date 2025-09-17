@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function Reader() {
+export default function Compare() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const bookAbbr = searchParams.get("book") || "";
@@ -32,7 +32,7 @@ export default function Reader() {
   });
 
   function handleOnPrevious() {
-    router.back();
+    router.back()
   }
 
   return (

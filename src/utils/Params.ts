@@ -13,6 +13,10 @@ export class Params {
     params: Record<string, string>,
     type: T = ParamType.STRING as T
   ): ParamRet<T> {
+    if (!params) {
+      throw new Error("Params are needed");
+    }
+
     if (type === ParamType.STRING) {
       if (!params[name]) {
         return [null as any, new Error(`Param ${name} is needed`)];

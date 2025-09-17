@@ -27,7 +27,7 @@ export async function GET(
   if (bookAbbrError) return ResponseError.asError(bookAbbrError);
   if (chapterNumberError) return ResponseError.asError(chapterNumberError);
 
-  const { data: chapter, error: chapterError } = await FnNormalizer.fun(
+  const { data: chapter, error: chapterError } = await FnNormalizer.getFromPromise(
     BibleVersionsRepository.getChapterWithVersion(
       abbrVersion,
       bookAbbr,

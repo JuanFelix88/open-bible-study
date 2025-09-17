@@ -4,6 +4,7 @@ import ArrowRightIconImage from "@/assets/icons/arrow-right.svg";
 import HomeIconImage from "@/assets/icons/home.svg";
 import { BookInfo } from "@/entities/BookInfo";
 import type { Chapter } from "@/entities/Chapter";
+import { SingleEvent } from "@/entities/SingleEvent";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
@@ -18,12 +19,13 @@ export default function Reader() {
   });
   const searchParams = useSearchParams();
   const bookAbbr = searchParams.get("book") || "";
+  const selectedVerseParam = searchParams.get("verse");
   const versionAbbr = searchParams.get("version") || "";
   const chapterNumber = searchParams.get("chapter")
     ? parseInt(searchParams.get("chapter")!, 10)
     : null;
-  const refSelected = useRef<HTMLDivElement>(null);
   const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
+  const refSelected = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   const { data: books, isLoading: isLoadingBooks } = useQuery({
@@ -57,35 +59,44 @@ export default function Reader() {
   function handleClickVerse(
     ev: MouseEvent<HTMLParagraphElement, globalThis.MouseEvent>
   ) {
-    if (ev.target instanceof HTMLElement) {
-      setSelectedVerse(parseInt(ev.target.id, 10) || null);
-    }
+    if (!(ev.target instanceof HTMLElement)) return;
+
+    const newSelected = parseInt(ev.target.id, 10) || null;
+
+    setSelectedVerse(newSelected);
+    router.replace(
+      `/reader?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${ev.target.id}`,
+      {
+        scroll: false,
+      }
+    );
   }
 
   function handlePreviousChapter() {
     if (chapter?.previous) {
+      setSelectedVerse(null);
       router.push(
         `/reader?book=${chapter?.previous.abbrev}&version=${versionAbbr}&chapter=${chapter?.previous.numChapter}`
       );
-      setSelectedVerse(null);
     }
   }
 
   function handleNextChapter() {
     if (chapter?.next) {
+      setSelectedVerse(null);
       router.push(
         `/reader?book=${chapter?.next.abbrev}&version=${versionAbbr}&chapter=${chapter?.next.numChapter}`
       );
-      setSelectedVerse(null);
     }
   }
 
-  function handleCompare(verseIndex: number) {
+  function handleCompare(ev: SingleEvent, verseIndex: number) {
     router.push(
       `/reader/compare?book=${bookAbbr}&chapter=${chapterNumber}&verse=${
         verseIndex + 1
       }`
     );
+    ev.stopPropagation();
   }
 
   function handleOnKeyDown(event: KeyboardEvent) {
@@ -113,7 +124,7 @@ export default function Reader() {
     if (event.key === "4") {
       event.preventDefault();
       const verseIndex = parseInt(refSelected.current?.id ?? "1", 10);
-      handleCompare(verseIndex - 1);
+      handleCompare(event, verseIndex - 1);
       return;
     }
   }
@@ -122,6 +133,12 @@ export default function Reader() {
     window.addEventListener("keydown", handleOnKeyDown);
     return () => window.removeEventListener("keydown", handleOnKeyDown);
   }, []);
+
+  useEffect(() => {
+    if (selectedVerseParam && /[0-9]+/.test(selectedVerseParam)) {
+      setSelectedVerse(parseInt(selectedVerseParam, 10) || null);
+    }
+  }, [bookAbbr, chapterNumber]);
 
   const bookName = books?.find((b) => b.abbr === bookAbbr)?.name ?? "...";
   const chapterText = `Chapter ${chapterNumber ?? "..."}`;
@@ -275,7 +292,7 @@ export default function Reader() {
             </button>
             <button
               className="border rounded-sm px-[3px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100"
-              onClick={() => handleCompare(index)}
+              onClick={(e) => handleCompare(e, index)}
             >
               <span className="hidden sm:inline mr-1">[4]</span>
               Compare
