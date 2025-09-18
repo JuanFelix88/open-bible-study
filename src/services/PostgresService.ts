@@ -142,7 +142,7 @@ export class PostgresService extends StaticClass {
 
   public static async query<T extends pg.QueryResultRow = any>(
     query: string,
-    values?: (string | number | boolean | Date)[]
+    values?: (string | number | boolean | Date | null)[]
   ) {
     return pool.query<T>(query, values);
   }

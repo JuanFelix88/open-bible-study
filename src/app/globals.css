@@ -41,3 +41,49 @@ body {
 .hide-buttons > .control-buttons {
   display: none;
 }
+
+@keyframes fade-in-from-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-from-bottom {
+  animation: fade-in-from-bottom 80ms ease-in-out;
+}
+
+.animate-fade-to-right {
+  animation: fade-to-right 0.1s ease-in-out;
+}
+
+.animate-fade-to-left {
+  animation: fade-to-right 0.1s ease-in-out;
+}
+
+
+@keyframes fade-to-right {
+  from {
+    opacity: 0;
+    transform: translateX(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-to-left {
+  from {
+    opacity: 0;
+    transform: translateX(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

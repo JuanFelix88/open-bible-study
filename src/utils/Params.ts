@@ -1,6 +1,13 @@
+import { ReadonlyURLSearchParams } from "next/dist/client/components/navigation";
+
 type ParamRet<TParam = ParamType> = TParam extends ParamType.STRING
   ? [string, Error?]
   : [number, Error?];
+
+type ParamRetOptional<TParam = ParamType> = TParam extends ParamType.STRING
+  ? [string?, Error?]
+  : [number?, Error?];
+
 
 export enum ParamType {
   STRING = "string",
@@ -36,6 +43,34 @@ export class Params {
       return [parseFloat(params[name]), null] as any;
     }
 
+    throw new Error(`Unknown param type ${type}`);
+  }
+
+  public static getParamFromSearchParams<
+    T extends ParamType = ParamType.STRING
+  >(
+    name: string,
+    searchParams: ReadonlyURLSearchParams,
+    type: T = ParamType.STRING as T
+  ): ParamRetOptional<T> {
+    if (!searchParams) {
+      return [null as any, new Error("Search params are needed")];
+    }
+    if (type === ParamType.STRING) {
+      const param = searchParams.get(name);
+      return [param || "", null] as any;
+    }
+    if (type === ParamType.NUMBER) {
+      const param = searchParams.get(name);
+      if (!param) {
+        return [null, null] as any;
+      }
+      if (isNaN(Number(param))) {
+        return [null, new Error(`Param ${name} must be a number`)] as any;
+      }
+
+      return [parseFloat(param), null] as any;
+    }
     throw new Error(`Unknown param type ${type}`);
   }
 }

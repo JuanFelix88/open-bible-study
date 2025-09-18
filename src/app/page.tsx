@@ -30,9 +30,10 @@ export default function Home() {
       .catch((error) => console.error("Error fetching versions:", error));
   }, []);
 
-  const hrefStartReading = `/reader?book=${selectedBook?.abbr || ""}&version=${
-    selectedVersion?.abbreviation || ""
-  }&chapter=${selectedChapter || ""}`;
+  const bookName = selectedBook?.abbr || "";
+  const version = selectedVersion?.abbreviation || ""
+
+  const hrefStartReading = `/reader?book=${bookName}&version=${version}&chapter=${selectedChapter || ""}`;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center py-24 px-12 sm:px-24">
