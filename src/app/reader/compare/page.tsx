@@ -37,7 +37,7 @@ export default function Compare() {
 
   return (
     <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-[#f4ece8]">
-      <div className="select-none fixed top-0 left-0 w-full bg-[#f4ece8] border-b border-gray-300 p-6 py-2 z-10 shadow animate-show-from-top">
+      <div className="select-none fixed top-0 left-0 w-full bg-[#f4ece8] border-b border-gray-300 p-6 py-2 z-10 shadow">
         <div className="flex items-center">
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold">
@@ -49,6 +49,9 @@ export default function Compare() {
             <h3 className="text-xs font-bold opacity-50">
               {verseNumber ? `Verse ${verseNumber}` : "..."}
             </h3>
+            <h4 className="text-xs font-bold opacity-70">
+              Compare versions:
+            </h4>
           </div>
           <div className="flex ml-auto">
             <button

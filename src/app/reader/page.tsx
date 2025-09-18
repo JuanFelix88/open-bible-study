@@ -71,6 +71,7 @@ export default function Reader() {
 
   const { data: references } = useQuery({
     queryKey: ["references", bookAbbr, chapterNumber],
+    gcTime: 0,
     queryFn: async () => {
       const chapterReferences = await fetch(
         `/api/references/${bookAbbr}/${chapterNumber}`
