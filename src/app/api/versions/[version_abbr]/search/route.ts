@@ -25,7 +25,7 @@ export async function GET(
   const allBooks = await BooksAndChapters.getBooks();
 
   const result =
-    /^(?<book>[A-Za-zÀ-ÿ0-9]{1,}) (?<chapter>[0-9]{1,}):?(?<verse>[0-9]{1,})?$/.exec(
+    /^(?<book>[0-9]? ?[A-Za-zÀ-ÿ0-9]{1,}) (?<chapter>[0-9]{1,}):?(?<verse>[0-9]{1,})?$/.exec(
       queryText
     );
 
@@ -86,7 +86,7 @@ export async function GET(
       )
       .sort((a, b) => (a.exactMatch && !b.exactMatch ? -1 : 0));
 
-    return NextResponse.json(results.slice(0, 10));
+    return NextResponse.json(results.slice(0, 50));
   }
 
   return NextResponse.json([]);
