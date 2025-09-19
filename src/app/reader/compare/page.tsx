@@ -36,8 +36,8 @@ export default function Compare() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-[#f4ece8]">
-      <div className="select-none fixed top-0 left-0 w-full bg-[#f4ece8] border-b border-gray-300 p-6 py-2 z-10 shadow">
+    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-backcolor">
+      <div className="select-none fixed top-0 left-0 w-full bg-backcolor border-b border-gray-300 p-6 py-2 z-10 shadow">
         <div className="flex items-center">
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold">

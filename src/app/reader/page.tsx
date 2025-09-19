@@ -104,6 +104,16 @@ export default function Reader() {
     );
   }
 
+  function handleUnselectVerse() {
+    setSelectedVerse(null);
+    router.replace(
+      `/reader?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}`,
+      {
+        scroll: false,
+      }
+    );
+  }
+
   function handlePreviousChapter() {
     if (chapter?.previous) {
       setSelectedVerse(null);
@@ -138,6 +148,12 @@ export default function Reader() {
 
     const verseNumber = parseInt(refSelected.current?.id ?? "1", 10);
     if (!selected) return;
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      handleUnselectVerse();
+      return;
+    }
 
     if (event.key === "1") {
       event.preventDefault();
@@ -202,14 +218,14 @@ export default function Reader() {
     }
   }, [chapter]);
 
-  const bookName = books?.find((b) => b.abbr === bookAbbr)?.name ?? "...";
+  const bookName = books?.find((b) => b.abbr.toLowerCase() === bookAbbr.toLowerCase())?.name ?? "...";
   const chapterText = `Chapter ${chapterNumber ?? "..."}`;
   const versionText = versionAbbr ?? "...";
 
   return (
-    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-15 bg-[#f4ece8]">
+    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-15 bg-backcolor">
       {!inViewHeader && (
-        <div className="select-none fixed top-0 left-0 w-full bg-[#f4ece8] border-b border-gray-300 p-6 py-2 z-40 shadow animate-show-from-top">
+        <div className="select-none fixed top-0 left-0 w-full bg-backcolor border-b border-gray-300 p-6 py-2 z-40 shadow animate-show-from-top">
           <div className="flex items-center">
             <div className="flex flex-col">
               {isLoadingBooks ? (

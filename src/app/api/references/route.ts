@@ -4,17 +4,17 @@ import { FnNormalizer } from "@/utils/FnNormalizer";
 import { ResponseError } from "@/utils/ResponseError";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(
-  req: NextRequest,
-) {
-  const body = (await req.json().catch(() => null)) as {
-    references: Array<{
-      abbr: string;
-      chapterNumber: number;
-      verseNumber: number;
-    }>;
-    note?: string;
-  };
+export interface Payload {
+  references: Array<{
+    abbr: string;
+    chapterNumber: number;
+    verseNumber: number;
+  }>;
+  note?: string;
+}
+
+export async function POST(req: NextRequest) {
+  const body = (await req.json().catch(() => null)) as Payload;
 
   if (!body || typeof body !== "object") {
     return ResponseError.asError("Body is needed");
@@ -108,6 +108,9 @@ export async function POST(
     await FnNormalizer.getFromPromise(statementPromise);
 
   if (!!refsInsertedError) {
+    console.log({refA, refB})
+    console.log(refsInsertedError.message);
+    console.log(refsInsertedError);
     return ResponseError.asError("Database error");
   }
 

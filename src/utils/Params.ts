@@ -1,5 +1,3 @@
-import { ReadonlyURLSearchParams } from "next/dist/client/components/navigation";
-
 type ParamRet<TParam = ParamType> = TParam extends ParamType.STRING
   ? [string, Error?]
   : [number, Error?];
@@ -7,7 +5,6 @@ type ParamRet<TParam = ParamType> = TParam extends ParamType.STRING
 type ParamRetOptional<TParam = ParamType> = TParam extends ParamType.STRING
   ? [string?, Error?]
   : [number?, Error?];
-
 
 export enum ParamType {
   STRING = "string",
@@ -50,7 +47,7 @@ export class Params {
     T extends ParamType = ParamType.STRING
   >(
     name: string,
-    searchParams: ReadonlyURLSearchParams,
+    searchParams: URLSearchParams,
     type: T = ParamType.STRING as T
   ): ParamRetOptional<T> {
     if (!searchParams) {

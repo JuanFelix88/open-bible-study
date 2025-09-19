@@ -60,6 +60,29 @@ export class BibleVersionsRepository extends StaticClass {
     return verseVersions;
   }
 
+  public static async getBookWithVersion(
+    versionAbbr: string,
+    bookAbbr: string
+  ): Promise<RawChapterVersion> {
+    versionAbbr = versionAbbr.trim().toLowerCase();
+    bookAbbr = bookAbbr.trim().toLowerCase();
+
+    if (!versionAbbr) throw new Error("Version abbreviation is required.");
+    if (!bookAbbr) throw new Error("Book abbreviation is required.");
+
+    const book = (await import(
+      `@/assets/versions/partitions/${versionAbbr.toLowerCase()}/${bookAbbr.toLowerCase()}.json`
+    ).catch(() => null)) as RawChapterVersion | null;
+
+    if (!book) {
+      throw new Error(
+        `Book ${bookAbbr.toUpperCase()} not found in version ${versionAbbr.toUpperCase()}.`
+      );
+    }
+
+    return book
+  }
+
   public static async getChapterWithVersion(
     versionAbbr: string,
     bookAbbr: string,
@@ -74,15 +97,7 @@ export class BibleVersionsRepository extends StaticClass {
       throw new Error("Chapter number must be greater than 0.");
     }
 
-    const book = (await import(
-      `@/assets/versions/partitions/${versionAbbr.toLowerCase()}/${bookAbbr.toLowerCase()}.json`
-    ).catch(() => null)) as RawChapterVersion | null;
-
-    if (!book) {
-      throw new Error(
-        `Book ${bookAbbr.toUpperCase()} not found in version ${versionAbbr.toUpperCase()}.`
-      );
-    }
+    const book = await this.getBookWithVersion(versionAbbr, bookAbbr)
 
     const allBooks = await BooksAndChapters.getBooks();
 
