@@ -323,7 +323,7 @@ export default function References() {
           )
         )}
         <Link
-          className="w-fit mt-2 text-[0.75rem] bg-gray-500/20 p-1 px-2 rounded hover:bg-gray-500/40"
+          className="w-fit mt-2 text-[0.85rem] text-black/90 bg-gray-500/20 p-1 px-2 rounded hover:bg-gray-500/40"
           href={`/reader/references/add?book=${bookAbbr}&chapter=${chapterNumber}&verse=${verseNumber}&version=${versionAbbr}`}
           hidden={isLoadingReferencesDetails}
         >

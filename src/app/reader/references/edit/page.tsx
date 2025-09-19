@@ -192,7 +192,7 @@ export default function ReferenceMutation() {
             Basic information of reference
           </span>
           <button
-            className="cursor-pointer text-[0.75rem] bg-gray-500/20 p-1 px-2 pr-4 rounded hover:bg-gray-500/40 w-fit mt-3"
+            className="cursor-pointer text-[0.85rem] text-black/90 bg-gray-500/20 p-1 px-2 pr-4 rounded hover:bg-gray-500/40 w-fit mt-3"
             onClick={handleOpenEditSelectedVerse}
           >
             <Image
@@ -298,7 +298,7 @@ export default function ReferenceMutation() {
               >
                 <div className="flex items-center">
                   <span className="font-bold opacity-80">
-                    {result.displayText}
+                    {result.bookName} {result.chapter}:{result.verse}
                   </span>
                   {result.exactMatch && (
                     <Image
