@@ -17,12 +17,19 @@ import { Reference } from "@/entities/Reference";
 
 function referencesIncludesVerse(
   references: Reference[] | undefined,
-  verseIndex: number
+  bookAbbr: string,
+  chapterNumber: number,
+  verseNumber: number
 ) {
   if (!references) return false;
 
   return references.some(({ verses }) =>
-    verses.some((v) => v.numVerse === verseIndex + 1)
+    verses.some(
+      (v) =>
+        v.numVerse === verseNumber &&
+        v.numChapter === chapterNumber &&
+        v.abbrev.toLowerCase() === bookAbbr.toLowerCase()
+    )
   );
 }
 
@@ -218,7 +225,9 @@ export default function Reader() {
     }
   }, [chapter]);
 
-  const bookName = books?.find((b) => b.abbr.toLowerCase() === bookAbbr.toLowerCase())?.name ?? "...";
+  const bookName =
+    books?.find((b) => b.abbr.toLowerCase() === bookAbbr.toLowerCase())?.name ??
+    "...";
   const chapterText = `Chapter ${chapterNumber ?? "..."}`;
   const versionText = versionAbbr ?? "...";
 
@@ -358,31 +367,49 @@ export default function Reader() {
             {verse}
             <div className="control-buttons absolute left-0 -bottom-9 z-20 rounded-sm bg-amber-200  border-amber-700 border border-dashed p-1 w-full gap-2 flex">
               <button
-                className="border rounded-sm px-[3px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100"
+                className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100"
                 onClick={(e) => handleOpenReferences(e, verseIndex)}
               >
-                <span className="hidden sm:inline mr-1 text-[0.7rem]">[1]</span>
+                <span className="opacity-70 hidden sm:inline mr-1 text-[0.7rem]">
+                  [1]
+                </span>
                 Ref.
               </button>
-              <button className="border rounded-sm px-[3px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100">
-                <span className="hidden sm:inline mr-1 text-[0.7rem]">[2]</span>
+              <button className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100">
+                <span className="opacity-70 hidden sm:inline mr-1 text-[0.7rem]">
+                  [2]
+                </span>
                 Start devot.
               </button>
-              <button className="border rounded-sm px-[3px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100">
-                <span className="hidden sm:inline mr-1 text-[0.7rem]">[3]</span>
+              <button className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100">
+                <span className="opacity-70 hidden sm:inline mr-1 text-[0.7rem]">
+                  [3]
+                </span>
                 Mark color
               </button>
               <button
-                className="border rounded-sm px-[3px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100"
+                className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100"
                 onClick={(e) => handleCompare(e, verseIndex)}
               >
-                <span className="hidden sm:inline mr-1">[4]</span>
+                <span className="opacity-70 hidden sm:inline mr-1">[4]</span>
                 Compare
+              </button>
+              <button
+                className="border rounded-sm py-0.5 sm:py-0 items-center px-[7px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100"
+                onClick={() => setSelectedVerse(null)}
+              >
+                <span className="opacity-70 hidden sm:inline mr-1">[Esc]</span>
+                Unselect
               </button>
             </div>
           </div>
           <div className="flex flex-start flex-col min-w-[20px] py-2 pl-1">
-            {referencesIncludesVerse(references, verseIndex) && (
+            {referencesIncludesVerse(
+              references,
+              chapter.book.abbrev,
+              chapter.book.chapter.number,
+              verseIndex + 1
+            ) && (
               <div className="flex rounded-full opacity-85 animate-fade-in-from-bottom">
                 <Image
                   width={16}
