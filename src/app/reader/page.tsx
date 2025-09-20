@@ -14,6 +14,7 @@ import { MouseEvent, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import DocRefIcon from "@/assets/icons/doc-ref.svg";
 import { Reference } from "@/entities/Reference";
+import { useDialog } from "@/hooks/useDialog";
 
 function referencesIncludesVerse(
   references: Reference[] | undefined,
@@ -47,6 +48,7 @@ export default function Reader() {
   const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
   const refSelected = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { setDialog } = useDialog();
 
   const { data: books, isLoading: isLoadingBooks } = useQuery({
     queryKey: ["books"],
@@ -148,6 +150,20 @@ export default function Reader() {
     ev.stopPropagation();
   }
 
+  function handleShare(ev: SingleEvent, verseNumber: number) {
+    ev.stopPropagation();
+
+    navigator.clipboard.writeText(
+      `${window.location.origin}/reader?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`
+    );
+
+    setDialog({
+      title: "Link copied!",
+      message: `Verse ${verseNumber} ready to share.`,
+      ms: 3500,
+    });
+  }
+
   function handleOnKeyDown(event: KeyboardEvent) {
     const selected = document.querySelector(
       "div:has(.control-buttons):not(.hidden-buttons)"
@@ -170,17 +186,13 @@ export default function Reader() {
 
     if (event.key === "2") {
       event.preventDefault();
+      handleCompare(event, verseNumber - 1);
       return;
     }
 
     if (event.key === "3") {
       event.preventDefault();
-      return;
-    }
-
-    if (event.key === "4") {
-      event.preventDefault();
-      handleCompare(event, verseNumber - 1);
+      handleShare(event, verseNumber);
       return;
     }
   }
@@ -370,37 +382,33 @@ export default function Reader() {
                 className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100"
                 onClick={(e) => handleOpenReferences(e, verseIndex)}
               >
-                <span className="opacity-70 hidden sm:inline mr-1 text-[0.7rem]">
+                <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
                   [1]
                 </span>
                 Ref.
-              </button>
-              <button disabled className="disabled:opacity-85 border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100">
-                <span className="opacity-70 hidden sm:inline mr-1 text-[0.7rem]">
-                  [2]
-                </span>
-                Start devot.
-              </button>
-              <button disabled className="disabled:opacity-85 border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100">
-                <span className="opacity-70 hidden sm:inline mr-1 text-[0.7rem]">
-                  [3]
-                </span>
-                Mark color
               </button>
               <button
                 className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100"
                 onClick={(e) => handleCompare(e, verseIndex)}
               >
-                <span className="opacity-70 hidden sm:inline mr-1">[4]</span>
+                <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">[2]</span>
                 Compare
+              </button>
+              <button className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100"
+                onClick={(e) => handleShare(e, verseIndex + 1)}
+              >
+                <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                  [3]
+                </span>
+                Share
               </button>
               <button
                 className="border rounded-sm py-0.5 sm:py-0 items-center px-[7px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100"
                 onClick={() => setSelectedVerse(null)}
               >
-                <span className="opacity-70 hidden sm:inline mr-1">[Esc]</span>
-                <span className='hidden sm:inline'>Unselect</span>
-                <span className='sm:hidden'>X</span>
+                <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">[Esc]</span>
+                <span className="hidden sm:inline">Unselect</span>
+                <span className="sm:hidden">X</span>
               </button>
             </div>
           </div>

@@ -11,7 +11,6 @@
   --color-secondary: #f43f5e;
 }
 
-
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -36,7 +35,7 @@ body {
 @keyframes fade-in-from-bottom {
   from {
     opacity: 0;
-    transform: translateY(3px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -44,8 +43,23 @@ body {
   }
 }
 
+@keyframes fade-out-to-bottom {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
 .animate-fade-in-from-bottom {
   animation: fade-in-from-bottom 80ms ease-in-out;
+}
+
+.animate-fade-out-from-bottom {
+  animation: fade-out-to-bottom 0.2s ease-in-out forwards;
 }
 
 .animate-fade-to-right {
@@ -60,6 +74,10 @@ body {
   animation: show-ref-icon 0.2s ease-in-out;
 }
 
+.animate-fadeout-to-bottom {
+  animation: fade-in-from-bottom 0.2s ease-in-out reverse forwards;
+}
+
 @keyframes show-ref-icon {
   from {
     opacity: 0;
@@ -70,7 +88,6 @@ body {
     transform: scale(1) rotate(-20deg);
   }
 }
-
 
 @keyframes fade-to-right {
   from {

@@ -4,6 +4,8 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { ReactNode } from "react";
+import { DialogProvider } from "@/contexts/DialogContext";
+import DialogToast from "./components/DialogToast";
 
 const getWindow = () => {
   try {
@@ -27,7 +29,10 @@ export function Providers({ children }: { children: ReactNode }) {
       client={queryClient}
       persistOptions={{ persister: asyncStoragePersister }}
     >
-      {children}
+      <DialogProvider>
+        {children}
+        <DialogToast />
+      </DialogProvider>
     </PersistQueryClientProvider>
   );
 }
