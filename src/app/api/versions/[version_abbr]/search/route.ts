@@ -35,10 +35,13 @@ export async function GET(
     const chapterNumber = chapter ? Number(chapter || "0") : null;
     const verseNumber = verse ? Number(verse || "0") : null;
 
-    const bookData = allBooks.find(
+    let bookData = allBooks.find((b) =>
+      StringCompare.isEqualIgnoreCaseAndDiacritics(b.abbr, book.trim())
+    );
+
+    bookData ||= allBooks.find(
       (b) =>
-        StringCompare.containsIgnoreCaseAndDiacritics(b.name, book) ||
-        StringCompare.isEqualIgnoreCaseAndDiacritics(b.abbr, book)
+        StringCompare.containsIgnoreCaseAndDiacritics(b.name, book.trim())
     );
 
     if (!bookData) return NextResponse.json([]);

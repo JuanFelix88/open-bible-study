@@ -56,7 +56,7 @@ function getVerse(
   }
 
   return {
-    text: chapter.book.chapter.verses.at(verseNumber - 1) ?? null,
+    text: chapter.book.chapter.verses.at(otherRelatedVerse.numVerse - 1) ?? null,
     displayVerse: `${otherRelatedVerse.abbrev.toUpperCase()} ${
       otherRelatedVerse.numChapter
     }:${otherRelatedVerse.numVerse}`,

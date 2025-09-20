@@ -156,6 +156,8 @@ export default function ReferenceMutation() {
   const displayBook = book ? book.name : "Unknown Book";
   const displayChapter = `Chapter ${povChapterNumber ?? "..."}`;
   const displayVerse = `Verse ${povVerseNumber ?? "..."}`;
+  const isLoadingSendForm =
+    handleAddReference.isPending || handleUpdateReference.isPending;
 
   return (
     <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-backcolor">
@@ -253,13 +255,10 @@ export default function ReferenceMutation() {
             }
             className="cursor-pointer text-sm bg-blue-500/20 text-gray/90 p-2 px-2 pr-4 rounded hover:bg-blue-500/40 w-fit mt-5"
           >
-            {handleAddReference.isPending ||
-              (handleUpdateReference.isPending && (
-                <span className="animate-pulse opacity-70 mr-2">Saving...</span>
-              ))}
-            {!handleAddReference.isPending &&
-              !handleUpdateReference.isPending &&
-              "Save reference"}
+            {isLoadingSendForm && (
+              <span className="animate-pulse opacity-70 mr-2">Saving...</span>
+            )}
+            {!isLoadingSendForm && "Save reference"}
           </button>
         </>
       )}
