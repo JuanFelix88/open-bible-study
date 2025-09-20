@@ -365,7 +365,7 @@ export default function Reader() {
               {verseIndex + 1}
             </sup>{" "}
             {verse}
-            <div className="control-buttons absolute left-0 -bottom-9 z-20 rounded-sm bg-amber-200  border-amber-700 border border-dashed p-1 w-full gap-2 flex">
+            <div className="control-buttons absolute left-0 -bottom-9 z-20 rounded-sm bg-amber-200  border-amber-700 border border-dashed p-1 w-full gap-2 flex flex-wrap">
               <button
                 className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100"
                 onClick={(e) => handleOpenReferences(e, verseIndex)}
@@ -375,13 +375,13 @@ export default function Reader() {
                 </span>
                 Ref.
               </button>
-              <button className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100">
+              <button disabled className="disabled:opacity-85 border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100">
                 <span className="opacity-70 hidden sm:inline mr-1 text-[0.7rem]">
                   [2]
                 </span>
                 Start devot.
               </button>
-              <button className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100">
+              <button disabled className="disabled:opacity-85 border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100">
                 <span className="opacity-70 hidden sm:inline mr-1 text-[0.7rem]">
                   [3]
                 </span>
@@ -399,7 +399,8 @@ export default function Reader() {
                 onClick={() => setSelectedVerse(null)}
               >
                 <span className="opacity-70 hidden sm:inline mr-1">[Esc]</span>
-                Unselect
+                <span className='hidden sm:inline'>Unselect</span>
+                <span className='sm:hidden'>X</span>
               </button>
             </div>
           </div>
