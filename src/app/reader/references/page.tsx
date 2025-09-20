@@ -56,7 +56,8 @@ function getVerse(
   }
 
   return {
-    text: chapter.book.chapter.verses.at(otherRelatedVerse.numVerse - 1) ?? null,
+    text:
+      chapter.book.chapter.verses.at(otherRelatedVerse.numVerse - 1) ?? null,
     displayVerse: `${otherRelatedVerse.abbrev.toUpperCase()} ${
       otherRelatedVerse.numChapter
     }:${otherRelatedVerse.numVerse}`,
@@ -113,8 +114,7 @@ export default function References() {
         chapterNumber,
         verseNumber,
       ],
-      // gcTime: 1_000 * 30,
-      gcTime: 0,
+      gcTime: 1_000 * 5,
       queryFn: async () => {
         const chapterReferences = await fetch(
           `/api/references/${bookAbbr}/${chapterNumber}`
@@ -130,7 +130,12 @@ export default function References() {
             createdAt: new Date(r.createdAt),
           }))
           .filter((reference) =>
-            reference.verses.some((v) => v.numVerse === verseNumber)
+            reference.verses.some(
+              (v) =>
+                v.abbrev.toLowerCase() === bookAbbr?.toLowerCase() &&
+                v.numChapter === chapterNumber &&
+                v.numVerse === verseNumber
+            )
           );
 
         if (!bookAbbr) return [];
