@@ -3,6 +3,7 @@ import type { BibleVersionObject } from "@/entities/BibleVersion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import BibleIcon from "./favicon.ico";
+import Link from 'next/link';
 
 interface Book {
   abbr: string;
@@ -36,7 +37,7 @@ export default function Home() {
   const hrefStartReading = `/reader?book=${bookName}&version=${version}&chapter=${selectedChapter || ""}`;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-24 px-12 sm:px-24">
+    <div className="flex min-h-screen flex-col items-center justify-center py-18 px-12 sm:px-24 bg-backcolor">
       <Image
         src={BibleIcon}
         alt="Bible Icon"
@@ -103,12 +104,14 @@ export default function Home() {
         ))}
       </select>
 
-      <a
+      <Link
         className="flex justify-center items-center rounded-md border bg-gray-200 border-gray-300 p-2 mt-4 w-full hover:border-gray-600 max-w-sm"
         href={hrefStartReading}
       >
         Start reading
-      </a>
+      </Link>
+
+      <Link href="/mode/set-theme" className='flex text-center mt-3 underline'>Set theme</Link>
     </div>
   );
 }

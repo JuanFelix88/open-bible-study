@@ -15,6 +15,18 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.mode-dark {
+  filter: invert(1) hue-rotate(-5deg) contrast(1.1);
+}
+
+.mode-ventura {
+  filter: invert(1) hue-rotate(100deg) contrast(0.9) saturate(0.8) sepia(0.1);
+}
+
+.mode-clean {
+  filter: invert(1) hue-rotate(30deg) contrast(0.85) sepia(0.3);
+}
+
 @keyframes show-from-top {
   from {
     transform: translateY(-5px);
