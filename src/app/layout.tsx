@@ -1,6 +1,6 @@
 "use client";
 import { Geist, Geist_Mono } from "next/font/google";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import "./globals.css";
 import { Providers } from "./Providers";
 
@@ -64,7 +64,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased ${classMode}`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <Suspense>{children}</Suspense>
+        </Providers>
       </body>
     </html>
   );
