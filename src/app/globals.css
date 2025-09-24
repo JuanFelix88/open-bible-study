@@ -20,11 +20,11 @@ body {
 }
 
 .mode-ventura {
-  filter: invert(1) hue-rotate(100deg) contrast(0.9) saturate(0.8) sepia(0.1);
+  filter: invert(1) hue-rotate(100deg) contrast(0.80) saturate(0.8) sepia(0.1);
 }
 
 .mode-clean {
-  filter: invert(1) hue-rotate(30deg) contrast(0.85) sepia(0.3);
+  filter: invert(1) hue-rotate(30deg) contrast(0.75) sepia(0.3);
 }
 
 @keyframes show-from-top {
