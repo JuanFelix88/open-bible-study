@@ -35,24 +35,28 @@ export async function generateMetadata({
   if (versionParamError) {
     return {
       title: "Error: Missing version",
+      metadataBase: null,
     };
   }
 
   if (abbrParamError) {
     return {
       title: "Error: Missing abbreviation",
+      metadataBase: null,
     };
   }
 
   if (chapterParamError) {
     return {
       title: "Error: Missing chapter",
+      metadataBase: null,
     };
   }
 
   if (verseParamError) {
     return {
       title: "Error: Missing verse",
+      metadataBase: null,
     };
   }
 
@@ -68,16 +72,18 @@ export async function generateMetadata({
   if (chapterDataError) {
     return {
       title: `Error: ${chapterDataError.message}`,
+      metadataBase: null,
     };
   }
 
   return {
     title: `${version.toUpperCase()} - ${chapterData?.book.name} ${
       chapterData?.book.chapter.number
-    } : ${verse}`,
+    }:${verse}`,
     description: `Read: ${chapterData.book.chapter.verses
       .at(verse - 1)
       ?.substring(0, 120)}...`,
+    metadataBase: null,
   } satisfies Metadata;
 }
 
