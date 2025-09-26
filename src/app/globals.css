@@ -32,7 +32,8 @@
   --color-dark: #00080c;
 
   --color-background: #00080c;
-  --color-surface: #07222f;
+  --color-surface: #051218;
+  --color-surface-strong: #12232a;
   --color-text: #ffffff;
   --color-text-muted: #a6b8de;
   --color-border: #152e3a;
@@ -132,7 +133,7 @@ body {
 }
 
 .animate-fade-in-from-bottom {
-  animation: fade-in-from-bottom 80ms ease-in-out;
+  animation: fade-in-from-bottom 60ms ease-in-out;
 }
 
 .animate-fade-out-from-bottom {

@@ -60,6 +60,24 @@ export class BibleVersionsRepository extends StaticClass {
     return verseVersions;
   }
 
+  public static async getBibleVersion(
+    versionAbbr: string
+  ): Promise<RawChapterVersion[]> {
+    versionAbbr = versionAbbr.trim().toLowerCase();
+
+    if (!versionAbbr) throw new Error("Version abbreviation is required.");
+
+    const bibleVersion = (await import(
+      `@/assets/versions/${versionAbbr.toUpperCase()}.json`
+    ).catch(() => null)) as RawChapterVersion[] | null;
+
+    if (!bibleVersion) {
+      throw new Error(`Version ${versionAbbr.toUpperCase()} not found.`);
+    }
+
+    return Array.from(bibleVersion)
+  }
+
   public static async getBookWithVersion(
     versionAbbr: string,
     bookAbbr: string

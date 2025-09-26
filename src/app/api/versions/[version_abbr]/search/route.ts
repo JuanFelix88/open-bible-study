@@ -36,9 +36,9 @@ export async function GET(
     const verseNumber = verse ? Number(verse || "0") : null;
 
     let bookData = allBooks.find((b) =>
-      StringCompare.isEqualIgnoreCaseAndDiacritics(b.abbr, book.trim())
+      StringCompare.isEqualIgnoringCase(b.abbr, book.trim())
     );
-
+    
     bookData ||= allBooks.find(
       (b) =>
         StringCompare.containsIgnoreCaseAndDiacritics(b.name, book.trim())

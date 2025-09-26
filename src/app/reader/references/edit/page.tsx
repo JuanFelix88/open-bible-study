@@ -151,10 +151,10 @@ export default function ReferenceMutation() {
   }
 
   const isEditMode = Boolean(editId);
-  const title = isEditMode ? "Edit Reference" : "Add Reference";
+  const title = isEditMode ? "Edit Reference:" : "Add Reference:";
   const displayBook = book ? book.name : "Unknown Book";
-  const displayChapter = `Chapter ${povChapterNumber ?? "..."}`;
-  const displayVerse = `Verse ${povVerseNumber ?? "..."}`;
+  const displayChapter = `${povChapterNumber ?? "..."}`;
+  const displayVerse = `${povVerseNumber ?? "..."}`;
   const isLoadingSendForm =
     handleAddReference.isPending || handleUpdateReference.isPending;
 
@@ -163,9 +163,7 @@ export default function ReferenceMutation() {
       <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-10 shadow">
         <div className="flex items-center">
           <div className="flex flex-col">
-            <h1 className="text-2xl font-bold">{displayBook}</h1>
-            <h2 className="text-sm font-bold opacity-70">{displayChapter}</h2>
-            <h3 className="text-xs font-bold opacity-50">{displayVerse}</h3>
+            <h1 className="text-2xl font-bold">{displayBook} {displayChapter}:{displayVerse}</h1>
             <h4 className="text-xs font-bold opacity-70">{title}</h4>
           </div>
           <div className="flex ml-auto">
@@ -179,7 +177,7 @@ export default function ReferenceMutation() {
         </div>
       </div>
 
-      <hr className="opacity-0 mt-22" />
+      <hr className="opacity-0 mt-14" />
 
       {/* idle mode */}
       {!isSelectingVerse && (

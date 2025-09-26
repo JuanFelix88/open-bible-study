@@ -37,8 +37,7 @@ function referencesIncludesVerse(
 }
 
 export default function Reader() {
-  const { ref: refHeader, inView: inViewHeader } = useInView({
-  });
+  const { ref: refHeader, inView: inViewHeader } = useInView({});
   const searchParams = useSearchParams();
   const bookAbbr = searchParams.get("book") || "";
   const selectedVerseParam = searchParams.get("verse");
@@ -81,7 +80,7 @@ export default function Reader() {
 
   const { data: references } = useQuery({
     queryKey: ["references", bookAbbr, chapterNumber],
-    gcTime: 0,
+    staleTime: 1_000 * 3,
     queryFn: async () => {
       const chapterReferences = await fetch(
         `/api/references/${bookAbbr}/${chapterNumber}`
@@ -155,7 +154,7 @@ export default function Reader() {
     ev.stopPropagation();
 
     navigator.clipboard.writeText(
-      `${window.location.origin}/reader?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`
+      `${window.location.origin}/share?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`
     );
 
     setDialog({
@@ -209,7 +208,7 @@ export default function Reader() {
   useEffect(() => {
     window.addEventListener("keydown", handleOnKeyDown);
     return () => window.removeEventListener("keydown", handleOnKeyDown);
-  }, []);
+  }, [bookAbbr, chapterNumber]);
 
   useEffect(() => {
     if (selectedVerseParam && /[0-9]+/.test(selectedVerseParam)) {
@@ -255,6 +254,11 @@ export default function Reader() {
               ) : (
                 <h1 className="text-2xl sm:text-4xl font-bold">
                   {bookName} {chapterText}
+                  {selectedVerse !== null ? (
+                    <span className="text-text/80">{`:${selectedVerse}`}</span>
+                  ) : (
+                    ""
+                  )}
                 </h1>
               )}
               <h3 className="text-xs font-bold text-text/50">{versionText}</h3>
@@ -288,6 +292,11 @@ export default function Reader() {
         <div className="flex flex-col mb-2">
           <h1 className="text-2xl sm:text-4xl font-bold" ref={refHeader}>
             {bookName} {chapterText}
+            {selectedVerse !== null ? (
+              <span className="text-text/80">{`:${selectedVerse}`}</span>
+            ) : (
+              ""
+            )}
           </h1>
           <h3 className="text-xs font-bold text-text/50">{versionText}</h3>
         </div>
@@ -410,7 +419,13 @@ export default function Reader() {
               chapter.book.chapter.number,
               verseIndex + 1
             ) && (
-              <div className="flex rounded-full text-text/70 animate-fade-in-from-bottom">
+              <div
+                className={
+                  selectedVerse === verseIndex + 1
+                    ? "flex rounded-full text-primary animate-fade-in-from-bottom"
+                    : "flex rounded-full text-text/70 animate-fade-in-from-bottom"
+                }
+              >
                 <DocumentIcon width={16} height={16} />
               </div>
             )}

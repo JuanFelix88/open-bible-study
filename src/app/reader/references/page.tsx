@@ -113,7 +113,7 @@ export default function References() {
         chapterNumber,
         verseNumber,
       ],
-      gcTime: 1_000 * 5,
+      staleTime: 1_000 * 5,
       queryFn: async () => {
         const chapterReferences = await fetch(
           `/api/references/${bookAbbr}/${chapterNumber}`
@@ -203,24 +203,22 @@ export default function References() {
   }
 
   const bookName =
-    books?.find((b) => b.abbr.toLowerCase() === bookAbbr?.toLowerCase())?.name ??
-    "...";
+    books?.find((b) => b.abbr.toLowerCase() === bookAbbr?.toLowerCase())
+      ?.name ?? "...";
   const chapterText = chapterNumber?.toString() ?? "...";
-  const versionText = versionAbbr ?? "...";
 
   return (
     <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text">
       <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-10 shadow">
         <div className="flex items-center">
           <div className="flex flex-col">
-              {isLoadingBooks ? (
-                <div className="w-10/12 h-6 rounded-sm bg-surface animate-pulse mb-1" />
-              ) : (
-                <h1 className="text-2xl sm:text-4xl font-bold">
-                  {bookName} {chapterText}
-                </h1>
-              )}
-              <h3 className="text-xs font-bold text-text/50">{versionText}</h3>
+            {isLoadingBooks ? (
+              <div className="w-10/12 h-6 rounded-sm bg-surface animate-pulse mb-1" />
+            ) : (
+              <h1 className="text-2xl sm:text-4xl font-bold">
+                {bookName} {chapterText}:{verseNumber ?? "..."}
+              </h1>
+            )}
             <h4 className="text-xs font-bold opacity-70">
               References in text:
             </h4>

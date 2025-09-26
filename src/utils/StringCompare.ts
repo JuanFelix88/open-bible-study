@@ -42,4 +42,10 @@ export class StringCompare extends StaticClass {
         .replace(/[\u0300-\u036f]/g, "")
     );
   }
+
+  public static isEqualIgnoringCase(a: Primitive, b: Primitive): boolean {
+    if (!a || !b) return false;
+
+    return a.toString().toLowerCase() === b.toString().toLowerCase();
+  }
 }
