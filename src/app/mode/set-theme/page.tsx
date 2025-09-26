@@ -2,13 +2,15 @@
 
 import { Themes } from "@/definitions/Themes";
 import { useEffect, useState } from "react";
-import { setCookie } from "nookies";
+import { parseCookies, setCookie } from "nookies";
 
 export default function DarkMode() {
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
 
   useEffect(() => {
-    setSelectedTheme(localStorage.getItem("theme"));
+    const cookies = parseCookies();
+
+    setSelectedTheme(cookies["theme-preference"] ?? Themes.modes[0])
   }, []);
 
   function handleChangeMode(event: React.ChangeEvent<HTMLSelectElement>) {
@@ -27,7 +29,7 @@ export default function DarkMode() {
       <select
         value={selectedTheme ?? Themes.modes[0]}
         onChange={handleChangeMode}
-        className="border border-border rounded p-2"
+        className="border border-border rounded p-2 brightness-[1.15] bg-background"
       >
         {Themes.modes.map((mode) => (
           <option key={mode} value={mode} className='bg-background'>

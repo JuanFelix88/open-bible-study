@@ -54,7 +54,7 @@ export default function Home() {
         autoFocus
         name="versions"
         id="versions"
-        className="rounded-md border border-border p-2 mt-4 w-full max-w-sm text-text"
+        className="rounded-md border border-border brightness-[1.15] bg-background  p-2 mt-4 w-full max-w-sm text-text"
         value={selectedVersion?.abbreviation || ""}
         onChange={(e) => {
           const version =
@@ -73,7 +73,7 @@ export default function Home() {
       <select
         name="books"
         id="books"
-        className="rounded-md border border-border p-2 mt-4 w-full max-w-sm"
+        className="rounded-md border border-border brightness-[1.15] bg-background p-2 mt-4 w-full max-w-sm"
         value={selectedBook?.abbr || ""}
         onChange={(e) => {
           const book = books.find((b) => b.abbr === e.target.value) || null;
@@ -91,7 +91,7 @@ export default function Home() {
       <select
         name="chapters"
         id="chapters"
-        className="rounded-md border border-border p-2 mt-4 w-full max-w-sm"
+        className="rounded-md border border-border brightness-[1.15] bg-background p-2 mt-4 w-full max-w-sm"
         onChange={(e) => {
           setSelectedChapter(parseInt(e.target.value, 10) || null);
         }}
