@@ -1,6 +1,11 @@
 "use client";
-import ArrowLeftIconImage from "@/assets/icons/arrow-left.svg";
-import DocRefIcon from "@/assets/icons/doc-ref.svg";
+import AddIcon from "@/app/components/icons/AddIcon";
+import ArrowLeftIcon from "@/app/components/icons/ArrowLeftIcon";
+import DeleteIcon from "@/app/components/icons/DeleteIcon";
+import DocumentIcon from "@/app/components/icons/DocumentIcon";
+import EditIcon from "@/app/components/icons/EditIcon";
+import LinkIcon from "@/app/components/icons/LinkIcon";
+import LoadingIcon from "@/app/components/icons/LoadingIcon";
 import { BookInfo } from "@/entities/BookInfo";
 import { Chapter } from "@/entities/Chapter";
 import { LinkToVerse } from "@/entities/LinkToVerse";
@@ -8,14 +13,8 @@ import { Reference } from "@/entities/Reference";
 import { Params, ParamType } from "@/utils/Params";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
-import LinkIcon from "@/assets/icons/link-icon.svg";
-import DeleteIcon from "@/assets/icons/delete-icon.svg";
-import EditIcon from "@/assets/icons/edit-icon.svg";
-import LoadingIcon from "@/assets/icons/loading-icon.svg";
-import AddIcon from "@/assets/icons/add-icon.svg";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 
 function getVerse(
   bookAbbr: string,
@@ -92,7 +91,7 @@ export default function References() {
 
   const queryclient = useQueryClient();
 
-  const { data: books } = useQuery({
+  const { data: books, isLoading: isLoadingBooks } = useQuery({
     queryKey: ["books"],
     queryFn: async () => {
       const booksResponse = await fetch("/api/books");
@@ -203,22 +202,25 @@ export default function References() {
       );
   }
 
-  const book = books?.find(
-    ({ abbr }) => abbr.toLowerCase() === bookAbbr?.toLowerCase()
-  );
+  const bookName =
+    books?.find((b) => b.abbr.toLowerCase() === bookAbbr?.toLowerCase())?.name ??
+    "...";
+  const chapterText = chapterNumber?.toString() ?? "...";
+  const versionText = versionAbbr ?? "...";
 
   return (
-    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-backcolor">
-      <div className="select-none fixed top-0 left-0 w-full bg-backcolor border-b border-gray-300 p-6 py-2 z-10 shadow">
+    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text">
+      <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-10 shadow">
         <div className="flex items-center">
           <div className="flex flex-col">
-            <h1 className="text-2xl font-bold">{book?.name || "..."}</h1>
-            <h2 className="text-sm font-bold opacity-70">
-              {chapterNumber ? `Chapter ${chapterNumber}` : "..."}
-            </h2>
-            <h3 className="text-xs font-bold opacity-50">
-              {verseNumber ? `Verse ${verseNumber}` : "..."}
-            </h3>
+              {isLoadingBooks ? (
+                <div className="w-10/12 h-6 rounded-sm bg-surface animate-pulse mb-1" />
+              ) : (
+                <h1 className="text-2xl sm:text-4xl font-bold">
+                  {bookName} {chapterText}
+                </h1>
+              )}
+              <h3 className="text-xs font-bold text-text/50">{versionText}</h3>
             <h4 className="text-xs font-bold opacity-70">
               References in text:
             </h4>
@@ -226,29 +228,18 @@ export default function References() {
           <div className="flex ml-auto">
             <button
               onClick={handlePrevious}
-              className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-gray-300 opacity-80"
+              className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
             >
-              <Image
-                width={30}
-                height={30}
-                src={ArrowLeftIconImage}
-                alt="Image return to reader"
-              />
+              <ArrowLeftIcon width={30} height={30} />
             </button>
           </div>
         </div>
       </div>
-      <hr className="mt-20 opacity-0" />
+      <hr className="mt-14 opacity-0" />
 
       {isLoadingReferencesDetails && (
         <div className="flex flex-row gap-2 animate-pulse my-2">
-          <Image
-            src={LoadingIcon}
-            alt="Loading icon image"
-            width={24}
-            height={24}
-            className="animate-spin"
-          />
+          <LoadingIcon width={24} height={24} className="animate-spin" />
           <span className="opacity-70 italic text-xl">
             Loading references...
           </span>
@@ -260,17 +251,15 @@ export default function References() {
           ({ id, displayVerse, text, note, linkToOpen }) => (
             <div
               key={id + displayVerse}
-              className="flex select-none flex-col py-1 pl-3 px-2 border-l-4 border-gray-500/40 hover:border-slate-700/40 bg-gray-400/20 hover:bg-gray-500/20 rounded"
+              className="flex select-none flex-col py-1 pl-3 px-2 border-l-4 border-border bg-surface hover:opacity-95 rounded"
             >
               <div className="flex items-center">
                 <span className="font-bold opacity-80">
                   {displayVerse ?? "..."}
                 </span>
-                <Image
+                <DocumentIcon
                   width={16}
                   height={16}
-                  src={DocRefIcon}
-                  alt="Icon - document reference"
                   className="opacity-80 -mt-0.5 ml-1"
                 />
               </div>
@@ -278,47 +267,41 @@ export default function References() {
               {note && (
                 <>
                   <hr className="opacity-20 border-dashed my-1 mr-1" />
-                  <p className="mt-1 bg-slate-500/10 p-2 italic rounded">
+                  <p className="mt-1 bg-surface-strong p-2 italic rounded">
                     {note}
                   </p>
                 </>
               )}
               <div className="flex w-full pt-3 gap-1.5">
                 <Link
-                  className="text-[0.75rem] bg-gray-500/20 p-1 px-3 rounded hover:bg-gray-500/40"
+                  className="text-[0.75rem] bg-surface-strong p-1 px-3 rounded hover:bg-info/30 cursor-pointer"
                   href={linkToOpen ?? "#"}
                 >
-                  <Image
+                  <LinkIcon
                     width={13}
                     height={13}
-                    alt="Icon link to reference"
-                    src={LinkIcon}
                     className="inline -mt-0.5 mr-1"
                   />
                   Open
                 </Link>
                 <Link
-                  className="text-[0.75rem] bg-gray-500/20 p-1 px-3 rounded hover:bg-gray-500/40"
+                  className="text-[0.75rem] bg-surface-strong p-1 px-3 rounded hover:bg-info/30 cursor-pointer"
                   href={`/reader/references/edit?id=${id}&book=${bookAbbr}&chapter=${chapterNumber}&verse=${verseNumber}&version=${versionAbbr}`}
                 >
-                  <Image
+                  <EditIcon
                     width={13}
                     height={13}
-                    alt="Icon link to reference"
-                    src={EditIcon}
                     className="inline -mt-0.5 mr-1"
                   />
                   Edit
                 </Link>
                 <button
-                  className="text-[0.75rem] bg-gray-500/20 p-1 px-3 rounded hover:bg-gray-500/40 cursor-pointer"
+                  className="text-[0.75rem] bg-surface-strong p-1 px-3 rounded hover:bg-info/30 cursor-pointer"
                   onClick={() => handleRemove(id)}
                 >
-                  <Image
+                  <DeleteIcon
                     width={13}
                     height={13}
-                    alt="Icon delete to reference"
-                    src={DeleteIcon}
                     className="inline -mt-0.5 mr-1"
                   />
                   Remove
@@ -328,17 +311,11 @@ export default function References() {
           )
         )}
         <Link
-          className="w-fit mt-2 text-[0.85rem] text-black/90 bg-gray-500/20 p-1 px-2 rounded hover:bg-gray-500/40"
+          className="w-fit mt-2 text-[0.85rem] text-text bg-surface p-1 px-2 rounded hover:bg-surface/60"
           href={`/reader/references/add?book=${bookAbbr}&chapter=${chapterNumber}&verse=${verseNumber}&version=${versionAbbr}`}
           hidden={isLoadingReferencesDetails}
         >
-          <Image
-            width={13}
-            height={13}
-            alt="Icon link to reference"
-            src={AddIcon}
-            className="inline -mt-0.5 mr-1"
-          />
+          <AddIcon width={13} height={13} className="inline -mt-0.5 mr-1" />
           Add new reference
         </Link>
       </div>

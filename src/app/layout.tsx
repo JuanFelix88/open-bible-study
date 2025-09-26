@@ -1,6 +1,7 @@
-"use client";
+import { Themes } from "@/definitions/Themes";
+import { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Suspense, useEffect, useState } from "react";
+import { cookies } from "next/headers";
 import "./globals.css";
 import { Providers } from "./Providers";
 
@@ -16,37 +17,19 @@ const geistMono = Geist_Mono({
 
 export const dynamic = "force-dynamic";
 
-// export const metadata: Metadata = {
-//   title: "Open Bible Study",
-//   description: "A advanced Bible study app to explore texts in depth.",
-// };
+export const metadata: Metadata = {
+  title: "Open Bible Study",
+  description: "A advanced Bible study app to explore texts in depth.",
+};
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [themeMode, setThemeMode] = useState<string | null>(null);
-
-  useEffect(() => {
-    setThemeMode(localStorage.getItem("theme"));
-  }, []);
-
-  const selectedTheme = themeMode ?? "normal";
-
-  let classMode = "";
-
-  if (selectedTheme === "dark") {
-    classMode = "mode-dark";
-  }
-
-  if (selectedTheme === "ventura") {
-    classMode = "mode-ventura";
-  }
-
-  if (selectedTheme === "clean") {
-    classMode = "mode-clean";
-  }
+  const cookieStore = await cookies();
+  const selectedTheme =
+    cookieStore.get("theme-preference")?.value ?? Themes.modes[0];
 
   return (
     <html lang="pt-br">
@@ -62,11 +45,10 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased ${classMode}`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        data-theme={selectedTheme}
       >
-        <Providers>
-          <Suspense>{children}</Suspense>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

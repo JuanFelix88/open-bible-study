@@ -1,8 +1,10 @@
 "use client";
-import AddIcon from "@/assets/icons/add-icon.svg";
-import ArrowLeftIconImage from "@/assets/icons/arrow-left.svg";
-import DocRefIcon from "@/assets/icons/doc-ref.svg";
-import EditIcon from "@/assets/icons/edit-icon.svg";
+import type { Payload as PutReferecenPayload } from "@/app/api/references/details/[reference_id]/route";
+import type { Payload as PostReferencePayload } from "@/app/api/references/route";
+import AddIcon from "@/app/components/icons/AddIcon";
+import ArrowLeftIcon from "@/app/components/icons/ArrowLeftIcon";
+import DocumentIcon from "@/app/components/icons/DocumentIcon";
+import EditIcon from "@/app/components/icons/EditIcon";
 import { BookInfo } from "@/entities/BookInfo";
 import { LinkToVerse } from "@/entities/LinkToVerse";
 import { Reference } from "@/entities/Reference";
@@ -11,11 +13,8 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { Params, ParamType } from "@/utils/Params";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import type { Payload as PostReferencePayload } from "@/app/api/references/route";
-import type { Payload as PutReferecenPayload } from "@/app/api/references/details/[reference_id]/route";
 
 export default function ReferenceMutation() {
   const searchParams = useSearchParams();
@@ -160,8 +159,8 @@ export default function ReferenceMutation() {
     handleAddReference.isPending || handleUpdateReference.isPending;
 
   return (
-    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-backcolor">
-      <div className="select-none fixed top-0 left-0 w-full bg-backcolor border-b border-gray-300 p-6 py-2 z-10 shadow">
+    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text">
+      <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-10 shadow">
         <div className="flex items-center">
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold">{displayBook}</h1>
@@ -171,15 +170,10 @@ export default function ReferenceMutation() {
           </div>
           <div className="flex ml-auto">
             <button
-              className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-gray-300 opacity-80"
+              className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
               onClick={() => router.back()}
             >
-              <Image
-                width={30}
-                height={30}
-                src={ArrowLeftIconImage}
-                alt="Image return to reader"
-              />
+              <ArrowLeftIcon width={30} height={30} />
             </button>
           </div>
         </div>
@@ -194,16 +188,10 @@ export default function ReferenceMutation() {
             Basic information of reference
           </span>
           <button
-            className="cursor-pointer text-[0.85rem] text-black/90 bg-gray-500/20 p-1 px-2 pr-4 rounded hover:bg-gray-500/40 w-fit mt-3"
+            className="cursor-pointer text-[0.85rem] text-text bg-surface p-1 px-2 pr-4 rounded hover:bg-surface/60 w-fit mt-3"
             onClick={handleOpenEditSelectedVerse}
           >
-            <Image
-              width={13}
-              height={13}
-              alt="Icon delete to reference"
-              src={EditIcon}
-              className="inline -mt-0.5 mr-1"
-            />
+            <EditIcon width={13} height={13} className="inline -mt-0.5 mr-1" />
             {selectedVerse
               ? `${selectedVerse.abbrev} ${selectedVerse.numChapter}:${selectedVerse.numVerse} (verse reference - click to change)`
               : "click here to select verse"}
@@ -214,7 +202,7 @@ export default function ReferenceMutation() {
             onChange={(e) => setNoteText(e.target.value)}
             value={noteText}
             placeholder="Reference notes..."
-            className="mt-5 p-2 border-2 bg-gray-100/60 border-gray-400 rounded-md"
+            className="mt-5 p-2 border-2 border-border bg-background brightness-[1.13] rounded-md"
           ></textarea>
 
           <button
@@ -253,7 +241,7 @@ export default function ReferenceMutation() {
                     note: noteText || undefined,
                   })
             }
-            className="cursor-pointer text-sm bg-blue-500/20 text-gray/90 p-2 px-2 pr-4 rounded hover:bg-blue-500/40 w-fit mt-5"
+            className="cursor-pointer text-sm bg-surface text-gray/90 p-2 px-2 pr-4 rounded hover:bg-surface/60 w-fit mt-5"
           >
             {isLoadingSendForm && (
               <span className="animate-pulse opacity-70 mr-2">Saving...</span>
@@ -273,16 +261,16 @@ export default function ReferenceMutation() {
             onChange={(e) => setSearchText(e.target.value)}
             value={searchText}
             placeholder='Search verse (e.g. "John 3:16")'
-            className="mt-2 p-2 border-2 bg-gray-100/60 border-gray-400 rounded-md"
+            className="mt-2 p-2 border-2 border-border bg-background brightness-[1.13] rounded-md"
           />
           <div className="flex flex-col gap-2 mt-5">
             {isLoading && (
               <div className="flex flex-col gap-2">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="flex flex-col gap-1">
-                    <div className="w-10/12 h-8 rounded-sm bg-slate-700/30 animate-pulse mb-1" />
-                    <div className="w-full h-5 rounded-sm bg-slate-700/30 animate-pulse mb-1" />
-                    <div className="w-3/6 h-5 rounded-sm bg-slate-700/30 animate-pulse mb-1" />
+                    <div className="w-10/12 h-8 rounded-sm bg-surface animate-pulse mb-1" />
+                    <div className="w-full h-5 rounded-sm bg-surface animate-pulse mb-1" />
+                    <div className="w-3/6 h-5 rounded-sm bg-surface animate-pulse mb-1" />
                   </div>
                 ))}
               </div>
@@ -293,18 +281,16 @@ export default function ReferenceMutation() {
             {searchResult?.map((result) => (
               <div
                 key={`${result.bookAbbr}-${result.chapter}-${result.verse}`}
-                className="flex select-none flex-col py-1 pl-3 px-2 border-l-4 border-gray-500/40 hover:border-slate-700/40 bg-gray-400/20 hover:bg-gray-500/20 rounded"
+                className="flex select-none flex-col py-1 pl-3 px-2 border-l-4 border-border bg-surface hover:opacity-95 rounded"
               >
                 <div className="flex items-center">
                   <span className="font-bold opacity-80">
                     {result.bookName} {result.chapter}:{result.verse}
                   </span>
                   {result.exactMatch && (
-                    <Image
+                    <DocumentIcon
                       width={16}
                       height={16}
-                      src={DocRefIcon}
-                      alt="Icon - document reference"
                       className="opacity-80 -mt-0.5 ml-1"
                     />
                   )}
@@ -312,7 +298,7 @@ export default function ReferenceMutation() {
                 <p className="text-lg">{result.text}</p>
                 <div className="flex w-full pt-3 gap-1.5">
                   <button
-                    className="cursor-pointer text-[0.75rem] bg-gray-500/20 p-1 px-2 rounded hover:bg-gray-500/40"
+                    className="cursor-pointer text-[0.75rem] bg-surface-strong p-1 px-2 rounded hover:bg-info/30"
                     onClick={() =>
                       handleSelectVerse(
                         result.bookAbbr,
@@ -321,11 +307,9 @@ export default function ReferenceMutation() {
                       )
                     }
                   >
-                    <Image
+                    <AddIcon
                       width={13}
                       height={13}
-                      alt="Icon link to reference"
-                      src={AddIcon}
                       className="inline -mt-0.5 mr-1"
                     />
                     Select

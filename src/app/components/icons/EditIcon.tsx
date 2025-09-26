@@ -1,0 +1,36 @@
+import * as React from "react";
+import { SVGProps } from "react";
+const EditIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlnsXlink="http://www.w3.org/1999/xlink"
+    width="16px"
+    height="16px"
+    viewBox="0,0,256,256"
+    {...props}
+  >
+    <g
+      fill="currentColor"
+      fillRule="nonzero"
+      stroke="none"
+      strokeWidth={1}
+      strokeLinecap="butt"
+      strokeLinejoin="miter"
+      strokeMiterlimit={10}
+      strokeDasharray=""
+      strokeDashoffset={0}
+      fontFamily="none"
+      fontWeight="none"
+      fontSize="none"
+      textAnchor="none"
+      style={{
+        mixBlendMode: "normal",
+      }}
+    >
+      <g transform="scale(16,16)">
+        <path d="M2.5,2c-0.82253,0 -1.5,0.67747 -1.5,1.5v8c0,0.82253 0.67747,1.5 1.5,1.5h4.5v-1h-4.5c-0.28147,0 -0.5,-0.21853 -0.5,-0.5v-6.5h12v2h1v-3.5c0,-0.82253 -0.67747,-1.5 -1.5,-1.5zM2.5,3h11c0.28147,0 0.5,0.21853 0.5,0.5v0.5h-12v-0.5c0,-0.28147 0.21853,-0.5 0.5,-0.5zM4,7v1h1v-1zM6,7v1h6v-1zM14.20508,7.96484c-0.32653,0.00209 -0.6513,0.1291 -0.89453,0.37891l-4.66406,4.74219l-0.69531,2.92578l2.92578,-0.69727l0.09766,-0.09766l4.64453,-4.56445c0.49962,-0.48647 0.5046,-1.30204 0.01172,-1.79492l-0.52539,-0.52539c-0.24644,-0.24644 -0.57386,-0.36928 -0.90039,-0.36719zM14.21094,8.95898c0.06668,-0.00033 0.13394,0.02652 0.1875,0.08008l0.52539,0.52539c0.10712,0.10712 0.10647,0.26557 -0.00195,0.37109l-0.00195,0.00195l-4.54687,4.4707l-1.07422,0.25586l0.25586,-1.07617l4.4707,-4.54688c0.05276,-0.05419 0.11886,-0.0817 0.18555,-0.08203zM4,9v1h1v-1zM6,9v1h4v-1z" />
+      </g>
+    </g>
+  </svg>
+);
+export default EditIcon;

@@ -1,15 +1,80 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
 }
 
 @theme {
-  --color-backcolor: #f4ece8;
-  --color-primary-700: #1e40af;
-  --color-secondary: #f43f5e;
+  --color-primary: #c25e14;
+  --color-secondary: #fee685;
+  --color-success: #5daf89;
+  --color-danger: #d55562;
+  --color-warning: #eeb13f;
+  --color-info: #7dc5d3;
+  --color-light: #faf2ef;
+  --color-dark: #323130;
+
+  --color-background: #f4ece8;
+  --color-surface: #d8d4d4;
+  --color-surface-strong: #bfbfbf;
+  --color-text: #1b1b1b;
+  --color-text-muted: #4a4846;
+  --color-border: #9d9b98;
 }
+
+[data-theme="dark"] {
+  --color-primary: #2ea8ed;
+  --color-secondary: #001277;
+  --color-success: #00772e;
+  --color-danger: #632e24;
+  --color-warning: #635424;
+  --color-info: #437480;
+  --color-light: #f4ece8;
+  --color-dark: #00080c;
+
+  --color-background: #00080c;
+  --color-surface: #07222f;
+  --color-text: #ffffff;
+  --color-text-muted: #a6b8de;
+  --color-border: #152e3a;
+}
+
+[data-theme="ventura"] {
+  --color-primary: #d677b6;
+  --color-secondary: #6b2235;
+  --color-success: #2b493b;
+  --color-danger: #703c3c;
+  --color-warning: #5b4d33;
+  --color-info: #b291c3;
+  --color-light: #eeeae4;
+  --color-dark: #2d272b;
+
+  --color-background: #2d272b;
+  --color-surface: #4c4048;
+  --color-surface-strong: #705e6a;
+  --color-text: #eeeae4;
+  --color-text-muted: #a397a3;
+  --color-border: #4b3b46;
+}
+
+[data-theme="clean"] {
+  --color-primary: #8d96cd;
+  --color-secondary: #57387a;
+  --color-success: #5daf89;
+  --color-danger: #63252b;
+  --color-warning: #715e2b;
+  --color-info: #4f5871;
+  --color-light: #f4ece8;
+  --color-dark: #323130;
+
+  --color-background: #39393f;
+  --color-surface: #434348;
+  --color-surface-strong: #4d4d58;
+  --color-text: #f7f7f7;
+  --color-text-muted: #cdd0d1;
+  --color-border: #292828;
+}
+
+/* ---------------------------------------------- */
 
 body {
   font-family: Arial, Helvetica, sans-serif;
@@ -20,7 +85,7 @@ body {
 }
 
 .mode-ventura {
-  filter: invert(1) hue-rotate(100deg) contrast(0.80) saturate(0.8) sepia(0.1);
+  filter: invert(1) hue-rotate(100deg) contrast(0.8) saturate(0.8) sepia(0.1);
 }
 
 .mode-clean {

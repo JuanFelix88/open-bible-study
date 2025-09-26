@@ -1,20 +1,22 @@
 "use client";
-import ArrowLeftIconImage from "@/assets/icons/arrow-left.svg";
-import ArrowRightIconImage from "@/assets/icons/arrow-right.svg";
-import HomeIconImage from "@/assets/icons/home.svg";
 import { BookInfo } from "@/entities/BookInfo";
 import type { Chapter } from "@/entities/Chapter";
+import { Reference } from "@/entities/Reference";
 import { SingleEvent } from "@/entities/SingleEvent";
+import { useDialog } from "@/hooks/useDialog";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MouseEvent, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import DocRefIcon from "@/assets/icons/doc-ref.svg";
-import { Reference } from "@/entities/Reference";
-import { useDialog } from "@/hooks/useDialog";
+import HomeIcon from "../components/icons/HomeIcon";
+import ArrowLeftIcon from "../components/icons/ArrowLeftIcon";
+import ArrowRightIcon from "../components/icons/ArrowRightIcon";
+import RefIcon from "../components/icons/RefIcon";
+import CompareIcon from "../components/icons/CompareIcon";
+import ShareIcon from "../components/icons/ShareIcon";
+import DocumentIcon from "../components/icons/DocumentIcon";
 
 function referencesIncludesVerse(
   references: Reference[] | undefined,
@@ -36,7 +38,6 @@ function referencesIncludesVerse(
 
 export default function Reader() {
   const { ref: refHeader, inView: inViewHeader } = useInView({
-    threshold: 0.3,
   });
   const searchParams = useSearchParams();
   const bookAbbr = searchParams.get("book") || "";
@@ -240,106 +241,76 @@ export default function Reader() {
   const bookName =
     books?.find((b) => b.abbr.toLowerCase() === bookAbbr.toLowerCase())?.name ??
     "...";
-  const chapterText = `Chapter ${chapterNumber ?? "..."}`;
+  const chapterText = chapterNumber?.toString() ?? "...";
   const versionText = versionAbbr ?? "...";
 
   return (
-    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-15 bg-backcolor">
+    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-15 bg-background relative text-text">
       {!inViewHeader && (
-        <div className="select-none fixed top-0 left-0 w-full bg-backcolor border-b border-gray-300 p-6 py-2 z-40 shadow animate-show-from-top">
+        <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-40 shadow animate-show-from-top">
           <div className="flex items-center">
             <div className="flex flex-col">
               {isLoadingBooks ? (
-                <div className="w-10/12 h-6 rounded-sm bg-slate-400/70 animate-pulse mb-1" />
+                <div className="w-10/12 h-6 rounded-sm bg-surface animate-pulse mb-1" />
               ) : (
-                <h1 className="text-2xl font-bold">{bookName}</h1>
+                <h1 className="text-2xl sm:text-4xl font-bold">
+                  {bookName} {chapterText}
+                </h1>
               )}
-              <h2 className="text-sm font-bold opacity-70">{chapterText}</h2>
-              <h3 className="text-xs font-bold opacity-50">{versionText}</h3>
+              <h3 className="text-xs font-bold text-text/50">{versionText}</h3>
             </div>
             <div className="flex ml-auto">
               <Link
                 href="/"
-                className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-gray-300 opacity-80"
+                className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
               >
-                <Image
-                  width={30}
-                  height={30}
-                  src={HomeIconImage}
-                  alt="Image - home icon"
-                />
+                <HomeIcon width={30} height={30} />
               </Link>
               <button
-                className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-gray-300 opacity-80"
+                className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
                 onClick={handlePreviousChapter}
                 disabled={!chapter?.previous}
               >
-                <Image
-                  width={30}
-                  height={30}
-                  src={ArrowLeftIconImage}
-                  alt="Image - next left icon"
-                />
+                <ArrowLeftIcon width={30} height={30} />
               </button>
               <button
-                className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-gray-300 opacity-80"
+                className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
                 onClick={handleNextChapter}
                 disabled={!chapter?.next}
               >
-                <Image
-                  width={30}
-                  height={30}
-                  src={ArrowRightIconImage.src}
-                  alt="Image - next right icon"
-                />
+                <ArrowRightIcon width={30} height={30} />
               </button>
             </div>
           </div>
         </div>
       )}
       <div className="flex items-center select-none">
-        <div className="flex flex-col">
+        <div className="flex flex-col mb-2">
           <h1 className="text-2xl sm:text-4xl font-bold" ref={refHeader}>
-            {bookName}
+            {bookName} {chapterText}
           </h1>
-          <h2 className="text-sm font-bold opacity-70">{chapterText}</h2>
-          <h3 className="text-xs font-bold opacity-50">{versionText}</h3>
+          <h3 className="text-xs font-bold text-text/50">{versionText}</h3>
         </div>
         <div className="flex ml-auto min-w-[180px] pr-2">
           <Link
             href="/"
-            className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-gray-300 opacity-80"
+            className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
           >
-            <Image
-              width={30}
-              height={30}
-              src={HomeIconImage}
-              alt="Image - home icon"
-            />
+            <HomeIcon width={30} height={30} />
           </Link>
           <button
-            className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-gray-300 opacity-80"
+            className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
             onClick={handlePreviousChapter}
             disabled={!chapter?.previous}
           >
-            <Image
-              width={30}
-              height={30}
-              src={ArrowLeftIconImage.src}
-              alt="Image - next left icon"
-            />
+            <ArrowLeftIcon width={30} height={30} />
           </button>
           <button
-            className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-gray-300 opacity-80"
+            className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
             onClick={handleNextChapter}
             disabled={!chapter?.next}
           >
-            <Image
-              width={30}
-              height={30}
-              src={ArrowRightIconImage.src}
-              alt="Image - next right icon"
-            />
+            <ArrowRightIcon width={30} height={30} />
           </button>
         </div>
       </div>
@@ -349,11 +320,11 @@ export default function Reader() {
         <div className="flex flex-col gap-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex flex-col gap-1">
-              <div className="w-10/12 h-6 rounded-sm bg-slate-700/30 animate-pulse mb-1" />
-              <div className="w-full h-6 rounded-sm bg-slate-700/30 animate-pulse mb-1" />
-              <div className="w-3/6 h-6 rounded-sm bg-slate-700/30 animate-pulse mb-1" />
-              <div className="w-5/6 h-6 rounded-sm bg-slate-700/30 animate-pulse mb-1" />
-              <div className="w-2/6 h-6 rounded-sm bg-slate-700/30 animate-pulse mb-1" />
+              <div className="w-10/12 h-6 rounded-sm bg-surface animate-pulse mb-1" />
+              <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
+              <div className="w-3/6 h-6 rounded-sm bg-surface animate-pulse mb-1" />
+              <div className="w-5/6 h-6 rounded-sm bg-surface animate-pulse mb-1" />
+              <div className="w-2/6 h-6 rounded-sm bg-surface animate-pulse mb-1" />
             </div>
           ))}
         </div>
@@ -368,8 +339,8 @@ export default function Reader() {
             ref={selectedVerse === verseIndex + 1 ? refSelected : null}
             className={
               selectedVerse === verseIndex + 1
-                ? "cursor-cell w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-amber-100 underline underline-offset-2 decoration-dashed decoration-amber-700 relative"
-                : "cursor-cell w-full mt-1 text-lg hover:bg-gray-300 select-none rounded-md px-1 py-[2px] hide-buttons"
+                ? "cursor-cell text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative"
+                : "cursor-cell text-text/95 w-full mt-1 text-lg hover:bg-surface select-none rounded-md px-1 py-[2px] hide-buttons"
             }
             onClick={handleClickVerse}
           >
@@ -377,38 +348,58 @@ export default function Reader() {
               {verseIndex + 1}
             </sup>{" "}
             {verse}
-            <div className="control-buttons absolute left-0 -bottom-9 z-20 rounded-sm bg-amber-200  border-amber-700 border border-dashed p-1 w-full gap-2 flex flex-wrap">
+            <div className="control-buttons absolute left-0 -bottom-9 z-20 rounded-sm bg-secondary border-primary border border-dashed p-1 w-full gap-2 flex flex-wrap">
               <button
-                className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100"
+                className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
                 onClick={(e) => handleOpenReferences(e, verseIndex)}
               >
                 <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
                   [1]
                 </span>
+                <RefIcon
+                  className="sm:hidden mr-1 opacity-80"
+                  width={12}
+                  height={12}
+                />
                 Ref.
               </button>
               <button
-                className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100"
+                className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
                 onClick={(e) => handleCompare(e, verseIndex)}
               >
-                <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">[2]</span>
+                <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                  [2]
+                </span>
+                <CompareIcon
+                  className="sm:hidden mr-1 opacity-80"
+                  width={12}
+                  height={12}
+                />
                 Compare
               </button>
-              <button className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100"
+              <button
+                className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
                 onClick={(e) => handleShare(e, verseIndex + 1)}
               >
                 <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
                   [3]
                 </span>
+                <ShareIcon
+                  className="sm:hidden mr-1 opacity-80"
+                  width={12}
+                  height={12}
+                />
                 Share
               </button>
               <button
-                className="border rounded-sm py-0.5 sm:py-0 items-center px-[7px] border-dashed border-gray-400 text-sm bg-gray-100 flex cursor-pointer hover:bg-amber-100"
+                className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
                 onClick={() => setSelectedVerse(null)}
               >
-                <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">[Esc]</span>
+                <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                  [Esc]
+                </span>
                 <span className="hidden sm:inline">Unselect</span>
-                <span className="sm:hidden">X</span>
+                <span className="sm:hidden mx-1">X</span>
               </button>
             </div>
           </div>
@@ -419,13 +410,8 @@ export default function Reader() {
               chapter.book.chapter.number,
               verseIndex + 1
             ) && (
-              <div className="flex rounded-full opacity-85 animate-fade-in-from-bottom">
-                <Image
-                  width={16}
-                  height={16}
-                  src={DocRefIcon}
-                  alt="Icon - document reference"
-                />
+              <div className="flex rounded-full text-text/70 animate-fade-in-from-bottom">
+                <DocumentIcon width={16} height={16} />
               </div>
             )}
           </div>
