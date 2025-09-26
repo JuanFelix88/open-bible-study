@@ -76,13 +76,18 @@ export async function generateMetadata({
     };
   }
 
+  const title = `${version.toUpperCase()} - ${chapterData?.book.name} ${
+    chapterData?.book.chapter.number
+  }:${verse}`;
+  const description = `Read: ${chapterData.book.chapter.verses
+    .at(verse - 1)
+    ?.substring(0, 120)}...`;
+
   return {
-    title: `${version.toUpperCase()} - ${chapterData?.book.name} ${
-      chapterData?.book.chapter.number
-    }:${verse}`,
-    description: `Read: ${chapterData.book.chapter.verses
-      .at(verse - 1)
-      ?.substring(0, 120)}...`,
+    title: {
+      absolute: title,
+    },
+    description: description,
     metadataBase: null,
     alternates: {},
     openGraph: {},
