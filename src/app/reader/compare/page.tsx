@@ -1,5 +1,5 @@
 "use client";
-import ArrowLeftIcon from '@/app/components/icons/ArrowLeftIcon';
+import ArrowLeftIcon from "@/app/components/icons/ArrowLeftIcon";
 import type { Chapter } from "@/entities/Chapter";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
@@ -15,6 +15,7 @@ export default function Compare() {
   const verseNumber = searchParams.get("verse")
     ? parseInt(searchParams.get("verse")!, 10)
     : null;
+
   const { data: verseVersions, isLoading: isLoadingVerseVersions } = useQuery({
     queryKey: ["compare", bookAbbr, chapterNumber, verseNumber],
     queryFn: async () => {
@@ -31,7 +32,7 @@ export default function Compare() {
   });
 
   function handleOnPrevious() {
-    router.back()
+    router.back();
   }
 
   const chapterText = chapterNumber?.toString() ?? "...";
@@ -42,21 +43,17 @@ export default function Compare() {
         <div className="flex items-center">
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold">
-              {verseVersions?.at(0)?.book.name || "..."} {chapterText}:{verseNumber || "..."}
+              {verseVersions?.at(0)?.book.name || "..."} {chapterText}:
+              {verseNumber || "..."}
             </h1>
-            <h4 className="text-xs font-bold opacity-70">
-              Compare versions:
-            </h4>
+            <h4 className="text-xs font-bold opacity-70">Compare versions:</h4>
           </div>
           <div className="flex ml-auto">
             <button
               onClick={handleOnPrevious}
               className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
             >
-              <ArrowLeftIcon
-                width={30}
-                height={30}
-              />
+              <ArrowLeftIcon width={30} height={30} />
             </button>
           </div>
         </div>

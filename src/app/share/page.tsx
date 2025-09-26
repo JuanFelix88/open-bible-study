@@ -84,6 +84,10 @@ export async function generateMetadata({
       .at(verse - 1)
       ?.substring(0, 120)}...`,
     metadataBase: null,
+    alternates: {},
+    openGraph: {},
+    twitter: {},
+    robots: {},
   } satisfies Metadata;
 }
 
