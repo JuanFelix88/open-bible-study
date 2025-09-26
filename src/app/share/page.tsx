@@ -1,8 +1,8 @@
+import ProcessRedirectShareLink from "@/components/RedirectsShare";
 import { BibleVersionsRepository } from "@/repositories/BibleVersionsRepository";
 import { FnNormalizer } from "@/utils/FnNormalizer";
 import { Params, ParamType } from "@/utils/Params";
 import { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 type Props = {
   params: Promise<any>;
@@ -81,47 +81,15 @@ export async function generateMetadata({
   } satisfies Metadata;
 }
 
-export default async function SharePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const searchParamsResolved = await searchParams;
-  const [version, versionParamError] = Params.getRequiredParam(
-    "version",
-    searchParamsResolved as any
-  );
-  const [abbr, abbrParamError] = Params.getRequiredParam(
-    "book",
-    searchParamsResolved as any
-  );
-  const [chapter, chapterParamError] = Params.getRequiredParam(
-    "chapter",
-    searchParamsResolved as any,
-    ParamType.NUMBER
-  );
-  const [verse, verseParamError] = Params.getRequiredParam(
-    "verse",
-    searchParamsResolved as any,
-    ParamType.NUMBER
-  );
-
-  if (
-    versionParamError ||
-    abbrParamError ||
-    chapterParamError ||
-    verseParamError
-  ) {
-    console.log({
-      versionParamError,
-      abbrParamError,
-      chapterParamError,
-      verseParamError,
-    });
-    return redirect("/");
-  }
-
-  redirect(
-    `/reader?book=${abbr}&chapter=${chapter}&version=${version}&verse=${verse}`
+export default async function SharePage() {
+  return (
+    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-15 bg-background relative text-text">
+      <h1 className="text-2xl sm:text-4xl font-bold text-center">
+        Redirecting...
+      </h1>
+      <p className="mt-4 text-lg text-center">Please wait a moment.</p>
+      <p className="mt-4 text-lg text-center">If not redirected, click </p>
+      <ProcessRedirectShareLink />
+    </div>
   );
 }
