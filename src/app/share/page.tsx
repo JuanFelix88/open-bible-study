@@ -80,8 +80,7 @@ export async function generateMetadata({
     chapterData?.book.chapter.number
   }:${verse}`;
   const description = `Read: ${chapterData.book.chapter.verses
-    .at(verse - 1)
-    ?.substring(0, 120)}...`;
+    .at(verse - 1)}`;
 
   return {
     title: {
