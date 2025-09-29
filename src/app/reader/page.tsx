@@ -223,7 +223,7 @@ export default function Reader() {
           behavior: "smooth",
           block: "center",
         });
-      }, 200);
+      }, 240);
     }
   }, [bookAbbr, chapterNumber]);
 
