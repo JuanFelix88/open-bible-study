@@ -15,6 +15,7 @@ import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 function getVerse(
   bookAbbr: string,
@@ -201,6 +202,17 @@ export default function References() {
         queryclient.invalidateQueries({ queryKey: ["references-details"] })
       );
   }
+
+  function handleOnKeyDown(e: KeyboardEvent) {
+    if (e.key === "Escape") {
+      router.back();
+    }
+  }
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleOnKeyDown);
+    return () => window.removeEventListener("keydown", handleOnKeyDown);
+  }, []);
 
   const bookName =
     books?.find((b) => b.abbr.toLowerCase() === bookAbbr?.toLowerCase())

@@ -47,7 +47,6 @@ export default function ReferenceMutation() {
     ParamType.NUMBER
   );
 
-
   const isEditMode = Boolean(editId);
   const [searchText, setSearchText] = useState("");
   const [noteText, setNoteText] = useState("");
@@ -152,7 +151,23 @@ export default function ReferenceMutation() {
     );
   }
 
-  
+  function handleOnKeyDown(e: KeyboardEvent) {
+    if (e.key === "Escape" && isSelectingVerse) {
+      setIsSelectingVerse(false);
+      return;
+    }
+
+    if (e.key === "Escape") {
+      router.back();
+      return;
+    }
+  }
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleOnKeyDown);
+    return () => window.removeEventListener("keydown", handleOnKeyDown);
+  }, [isSelectingVerse]);
+
   const title = isEditMode ? "Edit Reference:" : "Add Reference:";
   const displayBook = book ? book.name : "Unknown Book";
   const displayChapter = `${povChapterNumber ?? "..."}`;
@@ -165,7 +180,9 @@ export default function ReferenceMutation() {
       <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-10 shadow">
         <div className="flex items-center">
           <div className="flex flex-col">
-            <h1 className="text-2xl font-bold">{displayBook} {displayChapter}:{displayVerse}</h1>
+            <h1 className="text-2xl font-bold">
+              {displayBook} {displayChapter}:{displayVerse}
+            </h1>
             <h4 className="text-xs font-bold opacity-70">{title}</h4>
           </div>
           <div className="flex ml-auto">

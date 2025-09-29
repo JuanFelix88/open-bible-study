@@ -1,7 +1,7 @@
 import { SearchResult } from "@/entities/SearchResult";
 import { BibleVersionsRepository } from "@/repositories/BibleVersionsRepository";
 import { FnNormalizer } from "@/utils/FnNormalizer";
-import { Params } from "@/utils/Params";
+import { Params, ParamType } from "@/utils/Params";
 import { ResponseError } from "@/utils/ResponseError";
 import { StringCompare } from "@/utils/StringCompare";
 import { NextRequest, NextResponse } from "next/server";
@@ -13,6 +13,7 @@ export async function GET(
   const params = await ctx.params;
   const url = req.nextUrl;
   const [queryText] = Params.getParamFromSearchParams("q", url.searchParams);
+  const [count] = Params.getParamFromSearchParams("count", url.searchParams, ParamType.NUMBER);
 
   const [versionAbbr, versionAbbrError] = Params.getRequiredParam(
     "version_abbr",
@@ -44,12 +45,8 @@ export async function GET(
     percent: number;
   })[] = [];
   for (const book of version) {
-    if (matches.length >= 10) break;
     for (const chapterNumber in book.chapters) {
-      if (matches.length >= 10) break;
       for (const verseNumber in book.chapters[chapterNumber]) {
-        if (matches.length >= 10) break;
-
         const tokensMatches = tokens.filter((token) =>
           StringCompare.containsIgnoreCaseAndDiacritics(
             book.chapters[chapterNumber][verseNumber],
@@ -85,6 +82,6 @@ export async function GET(
   }
 
   return NextResponse.json(
-    matches.sort((a, b) => b.countMatches - a.countMatches)
+    matches.sort((a, b) => b.countMatches - a.countMatches).slice(0, count || 20)
   );
 }

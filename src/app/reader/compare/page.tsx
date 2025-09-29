@@ -8,6 +8,7 @@ import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import { Fragment } from "react/jsx-dev-runtime";
 
@@ -46,8 +47,18 @@ export default function Compare() {
     router.back();
   }
 
-  const chapterText = chapterNumber?.toString() ?? "...";
+  function handleOnKeyDown(e: KeyboardEvent) {
+    if (e.key === "Escape") {
+      router.back();
+    }
+  }
 
+  useEffect(() => {
+    window.addEventListener("keydown", handleOnKeyDown);
+    return () => window.removeEventListener("keydown", handleOnKeyDown);
+  }, []);
+
+  const chapterText = chapterNumber?.toString() ?? "...";
   const selectedVersion = verseVersions?.find((v) =>
     StringCompare.isEqualIgnoringCase(v.version, version ?? "")
   );
@@ -102,14 +113,22 @@ export default function Compare() {
 
       <div
         ref={refSelectedVersion}
-        className={inViewSelectedVersion ? "h-1 w-full bg-background text-background" : "mb-20 h-1 w-full bg-background text-background"}
+        className={
+          inViewSelectedVersion
+            ? "h-1 w-full bg-background text-background"
+            : "mb-20 h-1 w-full bg-background text-background"
+        }
       >
         -
       </div>
       {selectedVersion && (
-        <div className={
-          inViewSelectedVersion ? "block" : "fixed left-0 top-16 px-7 z-50 animate-show-from-top bg-background border-b border-b-border shadow-primary/80"
-        }>
+        <div
+          className={
+            inViewSelectedVersion
+              ? "block"
+              : "fixed left-0 top-16 px-7 z-50 animate-show-from-top bg-background border-b border-b-border shadow-primary/80"
+          }
+        >
           <div className="mb-1 text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative">
             <sup className="font-bold border rounded-sm px-[2px]  border-dashed border-gray-400">
               {selectedVersion.version}
@@ -118,7 +137,6 @@ export default function Compare() {
           </div>
         </div>
       )}
-
 
       {othersVersions?.map((verse, index) => (
         <div
