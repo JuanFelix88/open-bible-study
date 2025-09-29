@@ -1,13 +1,19 @@
 "use client";
 import ArrowLeftIcon from "@/app/components/icons/ArrowLeftIcon";
-import type { Chapter } from "@/entities/Chapter";
+import LinkIcon from '@/app/components/icons/LinkIcon';
+import { ChapterWithDiffs } from "@/entities/ChapterWithDiffs";
+import { Params } from "@/utils/Params";
+import { StringCompare } from "@/utils/StringCompare";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
+import Link from 'next/link';
 import { useRouter, useSearchParams } from "next/navigation";
+import { Fragment } from "react/jsx-dev-runtime";
 
 export default function Compare() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [version] = Params.getParamFromSearchParams("version", searchParams);
   const bookAbbr = searchParams.get("book") || "";
   const chapterNumber = searchParams.get("chapter")
     ? parseInt(searchParams.get("chapter")!, 10)
@@ -18,6 +24,7 @@ export default function Compare() {
 
   const { data: verseVersions, isLoading: isLoadingVerseVersions } = useQuery({
     queryKey: ["compare", bookAbbr, chapterNumber, verseNumber],
+    gcTime: 0,
     queryFn: async () => {
       const versesCompareResponse = await fetch(
         `/api/versions/compare/${bookAbbr}/${chapterNumber}/${verseNumber}`
@@ -27,7 +34,7 @@ export default function Compare() {
 
       const chapterData = await versesCompareResponse.json();
 
-      return chapterData as Chapter[];
+      return chapterData as ChapterWithDiffs[];
     },
   });
 
@@ -36,6 +43,18 @@ export default function Compare() {
   }
 
   const chapterText = chapterNumber?.toString() ?? "...";
+
+  const selectedVersion = verseVersions?.find((v) =>
+    StringCompare.isEqualIgnoringCase(v.version, version ?? "")
+  );
+
+  const othersVersions = verseVersions
+    ?.filter(
+      (v) => !StringCompare.isEqualIgnoringCase(v.version, version ?? "")
+    )
+    .toReversed();
+
+  console.log(othersVersions);
 
   return (
     <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text">
@@ -75,18 +94,60 @@ export default function Compare() {
         </div>
       )}
 
-      {verseVersions?.map((verse, index) => (
+      {selectedVersion && (
+        <div className="cursor-cell mb-3 text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative">
+          <sup className="font-bold border rounded-sm px-[2px]  border-dashed border-gray-400">
+            {selectedVersion.version}
+          </sup>{" "}
+          {selectedVersion.book.chapter.verses.at(0)}
+        </div>
+      )}
+
+      {othersVersions?.map((verse, index) => (
         <div
           key={index}
           id={(index + 1).toString()}
-          className="cursor-cell text-text/80 mt-3 text-lg hover:bg-surface select-none rounded-md px-1 py-[2px] hide-buttons border-b border-border border-dashed"
+          className="text-text/95 w-full mt-1 border-t border-dashed border-t-border/70 pt-3 text-lg select-none rounded-md px-1 py-[2px] hide-buttons"
         >
-          <h2 className="text-xl font-medium italic">{verse.version}</h2>
-          <sup className="font-bold border rounded-sm px-[2px]  border-dashed border-border">
-            {verse.book.name} {verse.book.chapter.number}:{verseNumber}
-          </sup>
+          <sup className="font-bold border rounded-sm px-[2px] border-dashed border-gray-400 -mb-5">
+            {verse.version}
+          </sup>{" "}
           <br />
-          {verse.book.chapter.verses.at(0) || "..."}
+          <div className="flex flex-wrap">
+            {verse.diffs.map((token, tokenIndex) => (
+              <Fragment key={token.token + tokenIndex + verse.version}>
+                <span className="mr-1.5">{tokenIndex > 1 ? " " : ""}</span>
+                <span
+                  className={
+                    token.level === 0
+                      ? "bg-danger/30 rounded-sm mt-0.5"
+                      : token.level === 1
+                      ? "bg-danger/20 rounded-sm mt-0.5"
+                      : token.level === 2
+                      ? "bg-warning/10 rounded-sm mt-0.5"
+                      : token.level === 3
+                      ? "rounded-sm"
+                      : ""
+                  }
+                >
+                  {token.token}
+                </span>
+              </Fragment>
+            ))}
+          </div>
+          <div className="flex w-full pt-3 gap-1.5">
+            <Link
+              className="text-[0.75rem] bg-surface p-1 px-3 rounded hover:bg-info/30 cursor-pointer"
+              href={`/reader?version=${verse.version}&book=${bookAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`}
+            >
+              <LinkIcon
+                width={13}
+                height={13}
+                className="inline -mt-0.5 mr-1"
+              />
+              Open
+            </Link>
+          </div>
         </div>
       ))}
     </div>

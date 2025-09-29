@@ -48,4 +48,10 @@ export class StringCompare extends StaticClass {
 
     return a.toString().toLowerCase() === b.toString().toLowerCase();
   }
+
+  public static isEqualIgnoringCaseAndAccents(a: Primitive, b: Primitive): boolean {
+    if (!a || !b) return false;
+
+    return a.toString().toLowerCase().replaceAll(/[\).,!?\(;]/g, "") === b.toString().toLowerCase().replaceAll(/[\).,!?\(;]/g, "");
+  }
 }

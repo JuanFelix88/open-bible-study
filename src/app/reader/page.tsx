@@ -147,7 +147,7 @@ export default function Reader() {
 
   function handleCompare(ev: SingleEvent, verseIndex: number) {
     router.push(
-      `/reader/compare?book=${bookAbbr}&chapter=${chapterNumber}&verse=${
+      `/reader/compare?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${
         verseIndex + 1
       }`
     );
