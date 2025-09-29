@@ -1,13 +1,14 @@
 "use client";
 import ArrowLeftIcon from "@/app/components/icons/ArrowLeftIcon";
-import LinkIcon from '@/app/components/icons/LinkIcon';
+import LinkIcon from "@/app/components/icons/LinkIcon";
 import { ChapterWithDiffs } from "@/entities/ChapterWithDiffs";
 import { Params } from "@/utils/Params";
 import { StringCompare } from "@/utils/StringCompare";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
-import Link from 'next/link';
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useInView } from "react-intersection-observer";
 import { Fragment } from "react/jsx-dev-runtime";
 
 export default function Compare() {
@@ -22,9 +23,12 @@ export default function Compare() {
     ? parseInt(searchParams.get("verse")!, 10)
     : null;
 
+  const { ref: refSelectedVersion, inView: inViewSelectedVersion } = useInView({
+    threshold: 0.5,
+  });
+
   const { data: verseVersions, isLoading: isLoadingVerseVersions } = useQuery({
     queryKey: ["compare", bookAbbr, chapterNumber, verseNumber],
-    gcTime: 0,
     queryFn: async () => {
       const versesCompareResponse = await fetch(
         `/api/versions/compare/${bookAbbr}/${chapterNumber}/${verseNumber}`
@@ -65,7 +69,9 @@ export default function Compare() {
               {verseVersions?.at(0)?.book.name || "..."} {chapterText}:
               {verseNumber || "..."}
             </h1>
-            <h4 className="text-xs font-bold opacity-70">Compare versions:</h4>
+            <h4 className="text-xs font-bold opacity-70">
+              Compare versions with:
+            </h4>
           </div>
           <div className="flex ml-auto">
             <button
@@ -94,14 +100,25 @@ export default function Compare() {
         </div>
       )}
 
+      <div
+        ref={refSelectedVersion}
+        className={inViewSelectedVersion ? "h-1 w-full bg-background text-background transition-[margin]" : "mb-18 h-1 w-full bg-background text-background transition-[margin]"}
+      >
+        -
+      </div>
       {selectedVersion && (
-        <div className="cursor-cell mb-3 text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative">
-          <sup className="font-bold border rounded-sm px-[2px]  border-dashed border-gray-400">
-            {selectedVersion.version}
-          </sup>{" "}
-          {selectedVersion.book.chapter.verses.at(0)}
+        <div className={
+          inViewSelectedVersion ? "block" : "fixed left-0 top-16 px-7 z-50 animate-show-from-top bg-background border-b border-b-border shadow-primary/80"
+        }>
+          <div className="mb-1 text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative">
+            <sup className="font-bold border rounded-sm px-[2px]  border-dashed border-gray-400">
+              {selectedVersion.version}
+            </sup>{" "}
+            {selectedVersion.book.chapter.verses.at(0)}
+          </div>
         </div>
       )}
+
 
       {othersVersions?.map((verse, index) => (
         <div
@@ -126,7 +143,7 @@ export default function Compare() {
                       : token.level === 2
                       ? "bg-warning/10 rounded-sm mt-0.5"
                       : token.level === 3
-                      ? "rounded-sm"
+                      ? "rounded-sm mt-0.5"
                       : ""
                   }
                 >
@@ -145,7 +162,7 @@ export default function Compare() {
                 height={13}
                 className="inline -mt-0.5 mr-1"
               />
-              Open
+              Open {verse.version}
             </Link>
           </div>
         </div>

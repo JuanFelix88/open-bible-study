@@ -47,9 +47,11 @@ export default function ReferenceMutation() {
     ParamType.NUMBER
   );
 
+
+  const isEditMode = Boolean(editId);
   const [searchText, setSearchText] = useState("");
   const [noteText, setNoteText] = useState("");
-  const [isSelectingVerse, setIsSelectingVerse] = useState(false);
+  const [isSelectingVerse, setIsSelectingVerse] = useState(!isEditMode);
   const [selectedVerse, setSelectedVerse] = useState<LinkToVerse | null>();
   const outSearchText = useDebounce(searchText, 200);
 
@@ -150,7 +152,7 @@ export default function ReferenceMutation() {
     );
   }
 
-  const isEditMode = Boolean(editId);
+  
   const title = isEditMode ? "Edit Reference:" : "Add Reference:";
   const displayBook = book ? book.name : "Unknown Book";
   const displayChapter = `${povChapterNumber ?? "..."}`;
