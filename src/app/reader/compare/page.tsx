@@ -102,7 +102,7 @@ export default function Compare() {
 
       <div
         ref={refSelectedVersion}
-        className={inViewSelectedVersion ? "h-1 w-full bg-background text-background transition-[margin]" : "mb-18 h-1 w-full bg-background text-background transition-[margin]"}
+        className={inViewSelectedVersion ? "h-1 w-full bg-background text-background" : "mb-18 h-1 w-full bg-background text-background"}
       >
         -
       </div>
