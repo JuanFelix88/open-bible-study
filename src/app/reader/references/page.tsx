@@ -233,7 +233,7 @@ export default function References() {
           </div>
         </div>
       </div>
-      <hr className="mt-14 opacity-0" />
+      <hr className="mt-11 opacity-0" />
 
       {isLoadingReferencesDetails && (
         <div className="flex flex-row gap-2 animate-pulse my-2">

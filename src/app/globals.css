@@ -75,6 +75,24 @@
   --color-border: #474756;
 }
 
+[data-theme="midnight"] {
+  --color-primary: #42e66c;
+  --color-secondary: #8676fa;
+  --color-success: #6dfb90;
+  --color-danger: #ff71ac;
+  --color-warning: #efa554;
+  --color-info: #9486ff;
+  --color-light: #f4ece8;
+  --color-dark: #1a1d23;
+
+  --color-background: #1a1d23;
+  --color-surface: #252738;
+  --color-surface-strong: #32354f;
+  --color-text: #FFFFFF;
+  --color-text-muted: #aab3c5;
+  --color-border: #c686f15d;
+}
+
 /* ---------------------------------------------- */
 
 body {

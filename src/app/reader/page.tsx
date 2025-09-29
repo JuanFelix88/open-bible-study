@@ -10,13 +10,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MouseEvent, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import HomeIcon from "../components/icons/HomeIcon";
 import ArrowLeftIcon from "../components/icons/ArrowLeftIcon";
 import ArrowRightIcon from "../components/icons/ArrowRightIcon";
-import RefIcon from "../components/icons/RefIcon";
 import CompareIcon from "../components/icons/CompareIcon";
-import ShareIcon from "../components/icons/ShareIcon";
 import DocumentIcon from "../components/icons/DocumentIcon";
+import HomeIcon from "../components/icons/HomeIcon";
+import RefIcon from "../components/icons/RefIcon";
+import ShareIcon from "../components/icons/ShareIcon";
 
 function referencesIncludesVerse(
   references: Reference[] | undefined,
@@ -110,6 +110,10 @@ export default function Reader() {
       {
         scroll: false,
       }
+    );
+
+    router.prefetch(
+      `/reader/references?version=${versionAbbr}&book=${bookAbbr}&chapter=${chapterNumber}&verse=${ev.target.id}`
     );
   }
 
