@@ -30,7 +30,7 @@ export default function Search() {
   const [searchVersionText, setSearchVersionText] = useState("");
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
   const [searchText, setSearchText] = useState("");
-  const debouncedSearchText = useDebounce(searchText, 300);
+  const debouncedSearchText = useDebounce(searchText, 150);
 
   const { data: versions } = useQuery({
     queryKey: ["versions"],
