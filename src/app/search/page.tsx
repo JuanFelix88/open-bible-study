@@ -4,19 +4,29 @@ import BibleIcon from "@/app/favicon.ico";
 import { SearchResult } from "@/entities/SearchResult";
 import { Version } from "@/entities/Version";
 import { useDebounce } from "@/hooks/useDebounce";
+import { Params } from "@/utils/Params";
 import { StringCompare } from "@/utils/StringCompare";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import LinkIcon from "../components/icons/LinkIcon";
 
 const displayVersionRegex =
   /^(?<book>[0-9]? ?[A-Za-zÀ-ÿ0-9]{1,}) (?<chapter>[0-9]{1,}):?(?<verse>[0-9]{1,})?$/;
 
 export default function Search() {
-  const [isSelectingVersion, setIsSelectingVersion] = useState(false);
+  const searchParams = useSearchParams();
+  const [versionAbbrParam] = Params.getParamFromSearchParams(
+    "version",
+    searchParams
+  );
+
+  const [isSelectingVersion, setIsSelectingVersion] = useState(
+    !versionAbbrParam
+  );
   const [searchVersionText, setSearchVersionText] = useState("");
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
   const [searchText, setSearchText] = useState("");
@@ -58,6 +68,16 @@ export default function Search() {
       return (await versionsResponse.json()) as SearchResult[];
     },
   });
+
+  useEffect(() => {
+    if (!versionAbbrParam || !versions) return;
+
+    const matchedVersion = versions.find((v) =>
+      StringCompare.isEqualIgnoringCase(v.abbreviation, versionAbbrParam)
+    );
+
+    setSelectedVersion(matchedVersion || null);
+  }, [versionAbbrParam, versions]);
 
   const filteredVersions = versions?.filter(
     (v) =>

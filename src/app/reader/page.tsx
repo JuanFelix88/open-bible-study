@@ -14,8 +14,8 @@ import ArrowLeftIcon from "../components/icons/ArrowLeftIcon";
 import ArrowRightIcon from "../components/icons/ArrowRightIcon";
 import CompareIcon from "../components/icons/CompareIcon";
 import DocumentIcon from "../components/icons/DocumentIcon";
-import HomeIcon from "../components/icons/HomeIcon";
 import RefIcon from "../components/icons/RefIcon";
+import SearchIcon from "../components/icons/SearchIcon";
 import ShareIcon from "../components/icons/ShareIcon";
 
 function referencesIncludesVerse(
@@ -269,10 +269,10 @@ export default function Reader() {
             </div>
             <div className="flex ml-auto">
               <Link
-                href="/"
-                className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
+                href={`/search?version=${versionAbbr}`}
+                className="cursor-pointer ml-4 mt-1.5 p-2 rounded-md hover:bg-surface opacity-80"
               >
-                <HomeIcon width={30} height={30} />
+                <SearchIcon width={25} height={25} />
               </Link>
               <button
                 className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
@@ -306,10 +306,10 @@ export default function Reader() {
         </div>
         <div className="flex ml-auto min-w-[180px] pr-2">
           <Link
-            href="/"
-            className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
+            href={`/search?version=${versionAbbr}`}
+            className="cursor-pointer ml-4 mt-1.5 p-2 rounded-md hover:bg-surface opacity-80"
           >
-            <HomeIcon width={30} height={30} />
+            <SearchIcon width={25} height={25} />
           </Link>
           <button
             className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
