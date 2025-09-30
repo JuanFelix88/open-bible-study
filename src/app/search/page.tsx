@@ -77,6 +77,7 @@ export default function Search() {
     );
 
     setSelectedVersion(matchedVersion || null);
+    document.querySelector<HTMLInputElement>("#search-texts")?.focus();
   }, [versionAbbrParam, versions]);
 
   const filteredVersions = versions?.filter(
@@ -161,6 +162,7 @@ export default function Search() {
             </button>
 
             <input
+              id="search-texts"
               hidden={!selectedVersion}
               autoFocus
               value={searchText}
