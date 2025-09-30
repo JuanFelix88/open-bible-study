@@ -77,7 +77,6 @@ export default function Search() {
     );
 
     setSelectedVersion(matchedVersion || null);
-    document.querySelector<HTMLInputElement>("#search-texts")?.focus();
   }, [versionAbbrParam, versions]);
 
   const filteredVersions = versions?.filter(
@@ -148,7 +147,7 @@ export default function Search() {
         {!isSelectingVersion && (
           <>
             <button
-              autoFocus
+              autoFocus={!!versionAbbrParam ? false : true}
               onClick={() => setIsSelectingVersion(true)}
               className="border border-border rounded-md p-2 mt-4 text-text bg-surface w-full hover:bg-surface-strong cursor-pointer select-none"
             >
@@ -162,7 +161,6 @@ export default function Search() {
             </button>
 
             <input
-              id="search-texts"
               hidden={!selectedVersion}
               autoFocus
               value={searchText}
