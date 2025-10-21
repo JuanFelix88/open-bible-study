@@ -17,6 +17,7 @@ import DocumentIcon from "../components/icons/DocumentIcon";
 import RefIcon from "../components/icons/RefIcon";
 import SearchIcon from "../components/icons/SearchIcon";
 import ShareIcon from "../components/icons/ShareIcon";
+import { Reading } from '@/entities/Reading';
 
 function referencesIncludesVerse(
   references: Reference[] | undefined,
@@ -240,6 +241,21 @@ export default function Reader() {
       );
     }
   }, [chapter]);
+
+  useEffect(() => {
+    const readingStr = localStorage.getItem("reading");
+
+    if (!readingStr) {
+      const newReading = new Reading(bookAbbr, chapterNumber || 1, selectedVerse);
+
+      localStorage.setItem("reading", JSON.stringify(newReading));
+      return
+    }
+    
+    const reading = Reading.fromString(readingStr)
+
+    
+  }, []);
 
   const bookName =
     books?.find((b) => b.abbr.toLowerCase() === bookAbbr.toLowerCase())?.name ??

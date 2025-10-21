@@ -71,7 +71,7 @@ export async function GET(
             allSizeMatches: countTotalTokensSize,
             exactMatch: false,
             displayText: `${book.abbrev} ${Number(chapterNumber) + 1}:${
-              verseNumber + 1
+              Number(verseNumber) + 1
             }`,
             text: book.chapters[chapterNumber][verseNumber],
             percent,

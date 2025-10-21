@@ -1,6 +1,6 @@
 import * as React from "react";
 import { SVGProps } from "react";
-const DocumentIcon = (props: SVGProps<SVGSVGElement>) => (
+const DocumentIcon = (props: SVGProps<SVGSVGElement> & { hidden?: boolean }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     xmlnsXlink="http://www.w3.org/1999/xlink"

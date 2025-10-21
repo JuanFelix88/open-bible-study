@@ -183,7 +183,7 @@ export default function References() {
             id,
             createdAt,
             note,
-            displayVerse: displayVerse ?? "Unknown Verse",
+            displayVerse: displayVerse ?? "",
             text,
             linkToOpen,
           };
@@ -261,7 +261,7 @@ export default function References() {
           ({ id, displayVerse, text, note, linkToOpen }) => (
             <div
               key={id + displayVerse}
-              className="flex select-none flex-col py-1 pl-3 px-2 border-l-4 border-border bg-surface hover:opacity-95 rounded"
+              className="flex select-none flex-col py-1 pl-3 px-2 bg-surface/50 hover:opacity-95 rounded"
             >
               <div className="flex items-center">
                 <span className="font-bold opacity-80">
@@ -271,13 +271,14 @@ export default function References() {
                   width={16}
                   height={16}
                   className="opacity-80 -mt-0.5 ml-1"
+                  hidden={!displayVerse}
                 />
               </div>
               <p className="text-lg">{text}</p>
               {note && (
                 <>
-                  <hr className="opacity-20 border-dashed my-1 mr-1" />
-                  <p className="mt-1 bg-surface-strong p-2 italic rounded">
+                  <hr className="opacity-20 border-dashed mb-1 mr-1" hidden={!displayVerse} />
+                  <p className="mt-1 italic rounded text-text/90">
                     {note}
                   </p>
                 </>
@@ -286,6 +287,7 @@ export default function References() {
                 <Link
                   className="text-[0.75rem] bg-surface-strong p-1 px-3 rounded hover:bg-info/30 cursor-pointer"
                   href={linkToOpen ?? "#"}
+                  hidden={!displayVerse}
                 >
                   <LinkIcon
                     width={13}
