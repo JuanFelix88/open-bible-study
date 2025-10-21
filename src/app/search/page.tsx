@@ -60,7 +60,7 @@ export default function Search() {
         : await fetch(
             `/api/versions/${versionAbbr}/search/deep?q=${encodeURIComponent(
               debouncedSearchText
-            )}&count=10`
+            )}&count=100`
           );
 
       ThrowByResponse.throwsIfNotOk(versionsResponse);
@@ -132,7 +132,7 @@ export default function Search() {
                 <span className="opacity-70 text-sm font-bold">
                   {version.abbreviation}
                 </span>
-                -<span>{version.name}</span>
+                -<span className='text-start max-w-4/6 text-ellipsis flex'>{version.name}</span>
                 <LinkIcon
                   width={16}
                   height={16}
