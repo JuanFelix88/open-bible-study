@@ -27,7 +27,7 @@ function getVerse(
 ) {
   const otherRelatedVerse = verses.find(
     (verse) =>
-      `${verse.abbrev.toLowerCase()} ${verse.numChapter}:${verseNumber}` !==
+      `${verse.abbrev.toLowerCase()} ${verse.numChapter}:${verse.numVerse}` !==
       `${bookAbbr?.toLowerCase()} ${chapterNumber}:${verseNumber}`
   );
 
