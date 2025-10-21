@@ -252,7 +252,7 @@ export default function Reader() {
       return
     }
     
-    const reading = Reading.fromString(readingStr)
+    // const reading = Reading.fromString(readingStr)
 
     
   }, []);
