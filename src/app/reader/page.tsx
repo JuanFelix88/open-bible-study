@@ -572,7 +572,7 @@ export default function Reader() {
                     width={12}
                     height={12}
                   />
-                  Compare
+                  Comp.
                 </button>
                 <button
                   className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
