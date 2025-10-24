@@ -258,6 +258,13 @@ export default function References() {
             </h4>
           </div>
           <div className="flex ml-auto">
+            <Link
+              className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
+              href={`/reader/references/add?book=${bookAbbr}&chapter=${chapterNumber}&verse=${verseNumber}&version=${versionAbbr}`}
+              hidden={isLoadingReferencesDetails}
+            >
+              <AddIcon width={30} height={30} />
+            </Link>
             <button
               onClick={handlePrevious}
               className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
@@ -267,7 +274,7 @@ export default function References() {
           </div>
         </div>
       </div>
-      <hr className="mt-11 opacity-0" />
+      <hr className="mt-13 opacity-0" />
 
       {/* Loading verse */}
       {isLoadingVerse && (

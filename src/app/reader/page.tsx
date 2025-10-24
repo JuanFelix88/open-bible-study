@@ -17,8 +17,9 @@ import DocumentIcon from "../components/icons/DocumentIcon";
 import RefIcon from "../components/icons/RefIcon";
 import SearchIcon from "../components/icons/SearchIcon";
 import ShareIcon from "../components/icons/ShareIcon";
-import { Reading } from "@/entities/Reading";
+import { ReadingMarker } from "@/entities/ReadingMarker";
 import CopyIcon from "../components/icons/CopyIcon";
+import MarkerIcon from "../components/icons/MarkerIcon";
 
 function referencesIncludesVerse(
   references: Reference[] | undefined,
@@ -51,6 +52,11 @@ export default function Reader() {
   const refSelected = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { setDialog } = useDialog();
+  const [candidateToMarker, setCandidateToMarker] = useState<number | null>(
+    null
+  );
+  const [readingMarkers, setReadingMarkers] = useState<ReadingMarker[]>([]);
+  const [markerName, setMarkerName] = useState("");
 
   const { data: books, isLoading: isLoadingBooks } = useQuery({
     queryKey: ["books"],
@@ -196,6 +202,68 @@ export default function Reader() {
     });
   }
 
+  function handleMarkerCandidate(ev: SingleEvent, verseNumber: number) {
+    ev.stopPropagation();
+
+    if (!selectedVerse) return;
+    if (!verseNumber) return;
+
+    if (candidateToMarker === verseNumber) {
+      setCandidateToMarker(null);
+      return;
+    }
+
+    setMarkerName(
+      readingMarkers.find((m) =>
+        m.compareTo(bookAbbr, chapterNumber, verseNumber)
+      )?.name || ""
+    );
+    setCandidateToMarker(verseNumber);
+  }
+
+  function handleSaveMarker() {
+    if (!markerName.trim()) {
+      setDialog({
+        title: "Set a marker name!",
+        message: `Please provide a name for the marker.`,
+        ms: 2500,
+      });
+      return;
+    }
+
+    const newReadingMarkers = [
+      ...readingMarkers.filter(
+        (m) =>
+          `${m.bookAbbr}-${m.chapter}-${m.verse}` !==
+          `${bookAbbr}-${chapterNumber}-${candidateToMarker}`
+      ),
+      new ReadingMarker(
+        markerName,
+        bookAbbr,
+        chapterNumber!,
+        candidateToMarker!
+      ),
+    ];
+
+    localStorage.setItem("markers", JSON.stringify(newReadingMarkers));
+    setReadingMarkers(newReadingMarkers);
+
+    setCandidateToMarker(null);
+    setMarkerName("");
+  }
+
+  function handleRemoveMarker() {
+    const updatedMarkers = readingMarkers.filter(
+      (m) =>
+        `${m.bookAbbr}-${m.chapter}-${m.verse}` !==
+        `${bookAbbr}-${chapterNumber}-${candidateToMarker}`
+    );
+    setReadingMarkers(updatedMarkers);
+    localStorage.setItem("markers", JSON.stringify(updatedMarkers));
+    setCandidateToMarker(null)
+    setMarkerName("");
+  }
+
   function handleOnKeyDown(event: KeyboardEvent) {
     const selected = document.querySelector(
       "div:has(.control-buttons):not(.hidden-buttons)"
@@ -272,7 +340,7 @@ export default function Reader() {
 
   function handleNextVerse() {
     setSelectedVerse((prev) => {
-      if (prev === null) return null;
+      if (prev === null) prev = 0;
       if (prev >= chapter!.book.chapter.verses.length) return prev;
       const nextVerse = prev + 1;
 
@@ -306,7 +374,7 @@ export default function Reader() {
   useEffect(() => {
     window.addEventListener("keydown", handleOnKeyDown);
     return () => window.removeEventListener("keydown", handleOnKeyDown);
-  }, [bookAbbr, chapterNumber, chapter]);
+  }, [bookAbbr, chapterNumber, chapter, selectedVerse]);
 
   useEffect(() => {
     if (selectedVerseParam && /[0-9]+/.test(selectedVerseParam)) {
@@ -329,20 +397,15 @@ export default function Reader() {
   }, [chapter]);
 
   useEffect(() => {
-    const readingStr = localStorage.getItem("reading");
+    const markersStr = localStorage.getItem("markers");
 
-    if (!readingStr) {
-      const newReading = new Reading(
-        bookAbbr,
-        chapterNumber || 1,
-        selectedVerse
-      );
+    if (!markersStr) return;
 
-      localStorage.setItem("reading", JSON.stringify(newReading));
-      return;
-    }
+    const markers: ReadingMarker[] = JSON.parse(markersStr).map((m: any) =>
+      ReadingMarker.fromObject(m)
+    );
 
-    // const reading = Reading.fromString(readingStr)
+    setReadingMarkers(markers);
   }, []);
 
   const bookName =
@@ -350,9 +413,12 @@ export default function Reader() {
     "...";
   const chapterText = chapterNumber?.toString() ?? "...";
   const versionText = versionAbbr ?? "...";
+  const isSettingMarker = candidateToMarker !== null;
+
+  console.log(readingMarkers)
 
   return (
-    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-18 bg-background relative text-text">
+    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-36 sm:pb-36  bg-background relative text-text">
       {!inViewHeader && (
         <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-40 shadow animate-show-from-top">
           <div className="flex items-center">
@@ -449,108 +515,182 @@ export default function Reader() {
 
       {/* Verses */}
       {chapter?.book.chapter.verses.map((verse, verseIndex) => (
-        <div key={verseIndex} className="flex flex-row ">
-          <div
-            key={verseIndex}
-            id={(verseIndex + 1).toString()}
-            ref={selectedVerse === verseIndex + 1 ? refSelected : null}
-            className={
-              selectedVerse === verseIndex + 1
-                ? "cursor-cell text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative"
-                : "cursor-cell text-text/95 w-full mt-1 text-lg hover:bg-surface select-none rounded-md px-1 py-[2px] hide-buttons"
-            }
-            onClick={handleClickVerse}
-          >
-            <sup className="font-bold border rounded-sm px-[2px]  border-dashed border-gray-400">
-              {verseIndex + 1}
-            </sup>{" "}
-            {verse}
-            <div className="control-buttons absolute left-0 -bottom-9 z-20 rounded-sm bg-secondary border-primary border border-dashed p-1 w-full gap-2 flex flex-wrap">
-              <button
-                className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                onClick={(e) => handleOpenReferences(e, verseIndex)}
-              >
-                <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                  [1]
-                </span>
-                <RefIcon
-                  className="sm:hidden mr-1 opacity-80"
-                  width={12}
-                  height={12}
-                />
-                Ref.
-              </button>
-              <button
-                className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                onClick={(e) => handleCompare(e, verseIndex)}
-              >
-                <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                  [2]
-                </span>
-                <CompareIcon
-                  className="sm:hidden mr-1 opacity-80"
-                  width={12}
-                  height={12}
-                />
-                Compare
-              </button>
-              <button
-                className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                onClick={(e) => handleShare(e, verseIndex + 1)}
-              >
-                <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                  [3]
-                </span>
-                <ShareIcon
-                  className="sm:hidden mr-1 opacity-80"
-                  width={12}
-                  height={12}
-                />
-                Share
-              </button>
-              <button
-                className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                onClick={(e) => handleCopyVerse(e, verseIndex + 1)}
-              >
-                <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                  [4]
-                </span>
-                <CopyIcon
-                  className="sm:hidden mr-1 opacity-80"
-                  width={12}
-                  height={12}
-                />
-                Copy
-              </button>
-              <button
-                className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                onClick={() => setSelectedVerse(null)}
-              >
-                <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                  [Esc]
-                </span>
-                <span className="hidden sm:inline">Unselect</span>
-                <span className="sm:hidden mx-1">X</span>
-              </button>
-            </div>
-          </div>
-          <div className="flex flex-start flex-col min-w-[20px] py-2 pl-1">
-            {referencesIncludesVerse(
-              references,
-              chapter.book.abbrev,
-              chapter.book.chapter.number,
-              verseIndex + 1
-            ) && (
-              <div
-                className={
-                  selectedVerse === verseIndex + 1
-                    ? "flex rounded-full text-primary animate-fade-in-from-bottom"
-                    : "flex rounded-full text-text/70 animate-fade-in-from-bottom"
+        <div key={verseIndex} className="flex flex-col">
+          {readingMarkers.some((m) =>
+            m.compareTo(bookAbbr, chapterNumber, verseIndex + 1)
+          ) && (
+            <div className="flex flex-row w-full items-center pr-5 mt-3">
+              <hr className="border-b border-dashed border-b-primary w-full" />
+              <span className='w-fit mx-2'>
+                {
+                  readingMarkers.find((m) =>
+                    m.compareTo(bookAbbr, chapterNumber, verseIndex + 1)
+                  )?.name
                 }
-              >
-                <DocumentIcon width={16} height={16} />
+              </span>
+              <hr className="border-b border-dashed border-b-primary w-full" />
+            </div>
+          )}
+          <div className="flex flex-row ">
+            <div
+              key={verseIndex}
+              id={(verseIndex + 1).toString()}
+              ref={selectedVerse === verseIndex + 1 ? refSelected : null}
+              className={
+                selectedVerse === verseIndex + 1
+                  ? "cursor-cell text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative"
+                  : "cursor-cell text-text/95 w-full mt-1 text-lg hover:bg-surface select-none rounded-md px-1 py-[2px] hide-buttons"
+              }
+              onClick={handleClickVerse}
+            >
+              <sup className="font-bold border rounded-sm px-[2px]  border-dashed border-gray-400">
+                {verseIndex + 1}
+              </sup>{" "}
+              {verse}
+              <div className="control-buttons absolute left-0 -bottom-9 z-20 rounded-sm bg-secondary border-primary border border-dashed p-1 w-full gap-2 flex flex-wrap">
+                <button
+                  className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                  onClick={(e) => handleOpenReferences(e, verseIndex)}
+                >
+                  <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                    [1]
+                  </span>
+                  <RefIcon
+                    className="sm:hidden mr-1 opacity-80"
+                    width={12}
+                    height={12}
+                  />
+                  Ref.
+                </button>
+                <button
+                  className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                  onClick={(e) => handleCompare(e, verseIndex)}
+                >
+                  <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                    [2]
+                  </span>
+                  <CompareIcon
+                    className="sm:hidden mr-1 opacity-80"
+                    width={12}
+                    height={12}
+                  />
+                  Compare
+                </button>
+                <button
+                  className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                  onClick={(e) => handleShare(e, verseIndex + 1)}
+                >
+                  <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                    [3]
+                  </span>
+                  <ShareIcon
+                    className="sm:hidden mr-1 opacity-80"
+                    width={12}
+                    height={12}
+                  />
+                  Share
+                </button>
+                <button
+                  className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                  onClick={(e) => handleCopyVerse(e, verseIndex + 1)}
+                >
+                  <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                    [4]
+                  </span>
+                  <CopyIcon
+                    className="sm:hidden mr-1 opacity-80"
+                    width={12}
+                    height={12}
+                  />
+                  Copy
+                </button>
+                <button
+                  className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                  onClick={(e) => handleMarkerCandidate(e, verseIndex + 1)}
+                >
+                  <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                    [5]
+                  </span>
+                  <MarkerIcon
+                    className="sm:hidden mr-1 opacity-80"
+                    width={12}
+                    height={12}
+                  />
+                  <span className="sm:block hidden">Marker</span>
+                  <span className="sm:hidden">M.</span>
+                </button>
+                <button
+                  className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                  onClick={() => setSelectedVerse(null)}
+                >
+                  <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                    [Esc]
+                  </span>
+                  <span className="hidden sm:inline">Unselect</span>
+                  <span className="sm:hidden mx-1">X</span>
+                </button>
               </div>
-            )}
+              {isSettingMarker && candidateToMarker === verseIndex + 1 && (
+                <div
+                  className="control-buttons absolute left-0 -bottom-33 z-20 flex-col w-full"
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={e => e.stopPropagation()}
+                >
+                  <div className="rounded-sm bg-secondary border-primary border border-dashed p-1 w-full gap-2 flex flex-row">
+                    <input
+                      type="text"
+                      autoFocus
+                      value={markerName}
+                      onChange={(e) => setMarkerName(e.target.value)}
+                      placeholder="Marker name"
+                      className="mt-1 w-full p-2 py-1 border-2 border-border bg-background brightness-[1.13] rounded-md"
+                    />
+                  </div>
+                  <div className="rounded-sm bg-secondary border-primary border border-dashed p-1 w-full gap-2 flex flex-row mt-1">
+                    <button
+                      onClick={handleSaveMarker}
+                      className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                    >
+                      <MarkerIcon
+                        className="sm:hidden mr-1 opacity-80"
+                        width={12}
+                        height={12}
+                      />
+                      Set marker
+                    </button>
+                    <button
+                      hidden={
+                        !readingMarkers.some((m) =>
+                          m.compareTo(bookAbbr, chapterNumber, verseIndex + 1)
+                        )
+                      }
+                      onClick={() => handleRemoveMarker()}
+                      className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                    >
+                      Remove marker
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-start flex-col min-w-[20px] py-2 pl-1">
+              {referencesIncludesVerse(
+                references,
+                chapter.book.abbrev,
+                chapter.book.chapter.number,
+                verseIndex + 1
+              ) && (
+                <div
+                  className={
+                    selectedVerse === verseIndex + 1
+                      ? "flex rounded-full text-primary animate-fade-in-from-bottom"
+                      : "flex rounded-full text-text/70 animate-fade-in-from-bottom"
+                  }
+                >
+                  <DocumentIcon width={16} height={16} />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       ))}

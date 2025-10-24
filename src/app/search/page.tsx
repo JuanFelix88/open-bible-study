@@ -102,13 +102,6 @@ export default function Search() {
   const isLoadingResults =
     isLoadingQueryResults || searchText !== debouncedSearchText || !versions;
 
-  console.log({
-    versionAbbrParam,
-    isSelectingVersion,
-    versions,
-    selectedVersion
-  });
-
   return (
     <div className="flex min-h-screen w-full flex-col items-center px-7 py-7 sm:py-7 pb-15 bg-background relative text-text">
       <div className="flex flex-col max-w-md w-full items-center animate-show-from-top">
