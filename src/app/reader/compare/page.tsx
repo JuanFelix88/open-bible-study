@@ -8,7 +8,7 @@ import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
 import { Fragment } from "react/jsx-dev-runtime";
 
@@ -27,6 +27,7 @@ export default function Compare() {
   const { ref: refSelectedVersion, inView: inViewSelectedVersion } = useInView({
     threshold: 0.5,
   });
+  const refVerse = useRef<HTMLDivElement>(null)
 
   const { data: verseVersions, isLoading: isLoadingVerseVersions } = useQuery({
     queryKey: ["compare", bookAbbr, chapterNumber, verseNumber],
@@ -68,8 +69,6 @@ export default function Compare() {
       (v) => !StringCompare.isEqualIgnoringCase(v.version, version ?? "")
     )
     .toReversed();
-
-  console.log(othersVersions);
 
   return (
     <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text">
@@ -116,13 +115,17 @@ export default function Compare() {
         className={
           inViewSelectedVersion
             ? "h-1 w-full bg-background text-background"
-            : "mb-20 h-1 w-full bg-background text-background"
+            : "mb-8 h-1 w-full bg-background text-background"
         }
+        style={{
+          height: refVerse.current?.style.height
+        }}
       >
         -
       </div>
       {selectedVersion && (
         <div
+          ref={refVerse}
           className={
             inViewSelectedVersion
               ? "block"

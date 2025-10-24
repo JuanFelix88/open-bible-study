@@ -17,7 +17,7 @@ import DocumentIcon from "../components/icons/DocumentIcon";
 import RefIcon from "../components/icons/RefIcon";
 import SearchIcon from "../components/icons/SearchIcon";
 import ShareIcon from "../components/icons/ShareIcon";
-import { Reading } from '@/entities/Reading';
+import { Reading } from "@/entities/Reading";
 
 function referencesIncludesVerse(
   references: Reference[] | undefined,
@@ -200,6 +200,18 @@ export default function Reader() {
       handleShare(event, verseNumber);
       return;
     }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      handlePreviousVerse();
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      handleNextVerse();
+      return;
+    }
   }
 
   function handleOpenReferences(event: SingleEvent, verseIndex: number) {
@@ -210,16 +222,50 @@ export default function Reader() {
     );
   }
 
+  function handlePreviousVerse() {
+    setSelectedVerse((prev) => {
+      if (prev === null) return null;
+      if (prev <= 1) return prev;
+      const previousVerse = prev - 1;
+      queueMicrotask(
+        () => refSelected.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      );
+      return previousVerse;
+    });
+  }
+
+  function handleNextVerse() {
+    setSelectedVerse((prev) => {
+      if (prev === null) return null;
+      if (prev >= chapter!.book.chapter.verses.length) return prev;
+      const nextVerse = prev + 1;
+
+      queueMicrotask(
+        () => refSelected.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      );
+
+      return nextVerse;
+    });
+  }
+
+  useEffect(() => {
+    if (selectedVerse === null) return;
+
+    router.replace(
+      `/reader?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${selectedVerse}`,
+      { scroll: false }
+    );
+  }, [selectedVerse, chapter]);
+
   useEffect(() => {
     window.addEventListener("keydown", handleOnKeyDown);
     return () => window.removeEventListener("keydown", handleOnKeyDown);
-  }, [bookAbbr, chapterNumber]);
+  }, [bookAbbr, chapterNumber, chapter]);
 
   useEffect(() => {
     if (selectedVerseParam && /[0-9]+/.test(selectedVerseParam)) {
       setSelectedVerse(parseInt(selectedVerseParam, 10) || null);
       setTimeout(() => {
-        console.log(refSelected.current);
         refSelected.current?.scrollIntoView({
           behavior: "smooth",
           block: "center",
@@ -246,15 +292,17 @@ export default function Reader() {
     const readingStr = localStorage.getItem("reading");
 
     if (!readingStr) {
-      const newReading = new Reading(bookAbbr, chapterNumber || 1, selectedVerse);
+      const newReading = new Reading(
+        bookAbbr,
+        chapterNumber || 1,
+        selectedVerse
+      );
 
       localStorage.setItem("reading", JSON.stringify(newReading));
-      return
+      return;
     }
-    
-    // const reading = Reading.fromString(readingStr)
 
-    
+    // const reading = Reading.fromString(readingStr)
   }, []);
 
   const bookName =
