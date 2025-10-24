@@ -114,6 +114,13 @@ export default function Reader() {
       }
     );
 
+    queueMicrotask(() =>
+      refSelected.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      })
+    );
+
     router.prefetch(
       `/reader/references?version=${versionAbbr}&book=${bookAbbr}&chapter=${chapterNumber}&verse=${ev.target.id}`
     );
@@ -345,7 +352,7 @@ export default function Reader() {
   const versionText = versionAbbr ?? "...";
 
   return (
-    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-15 bg-background relative text-text">
+    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-18 bg-background relative text-text">
       {!inViewHeader && (
         <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-40 shadow animate-show-from-top">
           <div className="flex items-center">
