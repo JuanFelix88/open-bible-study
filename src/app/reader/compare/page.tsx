@@ -27,8 +27,8 @@ export default function Compare() {
   const { ref: refSelectedVersion, inView: inViewSelectedVersion } = useInView({
     threshold: 1,
     delay: 15,
-    
   });
+
   const refVerse = useRef<HTMLDivElement>(null);
 
   const { data: verseVersions, isLoading: isLoadingVerseVersions } = useQuery({
@@ -112,22 +112,23 @@ export default function Compare() {
         </div>
       )}
 
+      {/* spacer */}
       <div
         ref={refSelectedVersion}
         className="h-1 w-full bg-background text-background"
         style={{
           height: !inViewSelectedVersion ? refVerse.current?.clientHeight : 0,
         }}
-      >
-        -
-      </div>
+      />
+
+      {/* selected version */}
       {selectedVersion && (
         <div
           ref={refVerse}
           className={
             inViewSelectedVersion
               ? "block"
-              : "fixed left-0 top-16 px-7 z-50 animate-show-from-top bg-background border-b border-b-border shadow-primary/10 shadow-lg"
+              : "fixed left-0 top-16 px-7 z-50 w-full animate-show-from-top bg-background border-b border-b-border shadow-primary/10 shadow-lg"
           }
         >
           <div className="mb-1 text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative">

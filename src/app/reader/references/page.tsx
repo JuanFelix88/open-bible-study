@@ -2,10 +2,8 @@
 import AddIcon from "@/app/components/icons/AddIcon";
 import ArrowLeftIcon from "@/app/components/icons/ArrowLeftIcon";
 import DeleteIcon from "@/app/components/icons/DeleteIcon";
-import DocumentIcon from "@/app/components/icons/DocumentIcon";
 import EditIcon from "@/app/components/icons/EditIcon";
 import LinkIcon from "@/app/components/icons/LinkIcon";
-import LoadingIcon from "@/app/components/icons/LoadingIcon";
 import { BookInfo } from "@/entities/BookInfo";
 import { Chapter } from "@/entities/Chapter";
 import { LinkToVerse } from "@/entities/LinkToVerse";
@@ -15,7 +13,8 @@ import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { useInView } from "react-intersection-observer";
 
 function getVerse(
   bookAbbr: string,
@@ -58,9 +57,8 @@ function getVerse(
   return {
     text:
       chapter.book.chapter.verses.at(otherRelatedVerse.numVerse - 1) ?? null,
-    displayVerse: `${otherRelatedVerse.abbrev.toUpperCase()} ${
-      otherRelatedVerse.numChapter
-    }:${otherRelatedVerse.numVerse}`,
+    displayVerse: `${chapter.book.name} ${otherRelatedVerse.numChapter}:${otherRelatedVerse.numVerse}`,
+    bookName: chapter.book.name,
     link: `/reader?book=${otherRelatedVerse.abbrev}&version=${versionAbbr}&chapter=${otherRelatedVerse.numChapter}&verse=${otherRelatedVerse.numVerse}`,
   };
 }
@@ -90,6 +88,13 @@ export default function References() {
     ParamType.NUMBER
   );
 
+  const { ref: refSelectedVerse, inView: inViewSelectedVerse } = useInView({
+    threshold: 1,
+    delay: 15,
+  });
+
+  const refVerse = useRef<HTMLDivElement>(null);
+
   const queryclient = useQueryClient();
 
   const { data: books, isLoading: isLoadingBooks } = useQuery({
@@ -102,6 +107,23 @@ export default function References() {
       const booksData = await booksResponse.json();
 
       return booksData as BookInfo[];
+    },
+  });
+
+  const { data: selectedVerse, isLoading: isLoadingVerse } = useQuery({
+    queryKey: ["verse", versionAbbr, bookAbbr, chapterNumber, verseNumber],
+    queryFn: async () => {
+      if (!verseNumber) return;
+
+      const chapterResponse = await fetch(
+        `/api/versions/${versionAbbr}/${bookAbbr}/${chapterNumber}`
+      );
+
+      await ThrowByResponse.throwsIfNotOk(chapterResponse);
+
+      const chapterData = await chapterResponse.json();
+
+      return (chapterData as Chapter).book.chapter.verses.at(verseNumber - 1);
     },
   });
 
@@ -247,43 +269,79 @@ export default function References() {
       </div>
       <hr className="mt-11 opacity-0" />
 
-      {isLoadingReferencesDetails && (
-        <div className="flex flex-row gap-2 animate-pulse my-2">
-          <LoadingIcon width={24} height={24} className="animate-spin" />
-          <span className="opacity-70 italic text-xl">
-            Loading references...
-          </span>
+      {/* Loading verse */}
+      {isLoadingVerse && (
+        <div className="flex flex-col gap-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex flex-col gap-1">
+              <div className="w-10/12 h-6 rounded-sm bg-surface animate-pulse mb-1" />
+              <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
+              <div className="w-3/6 h-6 rounded-sm bg-surface animate-pulse mb-1" />
+              <div className="w-2/6 h-6 rounded-sm bg-surface animate-pulse mb-1" />
+            </div>
+          ))}
         </div>
       )}
 
+      {/* spacer */}
+      <div
+        ref={refSelectedVerse}
+        className="h-1 w-full bg-background text-background"
+        style={{
+          height: !inViewSelectedVerse ? refVerse.current?.clientHeight : 0,
+        }}
+      />
+
+      {/* Selected verse */}
+      {selectedVerse && (
+        <div
+          ref={refVerse}
+          className={
+            inViewSelectedVerse
+              ? "block"
+              : "fixed left-0 top-16 px-7 z-50 w-full animate-show-from-top bg-background border-b border-b-border shadow-primary/10 shadow-lg"
+          }
+        >
+          <div className="mb-1 text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative">
+            <sup className="font-bold border rounded-sm px-[2px]  border-dashed border-gray-400">
+              {bookAbbr} {chapterNumber}:{verseNumber}
+            </sup>
+            {` `}
+            {selectedVerse}
+          </div>
+        </div>
+      )}
+
+      {/* References */}
       <div className="flex flex-col gap-2 py-2">
         {referencesDetails?.map(
           ({ id, displayVerse, text, note, linkToOpen }) => (
             <div
               key={id + displayVerse}
-              className="flex select-none flex-col py-1 pl-3 px-2 bg-surface/50 hover:opacity-95 rounded"
+              className="text-text/95 bg-surface/10 w-full mt-1 border-t border-dashed border-t-border/70 pt-3 text-lg select-none rounded-md px-1 py-[2px] hide-buttons"
             >
-              <div className="flex items-center">
-                <span className="font-bold opacity-80">
-                  {displayVerse ?? "..."}
-                </span>
-                <DocumentIcon
-                  width={16}
-                  height={16}
-                  className="opacity-80 -mt-0.5 ml-1"
-                  hidden={!displayVerse}
-                />
-              </div>
-              <p className="text-lg">{text}</p>
+              <sup
+                className="font-bold border rounded-sm px-[2px] border-dashed border-gray-400 -mb-5"
+                hidden={!displayVerse}
+              >
+                {displayVerse ?? "..."}
+              </sup>{" "}
+              <br hidden={!displayVerse} />
+              {text}
               {note && (
                 <>
-                  <hr className="opacity-20 border-dashed mb-1 mr-1" hidden={!displayVerse} />
-                  <p className="mt-1 italic rounded text-text/90">
+                  <p
+                    className={
+                      displayVerse
+                        ? "mt-1 text-[0.95rem] italic rounded text-text/80 ml-0.5"
+                        : "mt-1 italic rounded text-text/80 ml-0.5"
+                    }
+                  >
                     {note}
                   </p>
                 </>
               )}
-              <div className="flex w-full pt-3 gap-1.5">
+              <div className="flex w-full pt-2 gap-1.5">
                 <Link
                   className="text-[0.75rem] bg-surface-strong p-1 px-3 rounded hover:bg-info/30 cursor-pointer"
                   href={linkToOpen ?? "#"}

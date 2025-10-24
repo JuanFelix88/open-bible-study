@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import LinkIcon from "../components/icons/LinkIcon";
 
 const displayVersionRegex =
@@ -31,6 +31,7 @@ export default function Search() {
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
   const [searchText, setSearchText] = useState("");
   const debouncedSearchText = useDebounce(searchText, 150);
+  const refSearchText = useRef<HTMLInputElement>(null);
 
   const { data: versions } = useQuery({
     queryKey: ["versions"],
@@ -79,6 +80,12 @@ export default function Search() {
     setSelectedVersion(matchedVersion || null);
   }, [versionAbbrParam, versions]);
 
+  useEffect(() => {
+    if (!isSelectingVersion && selectedVersion) {
+      refSearchText.current?.focus()
+    }
+  }, [isSelectingVersion, selectedVersion]);
+
   const filteredVersions = versions?.filter(
     (v) =>
       !searchVersionText ||
@@ -93,7 +100,14 @@ export default function Search() {
   );
 
   const isLoadingResults =
-    isLoadingQueryResults || searchText !== debouncedSearchText;
+    isLoadingQueryResults || searchText !== debouncedSearchText || !versions;
+
+  console.log({
+    versionAbbrParam,
+    isSelectingVersion,
+    versions,
+    selectedVersion
+  });
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center px-7 py-7 sm:py-7 pb-15 bg-background relative text-text">
@@ -112,8 +126,8 @@ export default function Search() {
         {isSelectingVersion && (
           <>
             <input
-              autoFocus
               type="text"
+              autoFocus
               placeholder='Search version (e.g. "ARA")'
               value={searchVersionText}
               onChange={(e) => setSearchVersionText(e.target.value)}
@@ -132,7 +146,10 @@ export default function Search() {
                 <span className="opacity-70 text-sm font-bold">
                   {version.abbreviation}
                 </span>
-                -<span className='text-start max-w-4/6 text-ellipsis flex'>{version.name}</span>
+                -
+                <span className="text-start max-w-4/6 text-ellipsis flex">
+                  {version.name}
+                </span>
                 <LinkIcon
                   width={16}
                   height={16}
@@ -147,7 +164,6 @@ export default function Search() {
         {!isSelectingVersion && (
           <>
             <button
-              autoFocus={!!versionAbbrParam ? false : true}
               onClick={() => setIsSelectingVersion(true)}
               className="border border-border rounded-md p-2 mt-4 text-text bg-surface w-full hover:bg-surface-strong cursor-pointer select-none"
             >
@@ -162,7 +178,7 @@ export default function Search() {
 
             <input
               hidden={!selectedVersion}
-              autoFocus
+              ref={refSearchText}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               type="text"

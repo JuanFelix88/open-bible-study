@@ -18,6 +18,7 @@ import RefIcon from "../components/icons/RefIcon";
 import SearchIcon from "../components/icons/SearchIcon";
 import ShareIcon from "../components/icons/ShareIcon";
 import { Reading } from "@/entities/Reading";
+import CopyIcon from "../components/icons/CopyIcon";
 
 function referencesIncludesVerse(
   references: Reference[] | undefined,
@@ -169,6 +170,25 @@ export default function Reader() {
     });
   }
 
+  function handleCopyVerse(ev: SingleEvent, verseNumber: number) {
+    ev.stopPropagation();
+
+    if (!selectedVerse) return;
+
+    const verseText = chapter?.book.chapter.verses.at(selectedVerse - 1);
+    const displayVerse = `${bookAbbr} ${chapterNumber}:${selectedVerse}\n${verseText}`;
+
+    if (!verseText) return;
+
+    navigator.clipboard.writeText(displayVerse);
+
+    setDialog({
+      title: "Verse copied!",
+      message: `Verse ${verseNumber} copied to clipboard.`,
+      ms: 3500,
+    });
+  }
+
   function handleOnKeyDown(event: KeyboardEvent) {
     const selected = document.querySelector(
       "div:has(.control-buttons):not(.hidden-buttons)"
@@ -201,6 +221,12 @@ export default function Reader() {
       return;
     }
 
+    if (event.key === "4") {
+      event.preventDefault();
+      handleCopyVerse(event, verseNumber);
+      return;
+    }
+
     if (event.key === "ArrowUp") {
       event.preventDefault();
       handlePreviousVerse();
@@ -227,8 +253,11 @@ export default function Reader() {
       if (prev === null) return null;
       if (prev <= 1) return prev;
       const previousVerse = prev - 1;
-      queueMicrotask(
-        () => refSelected.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      queueMicrotask(() =>
+        refSelected.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        })
       );
       return previousVerse;
     });
@@ -240,8 +269,11 @@ export default function Reader() {
       if (prev >= chapter!.book.chapter.verses.length) return prev;
       const nextVerse = prev + 1;
 
-      queueMicrotask(
-        () => refSelected.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      queueMicrotask(() =>
+        refSelected.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        })
       );
 
       return nextVerse;
@@ -258,6 +290,13 @@ export default function Reader() {
   }, [selectedVerse, chapter]);
 
   useEffect(() => {
+    refSelected.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }, [refSelected.current]);
+
+  useEffect(() => {
     window.addEventListener("keydown", handleOnKeyDown);
     return () => window.removeEventListener("keydown", handleOnKeyDown);
   }, [bookAbbr, chapterNumber, chapter]);
@@ -265,12 +304,6 @@ export default function Reader() {
   useEffect(() => {
     if (selectedVerseParam && /[0-9]+/.test(selectedVerseParam)) {
       setSelectedVerse(parseInt(selectedVerseParam, 10) || null);
-      setTimeout(() => {
-        refSelected.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      }, 240);
     }
   }, [bookAbbr, chapterNumber]);
 
@@ -467,6 +500,20 @@ export default function Reader() {
                   height={12}
                 />
                 Share
+              </button>
+              <button
+                className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                onClick={(e) => handleCopyVerse(e, verseIndex + 1)}
+              >
+                <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                  [4]
+                </span>
+                <CopyIcon
+                  className="sm:hidden mr-1 opacity-80"
+                  width={12}
+                  height={12}
+                />
+                Copy
               </button>
               <button
                 className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
