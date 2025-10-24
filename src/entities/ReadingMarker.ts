@@ -31,6 +31,7 @@ export class ReadingMarker {
 
   public toJSON() {
     return {
+      name: this.name,
       bookAbbr: this.bookAbbr,
       chapter: this.chapter,
       verse: this.verse,
