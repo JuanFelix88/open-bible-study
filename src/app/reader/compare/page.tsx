@@ -25,9 +25,11 @@ export default function Compare() {
     : null;
 
   const { ref: refSelectedVersion, inView: inViewSelectedVersion } = useInView({
-    threshold: 0.5,
+    threshold: 1,
+    delay: 15,
+    
   });
-  const refVerse = useRef<HTMLDivElement>(null)
+  const refVerse = useRef<HTMLDivElement>(null);
 
   const { data: verseVersions, isLoading: isLoadingVerseVersions } = useQuery({
     queryKey: ["compare", bookAbbr, chapterNumber, verseNumber],
@@ -112,13 +114,9 @@ export default function Compare() {
 
       <div
         ref={refSelectedVersion}
-        className={
-          inViewSelectedVersion
-            ? "h-1 w-full bg-background text-background"
-            : "mb-8 h-1 w-full bg-background text-background"
-        }
+        className="h-1 w-full bg-background text-background"
         style={{
-          height: refVerse.current?.style.height
+          height: !inViewSelectedVersion ? refVerse.current?.clientHeight : 0,
         }}
       >
         -
@@ -129,7 +127,7 @@ export default function Compare() {
           className={
             inViewSelectedVersion
               ? "block"
-              : "fixed left-0 top-16 px-7 z-50 animate-show-from-top bg-background border-b border-b-border shadow-primary/80"
+              : "fixed left-0 top-16 px-7 z-50 animate-show-from-top bg-background border-b border-b-border shadow-primary/10 shadow-lg"
           }
         >
           <div className="mb-1 text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative">
