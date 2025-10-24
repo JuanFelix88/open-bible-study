@@ -415,8 +415,6 @@ export default function Reader() {
   const versionText = versionAbbr ?? "...";
   const isSettingMarker = candidateToMarker !== null;
 
-  console.log(readingMarkers)
-
   return (
     <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-36 sm:pb-36  bg-background relative text-text">
       {!inViewHeader && (
