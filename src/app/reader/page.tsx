@@ -260,7 +260,7 @@ export default function Reader() {
     );
     setReadingMarkers(updatedMarkers);
     localStorage.setItem("markers", JSON.stringify(updatedMarkers));
-    setCandidateToMarker(null)
+    setCandidateToMarker(null);
     setMarkerName("");
   }
 
@@ -517,9 +517,13 @@ export default function Reader() {
           {readingMarkers.some((m) =>
             m.compareTo(bookAbbr, chapterNumber, verseIndex + 1)
           ) && (
-            <div className="flex flex-row w-full items-center pr-5 mt-3">
-              <hr className="border-b border-dashed border-b-primary w-full" />
-              <span className='w-fit mx-2'>
+            <div className="flex flex-row w-full items-center mt-4 mb-1 -ml-2 pr-4">
+              <MarkerIcon
+                className="sm:hidden opacity-80"
+                width={16}
+                height={16}
+              />
+              <span className="min-w-fit mr-2">
                 {
                   readingMarkers.find((m) =>
                     m.compareTo(bookAbbr, chapterNumber, verseIndex + 1)
@@ -632,7 +636,7 @@ export default function Reader() {
                 <div
                   className="control-buttons absolute left-0 -bottom-33 z-20 flex-col w-full"
                   onClick={(e) => e.stopPropagation()}
-                  onKeyDown={e => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
                 >
                   <div className="rounded-sm bg-secondary border-primary border border-dashed p-1 w-full gap-2 flex flex-row">
                     <input
