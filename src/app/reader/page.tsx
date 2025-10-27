@@ -313,6 +313,18 @@ export default function Reader() {
       handleNextVerse();
       return;
     }
+
+    if (event.key === "ArrowRight" && event.ctrlKey) {
+      event.preventDefault();
+      handleNextChapter();
+      return;
+    }
+
+    if (event.key === "ArrowLeft" && event.ctrlKey) {
+      event.preventDefault();
+      handlePreviousChapter();
+      return;
+    }
   }
 
   function handleOpenReferences(event: SingleEvent, verseIndex: number) {
