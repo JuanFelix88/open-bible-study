@@ -302,6 +302,12 @@ export default function Reader() {
       return;
     }
 
+    if (event.key === "5") {
+      event.preventDefault();
+      handleMarkerCandidate(event, verseNumber);
+      return;
+    }
+
     if (event.key === "ArrowUp") {
       event.preventDefault();
       handlePreviousVerse();
