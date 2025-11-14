@@ -1,15 +1,10 @@
+import { VerseAnalysis } from '@/entities/VerseAnalysis';
 import { BibleVersionsRepository } from "@/repositories/BibleVersionsRepository";
 import { IAService } from "@/services/IAService";
 import { FnNormalizer } from "@/utils/FnNormalizer";
 import { Params, ParamType } from "@/utils/Params";
 import { ResponseError } from "@/utils/ResponseError";
 import { NextRequest, NextResponse } from "next/server";
-
-interface VerseAnalysis {
-  token_index: number;
-  explanation: string;
-  token: string;
-}
 
 export async function GET(
   req: NextRequest,

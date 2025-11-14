@@ -169,6 +169,15 @@ export default function Reader() {
     ev.stopPropagation();
   }
 
+  function handleExplain(ev: SingleEvent, verseIndex: number) {
+    router.push(
+      `/reader/explain?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${
+        verseIndex + 1
+      }`
+    );
+    ev.stopPropagation();
+  }
+
   function handleShare(ev: SingleEvent, verseNumber: number) {
     ev.stopPropagation();
 
@@ -183,24 +192,24 @@ export default function Reader() {
     });
   }
 
-  function handleCopyVerse(ev: SingleEvent, verseNumber: number) {
-    ev.stopPropagation();
+  // function handleCopyVerse(ev: SingleEvent, verseNumber: number) {
+  //   ev.stopPropagation();
 
-    if (!selectedVerse) return;
+  //   if (!selectedVerse) return;
 
-    const verseText = chapter?.book.chapter.verses.at(selectedVerse - 1);
-    const displayVerse = `${bookAbbr} ${chapterNumber}:${selectedVerse}\n${verseText}`;
+  //   const verseText = chapter?.book.chapter.verses.at(selectedVerse - 1);
+  //   const displayVerse = `${bookAbbr} ${chapterNumber}:${selectedVerse}\n${verseText}`;
 
-    if (!verseText) return;
+  //   if (!verseText) return;
 
-    navigator.clipboard.writeText(displayVerse);
+  //   navigator.clipboard.writeText(displayVerse);
 
-    setDialog({
-      title: "Verse copied!",
-      message: `Verse ${verseNumber} copied to clipboard.`,
-      ms: 3500,
-    });
-  }
+  //   setDialog({
+  //     title: "Verse copied!",
+  //     message: `Verse ${verseNumber} copied to clipboard.`,
+  //     ms: 3500,
+  //   });
+  // }
 
   function handleMarkerCandidate(ev: SingleEvent, verseNumber: number) {
     ev.stopPropagation();
@@ -298,7 +307,7 @@ export default function Reader() {
 
     if (event.key === "4") {
       event.preventDefault();
-      handleCopyVerse(event, verseNumber);
+      handleExplain(event, verseNumber);
       return;
     }
 
@@ -610,7 +619,7 @@ export default function Reader() {
                   />
                   Share
                 </button>
-                <button
+                {/* <button
                   className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
                   onClick={(e) => handleCopyVerse(e, verseIndex + 1)}
                 >
@@ -623,6 +632,20 @@ export default function Reader() {
                     height={12}
                   />
                   Copy
+                </button> */}
+                  <button
+                  className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                  onClick={(e) => handleExplain(e, verseIndex + 1)}
+                >
+                  <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                    [4]
+                  </span>
+                  <CopyIcon
+                    className="sm:hidden mr-1 opacity-80"
+                    width={12}
+                    height={12}
+                  />
+                  Exp.
                 </button>
                 <button
                   className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
