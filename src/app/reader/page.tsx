@@ -635,7 +635,7 @@ export default function Reader() {
                 </button> */}
                   <button
                   className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                  onClick={(e) => handleExplain(e, verseIndex + 1)}
+                  onClick={(e) => handleExplain(e, verseIndex)}
                 >
                   <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
                     [4]
