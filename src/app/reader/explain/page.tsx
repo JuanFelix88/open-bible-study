@@ -106,7 +106,7 @@ export default function Explain() {
       {/* Loading verses */}
       {(isLoadingVerseVersions || isLoadingVerseAnalysis) && (
         <div className="flex flex-col gap-2">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 2 }).map((_, i) => (
             <div key={i} className="flex flex-col gap-1">
               <div className="w-10/12 h-6 rounded-sm bg-surface animate-pulse mb-1" />
               <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
@@ -147,7 +147,10 @@ export default function Explain() {
         ))}
       </div>
 
-      <hr className="border-dashed border-gray-400 w-full pt-2 pb-0" />
+      <hr
+        className="border-dashed border-gray-400 w-full pt-2 pb-0"
+        hidden={isLoadingVerseAnalysis}
+      />
 
       {selectedTokenIndex !== null && (
         <div className="mt-4">
