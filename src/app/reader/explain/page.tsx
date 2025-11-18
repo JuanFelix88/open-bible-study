@@ -48,7 +48,7 @@ export default function Explain() {
   });
 
   const { data: verseAnalysis, isLoading: isLoadingVerseAnalysis } = useQuery({
-    queryKey: ["explain", bookAbbr, chapterNumber, verseNumber],
+    queryKey: ["explain", version, bookAbbr, chapterNumber, verseNumber],
     staleTime: Infinity,
     queryFn: async () => {
       const verseExplainResponse = await fetch(
