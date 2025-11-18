@@ -64,14 +64,18 @@ export async function GET(
   const rawResult = await IAService.request(
     `De acordo com o texto da bíblia ${chapter.book.name} ${chapter.book.chapter.number}:${verseNumber}, ` +
       `gere um retorno apenas em json no formato { token: string, token_index: number, explanation: string }[], explicando a tradução do texto original em relação` +
-      ` ao texto traduzido. Mencione o texto original, explique a lógica da tradução e relacione traduções alternativas. Responda-me somente no formato que mencionei. texto: "${chapter.book.chapter.verses.at(
+      ` ao texto traduzido. Mencione o texto original, explique a lógica da tradução e relacione traduções alternativas. Dê-me explicações não comuns, significados profundos. Quando nome de pessoa, explique quem foi essa pessoa. Responda-me somente no formato que mencionei. texto: "${chapter.book.chapter.verses.at(
         verseNumber - 1
       )}"`
   );
 
-  const data: VerseAnalysis[] = JSON.parse(
-    rawResult.split("Copy code").at(-1)?.trim() ?? "[]"
-  );
+  let textSanitized = rawResult.split("Copy code").at(-1)?.trim() ?? "[]"
+
+  if (textSanitized.includes("JSONCopy")) {
+    textSanitized = textSanitized.split("JSONCopy").at(-1)?.trim() ?? "[]";
+  }
+
+  const data: VerseAnalysis[] = JSON.parse(textSanitized);
 
   return NextResponse.json(data);
 }
