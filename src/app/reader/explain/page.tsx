@@ -172,7 +172,7 @@ export default function Explain() {
       <div className="text-text/95 w-full mt-1pt-3 text-lg select-none rounded-md px-1 py-[2px] hide-buttons">
         {verseAnalysis?.explainData.map((analysation) => (
           <Fragment key={analysation.token_index}>
-            <span className="mr-1.5" hidden={analysation.token_index === 0}>
+            <span className="mr-0.5" hidden={analysation.token_index === 0}>
               {" "}
             </span>
             <span
