@@ -64,7 +64,7 @@ export async function GET(
   const rawResult = await IAService.request(
     `De acordo com o texto da bíblia ${chapter.book.name} ${chapter.book.chapter.number}:${verseNumber}, ` +
       `gere um retorno apenas em json no formato { token: string, token_index: number, explanation: string }[], explicando a tradução do texto original em relação` +
-      ` ao texto traduzido. Responda-me somente no formato que mencionei. texto: "${chapter.book.chapter.verses.at(
+      ` ao texto traduzido. Mencione o texto original, explique a lógica da tradução e relacione traduções alternativas. Responda-me somente no formato que mencionei. texto: "${chapter.book.chapter.verses.at(
         verseNumber - 1
       )}"`
   );

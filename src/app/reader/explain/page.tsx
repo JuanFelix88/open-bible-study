@@ -108,9 +108,9 @@ export default function Explain() {
         <div className="flex flex-col gap-2">
           {Array.from({ length: 2 }).map((_, i) => (
             <div key={i} className="flex flex-col gap-1">
-              <div className="w-10/12 h-6 rounded-sm bg-surface animate-pulse mb-1" />
               <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
-              <div className="w-3/6 h-6 rounded-sm bg-surface animate-pulse mb-1" />
+              <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
+              <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
               <div className="w-5/6 h-6 rounded-sm bg-surface animate-pulse mb-1" />
               <div className="w-2/6 h-6 rounded-sm bg-surface animate-pulse mb-1" />
             </div>
