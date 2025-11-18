@@ -24,6 +24,9 @@ export default function Explain() {
   const [selectedTokenIndex, setSelectedTokenIndex] = useState<number | null>(
     null
   );
+  const [iaLoadingText, setIaLoadingText] = useState(
+    "Loading explanations AI..."
+  );
 
   const { ref: refSelectedVersion, inView: inViewSelectedVersion } = useInView({
     threshold: 1,
@@ -59,7 +62,11 @@ export default function Explain() {
 
       const explainData = await verseExplainResponse.json();
 
-      return explainData as VerseAnalysis[];
+      const modelName = verseExplainResponse.headers
+        .get("Agent-Ai")
+        ?.toString();
+
+      return { explainData: explainData as VerseAnalysis[], modelName };
     },
   });
 
@@ -73,9 +80,34 @@ export default function Explain() {
     }
   }
 
+  function random(init: number, end: number) {
+    return Math.floor(Math.random() * (end - init + 1)) + init;
+  }
+
   useEffect(() => {
     window.addEventListener("keydown", handleOnKeyDown);
     return () => window.removeEventListener("keydown", handleOnKeyDown);
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      await new Promise((resolve) => setTimeout(resolve, random(2_000, 3_000)));
+      setIaLoadingText("Still loading explanations from AI, please wait...");
+
+      await new Promise((resolve) => setTimeout(resolve, random(2_000, 7_000)));
+      setIaLoadingText("Looking for references in the original texts...");
+
+      await new Promise((resolve) => setTimeout(resolve, random(2_000, 5_000)));
+      setIaLoadingText("Gerating deep explanations, almost there...");
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, random(4_000, 10_000))
+      );
+      setIaLoadingText("Analyzing and correcting text applications...");
+
+      await new Promise((resolve) => setTimeout(resolve, random(3_000, 8_000)));
+      setIaLoadingText("Finishing explanation...");
+    })();
   }, []);
 
   const chapterText = chapterNumber?.toString() ?? "...";
@@ -106,15 +138,22 @@ export default function Explain() {
       {/* Loading verses */}
       {(isLoadingVerseVersions || isLoadingVerseAnalysis) && (
         <div className="flex flex-col gap-2">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="flex flex-col gap-1">
-              <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
-              <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
-              <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
-              <div className="w-5/6 h-6 rounded-sm bg-surface animate-pulse mb-1" />
-              <div className="w-2/6 h-6 rounded-sm bg-surface animate-pulse mb-1" />
-            </div>
-          ))}
+          <span
+            className="text-text/60 animate-pulse animate-show-from-bottom-slow"
+            key={iaLoadingText}
+          >
+            {iaLoadingText}
+          </span>
+          <div className="flex flex-col gap-1">
+            <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
+            <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
+            <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
+            <br />
+            <div className="w-5/6 h-4 rounded-sm bg-surface animate-pulse mb-1" />
+            <div className="w-2/6 h-4 rounded-sm bg-surface animate-pulse mb-1" />
+            <div className="w-3/6 h-4 rounded-sm bg-surface animate-pulse mb-1" />
+            <div className="w-2/6 h-4 rounded-sm bg-surface animate-pulse mb-1" />
+          </div>
         </div>
       )}
 
@@ -128,16 +167,16 @@ export default function Explain() {
       />
 
       <div className="text-text/95 w-full mt-1pt-3 text-lg select-none rounded-md px-1 py-[2px] hide-buttons">
-        {verseAnalysis?.map((analysation) => (
+        {verseAnalysis?.explainData.map((analysation) => (
           <Fragment key={analysation.token_index}>
-            <span className="mr-1.5">
-              {analysation.token_index > 1 ? " " : ""}
+            <span className="mr-1.5" hidden={analysation.token_index === 0}>
+              {" "}
             </span>
             <span
               className={
                 selectedTokenIndex === analysation.token_index
-                  ? "rounded-sm px-1 py-0.5 bg-secondary text-text"
-                  : "rounded-sm px-1 py-0.5 hover:bg-surface text-text"
+                  ? "rounded-sm px-1 py-0.5 bg-secondary text-text underline underline-offset-2 decoration-dashed decoration-primary"
+                  : "rounded-sm px-1 cursor-pointer py-0.5 hover:bg-surface text-text"
               }
               onClick={() => setSelectedTokenIndex(analysation.token_index)}
             >
@@ -153,8 +192,45 @@ export default function Explain() {
       />
 
       {selectedTokenIndex !== null && (
-        <div className="mt-4">
-          <span>{verseAnalysis?.at(selectedTokenIndex)?.explanation}</span>
+        <div className="flex flex-col mt-4 w-full">
+          <div
+            className="animate-show-from-bottom-slow"
+            key={selectedTokenIndex}
+          >
+            <span>
+              {verseAnalysis?.explainData
+                .at(selectedTokenIndex)
+                ?.explanation.split(" ")
+                .map((word, i) => {
+                  const isTagged =
+                    (word.trim().startsWith(`'`) && word.trim().endsWith(`'`));
+                  const endsWithNewLine = word.endsWith("\n");
+
+                  return (
+                    <Fragment key={word + i}>
+                      <span
+                        className={
+                          isTagged
+                            ? "bg-surface-strong px-0.5 rounded-sm text-text"
+                            : ""
+                        }
+                      >
+                        {isTagged ? word.substring(1, word.length - 1) : word}
+                      </span>{endsWithNewLine ? <br /> : " "}
+                    </Fragment>
+                  );
+                })}
+            </span>
+          </div>
+          <div
+            className="mt-3 italic text-xs text-text/50 animate-show-from-bottom-slow"
+            key={selectedTokenIndex + "-model"}
+          >
+            <span>
+              Generated by <strong>{verseAnalysis?.modelName}</strong> and may
+              contain errors.
+            </span>
+          </div>
         </div>
       )}
     </div>

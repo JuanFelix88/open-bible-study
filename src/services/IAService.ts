@@ -4,10 +4,11 @@ interface IIAResponse {
   response: string;
   poolNode: number;
   poolNodeCount: number;
+  agentName: string;
 }
 
 export class IAService extends StaticClass {
-  public static async request(prompt: string): Promise<string> {
+  public static async request(prompt: string): Promise<IIAResponse> {
     if (!process.env.AI_API_URL) {
       throw new Error("AI_API_URL is not defined");
     }
@@ -25,6 +26,6 @@ export class IAService extends StaticClass {
     }
 
     const data: IIAResponse = await response.json();
-    return data.response;
+    return data;
   }
 }

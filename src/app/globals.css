@@ -120,6 +120,10 @@ body {
   }
 }
 
+.animate-show-from-bottom-slow {
+  animation: fade-in-from-bottom 0.200s ease-in-out;
+}
+
 .animate-show-from-top {
   animation: show-from-top 0.08s ease-in-out;
 }
