@@ -1,4 +1,5 @@
 "use client";
+import AIIcon from "@/app/components/icons/AIIcon";
 import ArrowLeftIcon from "@/app/components/icons/ArrowLeftIcon";
 import { ChapterWithDiffs } from "@/entities/ChapterWithDiffs";
 import { VerseAnalysis } from "@/entities/VerseAnalysis";
@@ -94,10 +95,10 @@ export default function Explain() {
       await new Promise((resolve) => setTimeout(resolve, random(2_000, 3_000)));
       setIaLoadingText("Still loading explanations from AI, please wait...");
 
-      await new Promise((resolve) => setTimeout(resolve, random(2_000, 7_000)));
+      await new Promise((resolve) => setTimeout(resolve, random(500, 7_000)));
       setIaLoadingText("Looking for references in the original texts...");
 
-      await new Promise((resolve) => setTimeout(resolve, random(2_000, 5_000)));
+      await new Promise((resolve) => setTimeout(resolve, random(1_000, 5_000)));
       setIaLoadingText("Gerating deep explanations, almost there...");
 
       await new Promise((resolve) =>
@@ -138,12 +139,14 @@ export default function Explain() {
       {/* Loading verses */}
       {(isLoadingVerseVersions || isLoadingVerseAnalysis) && (
         <div className="flex flex-col gap-2">
-          <span
-            className="text-text/60 animate-pulse animate-show-from-bottom-slow"
+          <div
+            className="flex gap-1 text-text/60 animate-show-from-bottom-slow items-center"
             key={iaLoadingText}
           >
-            {iaLoadingText}
-          </span>
+            <AIIcon width={18} height={18}  className='-mt-0.5 animate-pulse' />
+            <span className='animate-pulse animate-pulse-[2s]'>{iaLoadingText}</span>
+          </div>
+
           <div className="flex flex-col gap-1">
             <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
             <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
@@ -203,7 +206,7 @@ export default function Explain() {
                 ?.explanation.split(" ")
                 .map((word, i) => {
                   const isTagged =
-                    (word.trim().startsWith(`'`) && word.trim().endsWith(`'`));
+                    word.trim().startsWith(`'`) && word.trim().endsWith(`'`);
                   const endsWithNewLine = word.endsWith("\n");
 
                   return (
@@ -216,7 +219,8 @@ export default function Explain() {
                         }
                       >
                         {isTagged ? word.substring(1, word.length - 1) : word}
-                      </span>{endsWithNewLine ? <br /> : " "}
+                      </span>
+                      {endsWithNewLine ? <br /> : " "}
                     </Fragment>
                   );
                 })}
