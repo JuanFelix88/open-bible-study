@@ -46,7 +46,7 @@ export default function Search() {
 
   const { data: results, isLoading: isLoadingQueryResults } = useQuery({
     queryKey: ["search", selectedVersion, debouncedSearchText],
-    gcTime: 0,
+    staleTime: 5_000,
     queryFn: async () => {
       if (!debouncedSearchText || !selectedVersion) return [];
 
