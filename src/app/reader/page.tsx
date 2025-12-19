@@ -39,8 +39,6 @@ function referencesIncludesVerse(
   );
 }
 
-const DEFAULT_VERSION = "ACF";
-
 export default function Reader() {
   const { ref: refHeader, inView: inViewHeader } = useInView({});
   const searchParams = useSearchParams();

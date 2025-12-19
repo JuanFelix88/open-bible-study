@@ -11,18 +11,10 @@ import Link from 'next/link';
 
 const DEFAULT_VERSION = "KJA";
 
-const SUGGESTED_READINGS = [
-  { book: "gn", chapter: 1, name: "Genesis 1" },
-  { book: "sl", chapter: 23, name: "Psalm 23" },
-  { book: "mt", chapter: 5, name: "Matthew 5" },
-  { book: "rm", chapter: 3, name: "Romans 3" },
-  { book: "jo", chapter: 3, name: "John 3" },
-];
-
 export default function Welcome() {
   const router = useRouter();
   const [selectedBook, setSelectedBook] = useState<string | null>(null);
-  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+  const [, setSelectedChapter] = useState<number | null>(null);
 
   const { data: books, isLoading: isLoadingBooks } = useQuery({
     queryKey: ["books"],
@@ -51,15 +43,6 @@ export default function Welcome() {
 
     router.push(
       `/reader?book=${selectedBook}&version=${DEFAULT_VERSION}&chapter=${chapterNumber}`
-    );
-  };
-
-  const handleSuggestedReading = (
-    bookAbbr: string,
-    chapterNumber: number
-  ) => {
-    router.push(
-      `/reader?book=${bookAbbr}&version=${DEFAULT_VERSION}&chapter=${chapterNumber}`
     );
   };
 

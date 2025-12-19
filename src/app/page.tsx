@@ -3,8 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import SearchIcon from "./components/icons/SearchIcon";
 import BibleIcon from "./favicon.ico";
-import LinkIcon from './components/icons/LinkIcon';
-import DocumentIcon from './components/icons/DocumentIcon';
 import CompareIcon from './components/icons/CompareIcon';
 
 export default function Home() {
