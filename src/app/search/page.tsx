@@ -17,6 +17,8 @@ import LinkIcon from "../components/icons/LinkIcon";
 const displayVersionRegex =
   /^(?<book>[0-9]? ?[A-Za-zÀ-ÿ0-9]{1,}) (?<chapter>[0-9]{1,}):?(?<verse>[0-9]{1,})?$/;
 
+const DEFAULT_VERSION = "KJA";
+
 export default function Search() {
   const searchParams = useSearchParams();
   const [versionAbbrParam] = Params.getParamFromSearchParams(
@@ -35,6 +37,7 @@ export default function Search() {
 
   const { data: versions } = useQuery({
     queryKey: ["versions"],
+    staleTime: 5_000,
     queryFn: async () => {
       const versionsResponse = await fetch("/api/versions");
 
@@ -71,6 +74,17 @@ export default function Search() {
   });
 
   useEffect(() => {
+    if (!versions) return;
+
+    setSelectedVersion(
+      versions?.find((v) =>
+        StringCompare.isEqualIgnoringCase(DEFAULT_VERSION, v.abbreviation)
+      ) ?? null
+    );
+    setIsSelectingVersion(false);
+  }, [versions]);
+
+  useEffect(() => {
     if (!versionAbbrParam || !versions) return;
 
     const matchedVersion = versions.find((v) =>
@@ -82,7 +96,7 @@ export default function Search() {
 
   useEffect(() => {
     if (!isSelectingVersion && selectedVersion) {
-      refSearchText.current?.focus()
+      refSearchText.current?.focus();
     }
   }, [isSelectingVersion, selectedVersion]);
 
@@ -105,15 +119,28 @@ export default function Search() {
   return (
     <div className="flex min-h-screen w-full flex-col items-center px-7 py-7 sm:py-7 pb-15 bg-background relative text-text">
       <div className="flex flex-col max-w-md w-full items-center animate-show-from-top">
-        <Image
-          src={BibleIcon}
-          alt="Bible Icon"
-          width={64}
-          height={64}
-          className="mb-2"
-        />
-        <h1 className="text-4xl font-bold text-center">Open Bible Study</h1>
-        <h2 className="text-xl opacity-80">Search texts</h2>
+        {/* Back Button */}
+        <Link
+          href="/"
+          className="mb-4 flex items-center gap-2 text-text/70 hover:opacity-70 transition-opacity cursor-pointer"
+          >
+          <span>←</span>
+          <span>Back to home</span>
+        </Link>
+
+        {/* Search text */}
+        <div className="flex items-center">
+          <h2 className="text-xl opacity-80">
+            Search texts in <strong>Open Bible Study</strong>
+          </h2>
+          <Image
+            src={BibleIcon}
+            alt="Bible Icon"
+            width={30}
+            height={30}
+            className=""
+          />
+        </div>
 
         {/* Selecting version */}
         {isSelectingVersion && (
@@ -124,7 +151,7 @@ export default function Search() {
               placeholder='Search version (e.g. "ARA")'
               value={searchVersionText}
               onChange={(e) => setSearchVersionText(e.target.value)}
-              className="mt-2 w-full p-2 border-2 border-border bg-background brightness-[1.13] rounded-md"
+              className="mt-2 w-full p-2 border-2 border-border bg-background   rightness-[1.13] rounded-md"
             />
 
             {filteredVersions?.map((version) => (

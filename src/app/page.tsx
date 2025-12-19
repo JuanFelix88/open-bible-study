@@ -3,6 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import SearchIcon from "./components/icons/SearchIcon";
 import BibleIcon from "./favicon.ico";
+import LinkIcon from './components/icons/LinkIcon';
+import DocumentIcon from './components/icons/DocumentIcon';
+import CompareIcon from './components/icons/CompareIcon';
 
 export default function Home() {
   return (
@@ -22,7 +25,14 @@ export default function Home() {
         href="/search"
       >
         <SearchIcon width={16} height={16} className="mr-1 text-text/80" />
-        Start reading
+        Search
+      </Link>
+      <Link
+        className="flex justify-center items-center rounded-md border bg-surface border-border p-2 mt-1 w-full hover:bg-surface/20 max-w-sm"
+        href="/select"
+      >
+        <CompareIcon width={16} height={16} className="mr-1 text-text/80" />
+        Select chapter
       </Link>
 
       <Link href="/mode/set-theme" className="flex text-center mt-3 underline">
