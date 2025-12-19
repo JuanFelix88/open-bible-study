@@ -16,7 +16,7 @@
     "@types/pg": "^8.15.5",
     "flexsearch": "^0.8.212",
     "lottie-react": "^2.4.1",
-    "next": "15.3.3",
+    "next": "15.3.8",
     "nookies": "^2.5.2",
     "pg": "^8.16.3",
     "react": "^19.0.0",
@@ -37,6 +37,7 @@
     "globals": "^16.4.0",
     "jiti": "^2.5.1",
     "tailwindcss": "^4",
+    "tscanner": "^0.1.2",
     "typescript": "^5",
     "typescript-eslint": "^8.44.0"
   }
