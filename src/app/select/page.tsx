@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import BibleIcon from "../favicon.ico";
 import Image from "next/image";
-import Link from 'next/link';
+import Link from "next/link";
 
 const DEFAULT_VERSION = "KJA";
 
@@ -47,29 +47,29 @@ export default function Welcome() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-18 pt-3 px-12 sm:px-24 bg-background text-text">
-        {/* Back Button */}
-        <Link
-          href="/"
-          className="mb-4 flex items-center gap-2 text-text/70 hover:opacity-70 transition-opacity cursor-pointer"
-          >
-          <span>←</span>
-          <span>Back to home</span>
-        </Link>
+    <div className="flex min-h-screen flex-col items-center justify-center py-18 pt-3 px-6 sm:px-24 bg-background text-text">
+      {/* Back Button */}
+      <Link
+        href="/"
+        className="mb-4 flex items-center gap-2 text-text/70 hover:opacity-70 transition-opacity cursor-pointer"
+      >
+        <span>←</span>
+        <span>Back to home</span>
+      </Link>
 
-        {/* Search text */}
-        <div className="flex w-full">
-          <h2 className="text-xl opacity-80">
-            Select book and chapter in <strong>Open Bible Study</strong>
-          </h2>
-          <Image
-            src={BibleIcon}
-            alt="Bible Icon"
-            width={30}
-            height={30}
-            className=""
-          />
-        </div>
+      {/* Search text */}
+      <div className="flex w-full max-w-2xl flex-wrap">
+        <h2 className="text-[1.15rem] opacity-80 text-wrap">
+          Select with <strong>Open Bible Study</strong>
+        </h2>
+        <Image
+          src={BibleIcon}
+          alt="Bible Icon"
+          width={30}
+          height={30}
+          className="min-w-[30px] max-h-[30px]"
+        />
+      </div>
 
       {/* Browse Section */}
       <div className="mt-2 w-full max-w-2xl">
@@ -78,24 +78,22 @@ export default function Welcome() {
         {/* Books List */}
         {!selectedBook ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-8">
-            {isLoadingBooks ? (
-              Array.from({ length: 9 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-12 rounded-md bg-surface animate-pulse"
-                />
-              ))
-            ) : (
-              books?.map((book) => (
-                <button
-                  key={book.abbr}
-                  onClick={() => handleSelectBook(book.abbr)}
-                  className="px-4 py-3 rounded-md border bg-surface border-border hover:bg-surface/80 hover:border-primary/50 active:scale-[0.97] transition-all cursor-pointer text-sm font-medium"
-                >
-                  {book.name}
-                </button>
-              ))
-            )}
+            {isLoadingBooks
+              ? Array.from({ length: 9 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-12 rounded-md bg-surface animate-pulse"
+                  />
+                ))
+              : books?.map((book) => (
+                  <button
+                    key={book.abbr}
+                    onClick={() => handleSelectBook(book.abbr)}
+                    className="px-4 py-3 rounded-md border bg-surface border-border hover:bg-surface/80 hover:border-primary/50 active:scale-[0.97] transition-all cursor-pointer text-sm font-medium"
+                  >
+                    {book.name}
+                  </button>
+                ))}
           </div>
         ) : (
           <>
@@ -136,7 +134,10 @@ export default function Welcome() {
 
       {/* Footer Info */}
       <div className="mt-12 text-center text-text/60 text-sm max-w-2xl">
-        <p>Reading from: <span className="text-primary font-semibold">{DEFAULT_VERSION}</span></p>
+        <p>
+          Reading from:{" "}
+          <span className="text-primary font-semibold">{DEFAULT_VERSION}</span>
+        </p>
       </div>
     </div>
   );

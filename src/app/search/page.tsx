@@ -131,7 +131,7 @@ export default function Search() {
         {/* Search text */}
         <div className="flex items-center">
           <h2 className="text-xl opacity-80">
-            Search texts in <strong>Open Bible Study</strong>
+            Search texts with <strong>Open Bible Study</strong>
           </h2>
           <Image
             src={BibleIcon}
