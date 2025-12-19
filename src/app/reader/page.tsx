@@ -20,6 +20,8 @@ import ShareIcon from "../components/icons/ShareIcon";
 import { ReadingMarker } from "@/entities/ReadingMarker";
 import CopyIcon from "../components/icons/CopyIcon";
 import MarkerIcon from "../components/icons/MarkerIcon";
+import { StringCompare } from '@/utils/StringCompare';
+import { Version } from '@/entities/Version';
 
 function referencesIncludesVerse(
   references: Reference[] | undefined,
@@ -68,6 +70,19 @@ export default function Reader() {
       const booksData = await booksResponse.json();
 
       return booksData as BookInfo[];
+    },
+  });
+
+  const { data: versions } = useQuery({
+    queryKey: ["versions"],
+    queryFn: async () => {
+      const versionsResponse = await fetch("/api/versions");
+
+      await ThrowByResponse.throwsIfNotOk(versionsResponse);
+
+      const versionsData = await versionsResponse.json();
+
+      return versionsData as Version[];
     },
   });
 
@@ -441,9 +456,13 @@ export default function Reader() {
   const chapterText = chapterNumber?.toString() ?? "...";
   const versionText = versionAbbr ?? "...";
   const isSettingMarker = candidateToMarker !== null;
+  const versionLicense =
+    versions?.find((v) => StringCompare.isEqualIgnoringCase(v.abbreviation, versionAbbr))?.license || "";
+
+  console.log({versionLicense, versions, versionAbbr});
 
   return (
-    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-36 sm:pb-36  bg-background relative text-text">
+    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-16 sm:pb-36  bg-background relative text-text">
       {!inViewHeader && (
         <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-40 shadow animate-show-from-top">
           <div className="flex items-center">
@@ -633,7 +652,7 @@ export default function Reader() {
                   />
                   Copy
                 </button> */}
-                  <button
+                <button
                   className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
                   onClick={(e) => handleExplain(e, verseIndex)}
                 >
@@ -737,6 +756,13 @@ export default function Reader() {
           </div>
         </div>
       ))}
+
+      {/* Footer with license */}
+      {versionLicense && (
+        <footer className="mt-10 pt-6 pb-4 mr-6 border-t border-border/50">
+          <p className="text-xs text-text/50 text-center">{versionLicense}</p>
+        </footer>
+      )}
     </div>
   );
 }

@@ -5,9 +5,10 @@ export class BibleVersion {
   public name: string = "";
   public abbreviation: string = "";
   public language: Language = Language.PT_BR;
+  public license: string = "";
 
-  public static from(path: string, name: string, abbr: string) {
-    return new BibleVersion({ path, name, abbreviation: abbr });
+  public static from(path: string, name: string, abbr: string, license?: string) {
+    return new BibleVersion({ path, name, abbreviation: abbr, license: license || "" });
   }
 
   public constructor(init?: Partial<BibleVersion>) {
@@ -19,6 +20,7 @@ export class BibleVersion {
       name: this.name,
       abbreviation: this.abbreviation,
       language: this.language,
+      license: this.license,
     };
   }
 }
