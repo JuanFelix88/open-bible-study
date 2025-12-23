@@ -462,10 +462,10 @@ export default function Reader() {
   console.log({versionLicense, versions, versionAbbr});
 
   return (
-    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-16 sm:pb-36  bg-background relative text-text">
+    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-16 sm:pb-36  bg-background relative text-text max-w-lg">
       {!inViewHeader && (
         <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-40 shadow animate-show-from-top">
-          <div className="flex items-center">
+          <div className="flex items-center max-w-lg mx-auto">
             <div className="flex flex-col">
               {isLoadingBooks ? (
                 <div className="w-10/12 h-6 rounded-sm bg-surface animate-pulse mb-1" />

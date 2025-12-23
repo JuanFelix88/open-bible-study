@@ -114,9 +114,9 @@ export default function Explain() {
   const chapterText = chapterNumber?.toString() ?? "...";
 
   return (
-    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text">
+    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text max-w-lg w-screen">
       <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-10 shadow">
-        <div className="flex items-center">
+        <div className="flex items-center max-w-lg mx-auto">
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold">
               {verseVersions?.at(0)?.book.name || "..."} {chapterText}:

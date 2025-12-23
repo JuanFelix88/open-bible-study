@@ -73,9 +73,9 @@ export default function Compare() {
     .toReversed();
 
   return (
-    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text">
+    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text max-w-lg">
       <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-10 shadow">
-        <div className="flex items-center">
+        <div className="flex items-center max-w-lg mx-auto">
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold">
               {verseVersions?.at(0)?.book.name || "..."} {chapterText}:
@@ -127,11 +127,11 @@ export default function Compare() {
           ref={refVerse}
           className={
             inViewSelectedVersion
-              ? "block"
-              : "fixed left-0 top-16 px-7 z-50 w-full animate-show-from-top bg-background border-b border-b-border shadow-primary/10 shadow-lg"
+              ? "w-full block"
+              : "fixed left-0 top-16 px-7 z-50 w-full animate-show-from-top bg-background border-b border-b-border shadow-primary/10 shadow-lg flex justify-center"
           }
         >
-          <div className="mb-1 text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative">
+          <div className="mb-1 text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative max-w-lg">
             <sup className="font-bold border rounded-sm px-[2px]  border-dashed border-gray-400">
               {selectedVersion.version}
             </sup>{" "}

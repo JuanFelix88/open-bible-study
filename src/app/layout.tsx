@@ -45,7 +45,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased justify-center flex bg-background`}
         data-theme={selectedTheme}
       >
         <Providers>{children}</Providers>
