@@ -22,7 +22,6 @@ import CopyIcon from "../components/icons/CopyIcon";
 import MarkerIcon from "../components/icons/MarkerIcon";
 import { StringCompare } from "@/utils/StringCompare";
 import { Version } from "@/entities/Version";
-import { Metadata } from "next";
 
 function referencesIncludesVerse(
   references: Reference[] | undefined,
