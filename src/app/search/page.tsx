@@ -25,14 +25,13 @@ export default function Search() {
     "version",
     searchParams
   );
-
   const [isSelectingVersion, setIsSelectingVersion] = useState(
     !versionAbbrParam
   );
   const [searchVersionText, setSearchVersionText] = useState("");
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
   const [searchText, setSearchText] = useState("");
-  const debouncedSearchText = useDebounce(searchText, 150);
+  const debouncedSearchText = useDebounce(searchText, 100);
   const refSearchText = useRef<HTMLInputElement>(null);
 
   const { data: versions } = useQuery({
