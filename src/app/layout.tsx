@@ -18,7 +18,6 @@ const geistMono = Geist_Mono({
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Open Bible Study",
   description: "A advanced Bible study app to explore texts in depth.",
 };
 

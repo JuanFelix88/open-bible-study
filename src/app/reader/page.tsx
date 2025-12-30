@@ -20,8 +20,9 @@ import ShareIcon from "../components/icons/ShareIcon";
 import { ReadingMarker } from "@/entities/ReadingMarker";
 import CopyIcon from "../components/icons/CopyIcon";
 import MarkerIcon from "../components/icons/MarkerIcon";
-import { StringCompare } from '@/utils/StringCompare';
-import { Version } from '@/entities/Version';
+import { StringCompare } from "@/utils/StringCompare";
+import { Version } from "@/entities/Version";
+import { Metadata } from "next";
 
 function referencesIncludesVerse(
   references: Reference[] | undefined,
@@ -457,9 +458,17 @@ export default function Reader() {
   const versionText = versionAbbr ?? "...";
   const isSettingMarker = candidateToMarker !== null;
   const versionLicense =
-    versions?.find((v) => StringCompare.isEqualIgnoringCase(v.abbreviation, versionAbbr))?.license || "";
+    versions?.find((v) =>
+      StringCompare.isEqualIgnoringCase(v.abbreviation, versionAbbr)
+    )?.license || "";
 
-  console.log({versionLicense, versions, versionAbbr});
+  useEffect(() => {
+    if (!bookName) return;
+    if (!chapterText) return;
+    document.title = `${bookName} ${chapterText}${selectedVerse ? ":" : ""}${
+      selectedVerse ?? ""
+    }`;
+  }, [bookName, chapterNumber, selectedVerse]);
 
   return (
     <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-16 sm:pb-36  bg-background relative text-text max-w-lg">
