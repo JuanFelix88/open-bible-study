@@ -23,28 +23,28 @@ export default function ReferenceMutation() {
   const [editId] = Params.getParamFromSearchParams(
     "id",
     searchParams,
-    ParamType.NUMBER
+    ParamType.NUMBER,
   );
 
   const [povBookAbbr] = Params.getParamFromSearchParams(
     "book",
     searchParams,
-    ParamType.STRING
+    ParamType.STRING,
   );
   const [povVersionAbbr] = Params.getParamFromSearchParams(
     "version",
     searchParams,
-    ParamType.STRING
+    ParamType.STRING,
   );
   const [povChapterNumber] = Params.getParamFromSearchParams(
     "chapter",
     searchParams,
-    ParamType.NUMBER
+    ParamType.NUMBER,
   );
   const [povVerseNumber] = Params.getParamFromSearchParams(
     "verse",
     searchParams,
-    ParamType.NUMBER
+    ParamType.NUMBER,
   );
 
   const isEditMode = Boolean(editId);
@@ -68,7 +68,7 @@ export default function ReferenceMutation() {
   });
 
   const book = books?.find(
-    ({ abbr }) => abbr.toLowerCase() === povBookAbbr?.toLowerCase()
+    ({ abbr }) => abbr.toLowerCase() === povBookAbbr?.toLowerCase(),
   );
 
   const { data: searchResult, isLoading } = useQuery({
@@ -76,8 +76,8 @@ export default function ReferenceMutation() {
     queryFn: async () => {
       const searchResponse = await fetch(
         `/api/versions/${povVersionAbbr}/search?q=${encodeURIComponent(
-          outSearchText
-        )}`
+          outSearchText,
+        )}`,
       );
 
       await ThrowByResponse.throwsIfNotOk(searchResponse);
@@ -123,7 +123,7 @@ export default function ReferenceMutation() {
               v.abbrev.toLowerCase() === povBookAbbr?.toLowerCase() &&
               v.numChapter === povChapterNumber &&
               v.numVerse === povVerseNumber
-            )
+            ),
         );
 
         if (diffVerse) {
@@ -135,7 +135,7 @@ export default function ReferenceMutation() {
   function handleSelectVerse(
     abbrev: string,
     numChapter: number,
-    numVerse: number
+    numVerse: number,
   ) {
     setSelectedVerse({ abbrev, numChapter, numVerse });
     setIsSelectingVerse(false);
@@ -147,7 +147,7 @@ export default function ReferenceMutation() {
     setSearchText(
       selectedVerse
         ? `${selectedVerse.abbrev} ${selectedVerse.numChapter}:${selectedVerse.numVerse}`
-        : ""
+        : "",
     );
   }
 
@@ -176,9 +176,9 @@ export default function ReferenceMutation() {
     handleAddReference.isPending || handleUpdateReference.isPending;
 
   return (
-    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text w-screen max-w-lg">
+    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text w-screen max-w-[750px]">
       <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-10 shadow">
-        <div className="flex items-center max-w-lg mx-auto">
+        <div className="flex items-center max-w-[750px] mx-auto">
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold">
               {displayBook} {displayChapter}:{displayVerse}
@@ -320,7 +320,7 @@ export default function ReferenceMutation() {
                       handleSelectVerse(
                         result.bookAbbr,
                         result.chapter,
-                        result.verse
+                        result.verse,
                       )
                     }
                   >

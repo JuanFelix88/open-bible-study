@@ -27,7 +27,7 @@ function referencesIncludesVerse(
   references: Reference[] | undefined,
   bookAbbr: string,
   chapterNumber: number,
-  verseNumber: number
+  verseNumber: number,
 ) {
   if (!references) return false;
 
@@ -36,8 +36,8 @@ function referencesIncludesVerse(
       (v) =>
         v.numVerse === verseNumber &&
         v.numChapter === chapterNumber &&
-        v.abbrev.toLowerCase() === bookAbbr.toLowerCase()
-    )
+        v.abbrev.toLowerCase() === bookAbbr.toLowerCase(),
+    ),
   );
 }
 
@@ -55,7 +55,7 @@ export default function Reader() {
   const router = useRouter();
   const { setDialog } = useDialog();
   const [candidateToMarker, setCandidateToMarker] = useState<number | null>(
-    null
+    null,
   );
   const [readingMarkers, setReadingMarkers] = useState<ReadingMarker[]>([]);
   const [markerName, setMarkerName] = useState("");
@@ -90,7 +90,7 @@ export default function Reader() {
     queryKey: ["chapter", versionAbbr, bookAbbr, chapterNumber],
     queryFn: async () => {
       const chapterResponse = await fetch(
-        `/api/versions/${versionAbbr}/${bookAbbr}/${chapterNumber}`
+        `/api/versions/${versionAbbr}/${bookAbbr}/${chapterNumber}`,
       );
 
       await ThrowByResponse.throwsIfNotOk(chapterResponse);
@@ -106,7 +106,7 @@ export default function Reader() {
     staleTime: 1_000 * 3,
     queryFn: async () => {
       const chapterReferences = await fetch(
-        `/api/references/${bookAbbr}/${chapterNumber}`
+        `/api/references/${bookAbbr}/${chapterNumber}`,
       );
 
       await ThrowByResponse.throwsIfNotOk(chapterReferences);
@@ -121,7 +121,7 @@ export default function Reader() {
   });
 
   function handleClickVerse(
-    ev: MouseEvent<HTMLParagraphElement, globalThis.MouseEvent>
+    ev: MouseEvent<HTMLParagraphElement, globalThis.MouseEvent>,
   ) {
     if (!(ev.target instanceof HTMLElement)) return;
 
@@ -132,18 +132,18 @@ export default function Reader() {
       `/reader?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${ev.target.id}`,
       {
         scroll: false,
-      }
+      },
     );
 
     queueMicrotask(() =>
       refSelected.current?.scrollIntoView({
         behavior: "smooth",
         block: "center",
-      })
+      }),
     );
 
     router.prefetch(
-      `/reader/references?version=${versionAbbr}&book=${bookAbbr}&chapter=${chapterNumber}&verse=${ev.target.id}`
+      `/reader/references?version=${versionAbbr}&book=${bookAbbr}&chapter=${chapterNumber}&verse=${ev.target.id}`,
     );
   }
 
@@ -153,7 +153,7 @@ export default function Reader() {
       `/reader?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}`,
       {
         scroll: false,
-      }
+      },
     );
   }
 
@@ -161,7 +161,7 @@ export default function Reader() {
     if (chapter?.previous) {
       setSelectedVerse(null);
       router.push(
-        `/reader?book=${chapter?.previous.abbrev}&version=${versionAbbr}&chapter=${chapter?.previous.numChapter}`
+        `/reader?book=${chapter?.previous.abbrev}&version=${versionAbbr}&chapter=${chapter?.previous.numChapter}`,
       );
     }
   }
@@ -170,7 +170,7 @@ export default function Reader() {
     if (chapter?.next) {
       setSelectedVerse(null);
       router.push(
-        `/reader?book=${chapter?.next.abbrev}&version=${versionAbbr}&chapter=${chapter?.next.numChapter}`
+        `/reader?book=${chapter?.next.abbrev}&version=${versionAbbr}&chapter=${chapter?.next.numChapter}`,
       );
     }
   }
@@ -179,7 +179,7 @@ export default function Reader() {
     router.push(
       `/reader/compare?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${
         verseIndex + 1
-      }`
+      }`,
     );
     ev.stopPropagation();
   }
@@ -188,7 +188,7 @@ export default function Reader() {
     router.push(
       `/reader/explain?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${
         verseIndex + 1
-      }`
+      }`,
     );
     ev.stopPropagation();
   }
@@ -197,7 +197,7 @@ export default function Reader() {
     ev.stopPropagation();
 
     navigator.clipboard.writeText(
-      `${window.location.origin}/share?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`
+      `${window.location.origin}/share?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`,
     );
 
     setDialog({
@@ -239,8 +239,8 @@ export default function Reader() {
 
     setMarkerName(
       readingMarkers.find((m) =>
-        m.compareTo(bookAbbr, chapterNumber, verseNumber)
-      )?.name || ""
+        m.compareTo(bookAbbr, chapterNumber, verseNumber),
+      )?.name || "",
     );
     setCandidateToMarker(verseNumber);
   }
@@ -259,13 +259,13 @@ export default function Reader() {
       ...readingMarkers.filter(
         (m) =>
           `${m.bookAbbr}-${m.chapter}-${m.verse}` !==
-          `${bookAbbr}-${chapterNumber}-${candidateToMarker}`
+          `${bookAbbr}-${chapterNumber}-${candidateToMarker}`,
       ),
       new ReadingMarker(
         markerName,
         bookAbbr,
         chapterNumber!,
-        candidateToMarker!
+        candidateToMarker!,
       ),
     ];
 
@@ -280,7 +280,7 @@ export default function Reader() {
     const updatedMarkers = readingMarkers.filter(
       (m) =>
         `${m.bookAbbr}-${m.chapter}-${m.verse}` !==
-        `${bookAbbr}-${chapterNumber}-${candidateToMarker}`
+        `${bookAbbr}-${chapterNumber}-${candidateToMarker}`,
     );
     setReadingMarkers(updatedMarkers);
     localStorage.setItem("markers", JSON.stringify(updatedMarkers));
@@ -290,7 +290,7 @@ export default function Reader() {
 
   function handleOnKeyDown(event: KeyboardEvent) {
     const selected = document.querySelector(
-      "div:has(.control-buttons):not(.hidden-buttons)"
+      "div:has(.control-buttons):not(.hidden-buttons)",
     );
 
     const verseNumber = parseInt(refSelected.current?.id ?? "1", 10);
@@ -361,7 +361,7 @@ export default function Reader() {
     event.stopPropagation();
     const verseNumber = verseIndex + 1;
     router.push(
-      `/reader/references?version=${versionAbbr}&book=${bookAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`
+      `/reader/references?version=${versionAbbr}&book=${bookAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`,
     );
   }
 
@@ -374,7 +374,7 @@ export default function Reader() {
         refSelected.current?.scrollIntoView({
           behavior: "smooth",
           block: "center",
-        })
+        }),
       );
       return previousVerse;
     });
@@ -390,7 +390,7 @@ export default function Reader() {
         refSelected.current?.scrollIntoView({
           behavior: "smooth",
           block: "center",
-        })
+        }),
       );
 
       return nextVerse;
@@ -402,7 +402,7 @@ export default function Reader() {
 
     router.replace(
       `/reader?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${selectedVerse}`,
-      { scroll: false }
+      { scroll: false },
     );
   }, [selectedVerse, chapter]);
 
@@ -427,13 +427,13 @@ export default function Reader() {
   useEffect(() => {
     if (chapter?.previous) {
       router.prefetch(
-        `/reader?book=${chapter.previous.abbrev}&version=${versionAbbr}&chapter=${chapter.previous.numChapter}`
+        `/reader?book=${chapter.previous.abbrev}&version=${versionAbbr}&chapter=${chapter.previous.numChapter}`,
       );
     }
 
     if (chapter?.next) {
       router.prefetch(
-        `/reader?book=${chapter.next.abbrev}&version=${versionAbbr}&chapter=${chapter.next.numChapter}`
+        `/reader?book=${chapter.next.abbrev}&version=${versionAbbr}&chapter=${chapter.next.numChapter}`,
       );
     }
   }, [chapter]);
@@ -444,7 +444,7 @@ export default function Reader() {
     if (!markersStr) return;
 
     const markers: ReadingMarker[] = JSON.parse(markersStr).map((m: any) =>
-      ReadingMarker.fromObject(m)
+      ReadingMarker.fromObject(m),
     );
 
     setReadingMarkers(markers);
@@ -458,7 +458,7 @@ export default function Reader() {
   const isSettingMarker = candidateToMarker !== null;
   const versionLicense =
     versions?.find((v) =>
-      StringCompare.isEqualIgnoringCase(v.abbreviation, versionAbbr)
+      StringCompare.isEqualIgnoringCase(v.abbreviation, versionAbbr),
     )?.license || "";
 
   useEffect(() => {
@@ -470,10 +470,10 @@ export default function Reader() {
   }, [bookName, chapterNumber, selectedVerse]);
 
   return (
-    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-16 sm:pb-36  bg-background relative text-text max-w-lg">
+    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-16 sm:pb-36  bg-background relative text-text max-w-[750px]">
       {!inViewHeader && (
         <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-40 shadow animate-show-from-top">
-          <div className="flex items-center max-w-lg mx-auto">
+          <div className="flex items-center max-w-[750px] mx-auto">
             <div className="flex flex-col">
               {isLoadingBooks ? (
                 <div className="w-10/12 h-6 rounded-sm bg-surface animate-pulse mb-1" />
@@ -569,7 +569,7 @@ export default function Reader() {
       {chapter?.book.chapter.verses.map((verse, verseIndex) => (
         <div key={verseIndex} className="flex flex-col">
           {readingMarkers.some((m) =>
-            m.compareTo(bookAbbr, chapterNumber, verseIndex + 1)
+            m.compareTo(bookAbbr, chapterNumber, verseIndex + 1),
           ) && (
             <div className="flex flex-row w-full items-center mt-4 mb-1 -ml-2 pr-4">
               <MarkerIcon
@@ -580,7 +580,7 @@ export default function Reader() {
               <span className="min-w-fit mr-2">
                 {
                   readingMarkers.find((m) =>
-                    m.compareTo(bookAbbr, chapterNumber, verseIndex + 1)
+                    m.compareTo(bookAbbr, chapterNumber, verseIndex + 1),
                   )?.name
                 }
               </span>
@@ -731,7 +731,7 @@ export default function Reader() {
                     <button
                       hidden={
                         !readingMarkers.some((m) =>
-                          m.compareTo(bookAbbr, chapterNumber, verseIndex + 1)
+                          m.compareTo(bookAbbr, chapterNumber, verseIndex + 1),
                         )
                       }
                       onClick={() => handleRemoveMarker()}
@@ -748,7 +748,7 @@ export default function Reader() {
                 references,
                 chapter.book.abbrev,
                 chapter.book.chapter.number,
-                verseIndex + 1
+                verseIndex + 1,
               ) && (
                 <div
                   className={

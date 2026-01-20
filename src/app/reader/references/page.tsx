@@ -22,12 +22,12 @@ function getVerse(
   verseNumber: number,
   verses: LinkToVerse[],
   chapters: Chapter[],
-  versionAbbr: string
+  versionAbbr: string,
 ) {
   const otherRelatedVerse = verses.find(
     (verse) =>
       `${verse.abbrev.toLowerCase()} ${verse.numChapter}:${verse.numVerse}` !==
-      `${bookAbbr?.toLowerCase()} ${chapterNumber}:${verseNumber}`
+      `${bookAbbr?.toLowerCase()} ${chapterNumber}:${verseNumber}`,
   );
 
   if (!otherRelatedVerse) {
@@ -43,7 +43,7 @@ function getVerse(
       `${c.book.abbrev.toLowerCase()} ${c.book.chapter.number}` ===
       `${otherRelatedVerse.abbrev.toLowerCase()} ${
         otherRelatedVerse.numChapter
-      }`
+      }`,
   );
 
   if (!chapter) {
@@ -70,22 +70,22 @@ export default function References() {
   const [bookAbbr] = Params.getParamFromSearchParams(
     "book",
     searchParams,
-    ParamType.STRING
+    ParamType.STRING,
   );
   const [versionAbbr] = Params.getParamFromSearchParams(
     "version",
     searchParams,
-    ParamType.STRING
+    ParamType.STRING,
   );
   const [chapterNumber] = Params.getParamFromSearchParams(
     "chapter",
     searchParams,
-    ParamType.NUMBER
+    ParamType.NUMBER,
   );
   const [verseNumber] = Params.getParamFromSearchParams(
     "verse",
     searchParams,
-    ParamType.NUMBER
+    ParamType.NUMBER,
   );
 
   const { ref: refSelectedVerse, inView: inViewSelectedVerse } = useInView({
@@ -116,7 +116,7 @@ export default function References() {
       if (!verseNumber) return;
 
       const chapterResponse = await fetch(
-        `/api/versions/${versionAbbr}/${bookAbbr}/${chapterNumber}`
+        `/api/versions/${versionAbbr}/${bookAbbr}/${chapterNumber}`,
       );
 
       await ThrowByResponse.throwsIfNotOk(chapterResponse);
@@ -139,7 +139,7 @@ export default function References() {
       staleTime: 1_000 * 5,
       queryFn: async () => {
         const chapterReferences = await fetch(
-          `/api/references/${bookAbbr}/${chapterNumber}`
+          `/api/references/${bookAbbr}/${chapterNumber}`,
         );
 
         await ThrowByResponse.throwsIfNotOk(chapterReferences);
@@ -156,8 +156,8 @@ export default function References() {
               (v) =>
                 v.abbrev.toLowerCase() === bookAbbr?.toLowerCase() &&
                 v.numChapter === chapterNumber &&
-                v.numVerse === verseNumber
-            )
+                v.numVerse === verseNumber,
+            ),
           );
 
         if (!bookAbbr) return [];
@@ -168,15 +168,15 @@ export default function References() {
         const distinctBooksChapters = Array.from(
           new Set(
             relatedReferences.flatMap((r) =>
-              r.verses.map((v) => `${v.abbrev}/${v.numChapter}`)
-            )
-          )
+              r.verses.map((v) => `${v.abbrev}/${v.numChapter}`),
+            ),
+          ),
         );
 
         const chaptersResponses = await Promise.all(
           distinctBooksChapters.map((bookAndChapterStr) =>
-            fetch(`/api/versions/${versionAbbr}/${bookAndChapterStr}`)
-          )
+            fetch(`/api/versions/${versionAbbr}/${bookAndChapterStr}`),
+          ),
         );
 
         for (const chapterResponse of chaptersResponses) {
@@ -184,7 +184,7 @@ export default function References() {
         }
 
         const chapters: Chapter[] = await Promise.all(
-          chaptersResponses.map((vr) => vr.json())
+          chaptersResponses.map((vr) => vr.json()),
         );
 
         return relatedReferences.map(({ id, verses, createdAt, note }) => {
@@ -198,7 +198,7 @@ export default function References() {
             verseNumber,
             verses,
             chapters,
-            versionAbbr
+            versionAbbr,
           );
 
           return {
@@ -221,7 +221,7 @@ export default function References() {
     fetch(`/api/references/details/${id}`, { method: "DELETE" })
       .then((res) => res.json())
       .then(() =>
-        queryclient.invalidateQueries({ queryKey: ["references-details"] })
+        queryclient.invalidateQueries({ queryKey: ["references-details"] }),
       );
   }
 
@@ -242,9 +242,9 @@ export default function References() {
   const chapterText = chapterNumber?.toString() ?? "...";
 
   return (
-    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text max-w-lg">
+    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text max-w-[750px]">
       <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-10 shadow">
-        <div className="flex items-center max-w-lg mx-auto">
+        <div className="flex items-center max-w-[750px] mx-auto">
           <div className="flex flex-col">
             {isLoadingBooks ? (
               <div className="w-10/12 h-6 rounded-sm bg-surface animate-pulse mb-1" />
@@ -385,7 +385,7 @@ export default function References() {
                 </button>
               </div>
             </div>
-          )
+          ),
         )}
         <Link
           className="w-fit mt-2 text-[0.85rem] text-text bg-surface p-1 px-2 rounded hover:bg-surface/60"

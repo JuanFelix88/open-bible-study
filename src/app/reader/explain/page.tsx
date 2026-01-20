@@ -23,10 +23,10 @@ export default function Explain() {
     ? parseInt(searchParams.get("verse")!, 10)
     : null;
   const [selectedTokenIndex, setSelectedTokenIndex] = useState<number | null>(
-    null
+    null,
   );
   const [iaLoadingText, setIaLoadingText] = useState(
-    "Loading explanations AI..."
+    "Loading explanations AI...",
   );
 
   const { ref: refSelectedVersion, inView: inViewSelectedVersion } = useInView({
@@ -40,7 +40,7 @@ export default function Explain() {
     queryKey: ["compare", bookAbbr, chapterNumber, verseNumber],
     queryFn: async () => {
       const versesCompareResponse = await fetch(
-        `/api/versions/compare/${bookAbbr}/${chapterNumber}/${verseNumber}`
+        `/api/versions/compare/${bookAbbr}/${chapterNumber}/${verseNumber}`,
       );
 
       await ThrowByResponse.throwsIfNotOk(versesCompareResponse);
@@ -56,7 +56,7 @@ export default function Explain() {
     staleTime: Infinity,
     queryFn: async () => {
       const verseExplainResponse = await fetch(
-        `/api/versions/${version}/${bookAbbr}/${chapterNumber}/${verseNumber}/explain`
+        `/api/versions/${version}/${bookAbbr}/${chapterNumber}/${verseNumber}/explain-cloud`,
       );
 
       await ThrowByResponse.throwsIfNotOk(verseExplainResponse);
@@ -102,7 +102,7 @@ export default function Explain() {
       setIaLoadingText("Gerating deep explanations, almost there...");
 
       await new Promise((resolve) =>
-        setTimeout(resolve, random(4_000, 10_000))
+        setTimeout(resolve, random(4_000, 10_000)),
       );
       setIaLoadingText("Analyzing and correcting text applications...");
 
@@ -114,9 +114,9 @@ export default function Explain() {
   const chapterText = chapterNumber?.toString() ?? "...";
 
   return (
-    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text max-w-lg w-screen">
+    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text max-w-[750px] w-screen">
       <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-10 shadow">
-        <div className="flex items-center max-w-lg mx-auto">
+        <div className="flex items-center max-w-[750px] mx-auto">
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold">
               {verseVersions?.at(0)?.book.name || "..."} {chapterText}:
@@ -143,8 +143,10 @@ export default function Explain() {
             className="flex gap-1 text-text/60 animate-show-from-bottom-slow items-center"
             key={iaLoadingText}
           >
-            <AIIcon width={18} height={18}  className='-mt-0.5 animate-pulse' />
-            <span className='animate-pulse animate-pulse-[2s]'>{iaLoadingText}</span>
+            <AIIcon width={18} height={18} className="-mt-0.5 animate-pulse" />
+            <span className="animate-pulse animate-pulse-[2s]">
+              {iaLoadingText}
+            </span>
           </div>
 
           <div className="flex flex-col gap-1">

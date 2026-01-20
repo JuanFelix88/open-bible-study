@@ -35,7 +35,7 @@ export default function Compare() {
     queryKey: ["compare", bookAbbr, chapterNumber, verseNumber],
     queryFn: async () => {
       const versesCompareResponse = await fetch(
-        `/api/versions/compare/${bookAbbr}/${chapterNumber}/${verseNumber}`
+        `/api/versions/compare/${bookAbbr}/${chapterNumber}/${verseNumber}`,
       );
 
       await ThrowByResponse.throwsIfNotOk(versesCompareResponse);
@@ -63,19 +63,19 @@ export default function Compare() {
 
   const chapterText = chapterNumber?.toString() ?? "...";
   const selectedVersion = verseVersions?.find((v) =>
-    StringCompare.isEqualIgnoringCase(v.version, version ?? "")
+    StringCompare.isEqualIgnoringCase(v.version, version ?? ""),
   );
 
   const othersVersions = verseVersions
     ?.filter(
-      (v) => !StringCompare.isEqualIgnoringCase(v.version, version ?? "")
+      (v) => !StringCompare.isEqualIgnoringCase(v.version, version ?? ""),
     )
     .toReversed();
 
   return (
-    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text max-w-lg">
+    <div className="flex min-h-screen flex-col px-7 py-7 pb-15 bg-background text-text max-w-[750px]">
       <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-10 shadow">
-        <div className="flex items-center max-w-lg mx-auto">
+        <div className="flex items-center max-w-[750px] mx-auto">
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold">
               {verseVersions?.at(0)?.book.name || "..."} {chapterText}:
@@ -131,7 +131,7 @@ export default function Compare() {
               : "fixed left-0 top-16 px-7 z-50 w-full animate-show-from-top bg-background border-b border-b-border shadow-primary/10 shadow-lg flex justify-center"
           }
         >
-          <div className="mb-1 text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative max-w-lg">
+          <div className="mb-1 text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative max-w-[750px]">
             <sup className="font-bold border rounded-sm px-[2px]  border-dashed border-gray-400">
               {selectedVersion.version}
             </sup>{" "}
@@ -159,12 +159,12 @@ export default function Compare() {
                     token.level === 0
                       ? "bg-danger/30 rounded-sm mt-0.5"
                       : token.level === 1
-                      ? "bg-danger/20 rounded-sm mt-0.5"
-                      : token.level === 2
-                      ? "bg-warning/10 rounded-sm mt-0.5"
-                      : token.level === 3
-                      ? "rounded-sm mt-0.5"
-                      : ""
+                        ? "bg-danger/20 rounded-sm mt-0.5"
+                        : token.level === 2
+                          ? "bg-warning/10 rounded-sm mt-0.5"
+                          : token.level === 3
+                            ? "rounded-sm mt-0.5"
+                            : ""
                   }
                 >
                   {token.token}
