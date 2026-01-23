@@ -1,4 +1,5 @@
 "use client";
+import HighlitableText from "@/app/components/HighlitableText";
 import AIIcon from "@/app/components/icons/AIIcon";
 import ArrowLeftIcon from "@/app/components/icons/ArrowLeftIcon";
 import { ChapterWithDiffs } from "@/entities/ChapterWithDiffs";
@@ -202,7 +203,12 @@ export default function Explain() {
             className="animate-show-from-bottom-slow"
             key={selectedTokenIndex}
           >
-            <span>
+            <HighlitableText
+              text={
+                verseAnalysis?.explainData.at(selectedTokenIndex)?.explanation
+              }
+            />
+            {/* <span>
               {verseAnalysis?.explainData
                 .at(selectedTokenIndex)
                 ?.explanation.split(" ")
@@ -226,7 +232,7 @@ export default function Explain() {
                     </Fragment>
                   );
                 })}
-            </span>
+            </span> */}
           </div>
           <div
             className="mt-3 italic text-xs text-text/50 animate-show-from-bottom-slow"

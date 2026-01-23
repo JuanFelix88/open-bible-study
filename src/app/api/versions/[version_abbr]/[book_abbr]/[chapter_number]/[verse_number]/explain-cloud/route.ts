@@ -11,7 +11,7 @@ Considere estudos evangélicos, protestantes;
 Preciso que de acordo com o trecho bíblico abaixo você me forneça o seguinte JSON,
 considerando que seja quebrado em palavras para tradução do original, pode ser agrupado por frase que faça mais sentido para a tradução, explique cada um em relação a sua tradução do original, considerando o contexto histórico e cultural da época.
 Considere também estudos profundos, significados da língua judaica, curiosidades (enfatizar curiosidades), explicações teológicas e quando for nome de pessoas explique quem foi a pessoa na bíblia.
-Utilize unicamente '' para destacar textos ao invés de ** e afins, use apenas ' para formar bold;
+Utilize unicamente ** para destacar textos ao invés de ** e afins, use apenas ** para formar bold;
 Considere o seguinte trecho bíblico:
 
 "@Verse"

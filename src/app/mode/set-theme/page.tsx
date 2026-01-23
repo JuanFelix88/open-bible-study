@@ -10,7 +10,7 @@ export default function DarkMode() {
   useEffect(() => {
     const cookies = parseCookies();
 
-    setSelectedTheme(cookies["theme-preference"] ?? Themes.modes[0])
+    setSelectedTheme(cookies["theme-preference"] ?? Themes.modes[0]);
   }, []);
 
   function handleChangeMode(event: React.ChangeEvent<HTMLSelectElement>) {
@@ -24,7 +24,7 @@ export default function DarkMode() {
   }
 
   return (
-    <div className="p-4 flex flex-col gap-4 bg-background text-text min-h-screen">
+    <div className="p-4 flex flex-col gap-4 bg-background text-text min-h-screen max-w-[550px] w-full">
       <h1 className="text-xl font-bold">Set mode</h1>
       <select
         value={selectedTheme ?? Themes.modes[0]}
@@ -32,7 +32,7 @@ export default function DarkMode() {
         className="border border-border rounded p-2 brightness-[1.15] bg-background"
       >
         {Themes.modes.map((mode) => (
-          <option key={mode} value={mode} className='bg-background'>
+          <option key={mode} value={mode} className="bg-background">
             {mode}
           </option>
         ))}

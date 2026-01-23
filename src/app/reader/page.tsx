@@ -470,7 +470,7 @@ export default function Reader() {
   }, [bookName, chapterNumber, selectedVerse]);
 
   return (
-    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-16 sm:pb-36  bg-background relative text-text max-w-[750px]">
+    <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-16 sm:pb-36 bg-background relative text-text max-w-[750px] w-full">
       {!inViewHeader && (
         <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-40 shadow animate-show-from-top">
           <div className="flex items-center max-w-[750px] mx-auto">
@@ -552,9 +552,11 @@ export default function Reader() {
 
       {/* Loading verses */}
       {isLoadingChapter && (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 w-full max-w-[750px] min-w-fit">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex flex-col gap-1">
+            <div key={i} className="flex flex-col gap-1 w-full min-w-fit">
+              <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
+              <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
               <div className="w-10/12 h-6 rounded-sm bg-surface animate-pulse mb-1" />
               <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
               <div className="w-3/6 h-6 rounded-sm bg-surface animate-pulse mb-1" />
