@@ -94,7 +94,7 @@ export default function Explain() {
   useEffect(() => {
     (async () => {
       await new Promise((resolve) => setTimeout(resolve, random(2_000, 3_000)));
-      setIaLoadingText("Still loading explanations from AI, please wait...");
+      setIaLoadingText("Loading explanations from AI, please wait...");
 
       await new Promise((resolve) => setTimeout(resolve, random(500, 7_000)));
       setIaLoadingText("Looking for references in the original texts...");
