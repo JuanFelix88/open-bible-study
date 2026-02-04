@@ -82,7 +82,7 @@ export async function GET(
 
     const response = await fetch("https://ollama.com/api/generate", {
       body: JSON.stringify({
-        model: "qwen3-vl:235b-instruct-cloud",
+        model: "gpt-oss:120b-cloud",
         prompt: PROMPT_TEMPLATE.replace(
           "@Verse",
           chapter.book.chapter.verses.at(verseNumber - 1) as string,
