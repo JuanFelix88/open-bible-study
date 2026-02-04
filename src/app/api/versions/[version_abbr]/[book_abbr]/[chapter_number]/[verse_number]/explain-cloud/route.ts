@@ -7,9 +7,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 const PROMPT_TEMPLATE = `
 Agora você é um especialista em estudos bíblicos;
-Considere estudos evangélicos, protestantes;
+Considere estudos evangélicos, protestantes e históricos (coesos);
 Preciso que de acordo com o trecho bíblico abaixo você me forneça o seguinte JSON,
-considerando que seja quebrado em palavras para tradução do original, pode ser agrupado por frase que faça mais sentido para a tradução, explique cada um em relação a sua tradução do original, considerando o contexto histórico e cultural da época.
+considerando que seja quebrado em palavras para tradução do original, pode ser agrupado por frase que faça mais sentido para a tradução, explique cada um em relação a sua tradução do original, considerando o contexto histórico e cultural da época (com fatos históricos comprovados).
 Considere também estudos profundos, significados da língua judaica, curiosidades (enfatizar curiosidades), explicações teológicas e quando for nome de pessoas explique quem foi a pessoa na bíblia.
 Utilize unicamente ** para destacar textos ao invés de ** e afins, use apenas ** para formar bold;
 Considere o seguinte trecho bíblico:
@@ -82,7 +82,7 @@ export async function GET(
 
     const response = await fetch("https://ollama.com/api/generate", {
       body: JSON.stringify({
-        model: "gpt-oss:120b-cloud",
+        model: "qwen3-vl:235b-instruct-cloud",
         prompt: PROMPT_TEMPLATE.replace(
           "@Verse",
           chapter.book.chapter.verses.at(verseNumber - 1) as string,
