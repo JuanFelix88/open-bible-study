@@ -2,12 +2,13 @@
   "name": "open-bible-study",
   "version": "0.1.0",
   "scripts": {
-    "dev": "pnpm run parts && next dev --turbopack",
-    "build": "npm run parts && next build",
+    "dev": "npm run orig && npm run parts && next dev --turbopack",
+    "build": "npm run orig && npm run parts && next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "parts": "node scripts/versions-partition.mjs"
+    "parts": "node scripts/versions-partition.mjs",
+    "orig": "node scripts/convert-original.mjs"
   },
   "dependencies": {
     "@tanstack/query-async-storage-persister": "^5.89.0",

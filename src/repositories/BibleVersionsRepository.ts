@@ -1,5 +1,6 @@
 import { BibleVersions } from "@/definitions/BibleVersions";
 import { BooksAndChapters } from "@/definitions/BooksAndChapters";
+import { BibleVersion } from "@/entities/BibleVersion";
 import { Chapter } from "@/entities/Chapter";
 import { LinkToChapter } from "@/entities/LinkToChapter";
 import { Nullable } from "@/entities/Nullable";
@@ -10,7 +11,7 @@ export class BibleVersionsRepository extends StaticClass {
   public static async getAllVersionsWithVerse(
     bookAbbr: string,
     chapterNumber: number,
-    verseNumber: number
+    verseNumber: number,
   ): Promise<Chapter[]> {
     bookAbbr = bookAbbr.trim().toLowerCase();
 
@@ -20,23 +21,25 @@ export class BibleVersionsRepository extends StaticClass {
     }
 
     const versions = await Promise.all(
-      BibleVersions.versions.map(async (version) => {
-        return {
-          raw: (await import(
-            `@/assets/versions/partitions/${version.abbreviation.toLowerCase()}/${bookAbbr.toLowerCase()}.json`
-          )) as RawChapterVersion,
-          version,
-        };
-      })
+      BibleVersions.versions
+        .filter((version) => !version.isOriginal)
+        .map(async (version) => {
+          return {
+            raw: (await import(
+              `@/assets/versions/partitions/${version.abbreviation.toLowerCase()}/${bookAbbr.toLowerCase()}.json`
+            )) as RawChapterVersion,
+            version,
+          };
+        }),
     );
 
     const hasVerseInBibleVersions = versions.some(
-      (v) => !!v.raw.chapters.at(chapterNumber - 1)?.at(verseNumber - 1)
+      (v) => !!v.raw.chapters.at(chapterNumber - 1)?.at(verseNumber - 1),
     );
 
     if (!hasVerseInBibleVersions) {
       throw new Error(
-        `Verse [${bookAbbr.toUpperCase()} ${chapterNumber}:${verseNumber}] not found in one or more versions.`
+        `Verse [${bookAbbr.toUpperCase()} ${chapterNumber}:${verseNumber}] not found in one or more versions.`,
       );
     }
 
@@ -54,14 +57,14 @@ export class BibleVersionsRepository extends StaticClass {
           },
           previous: null,
           next: null,
-        } satisfies Chapter)
+        }) satisfies Chapter,
     );
 
     return verseVersions;
   }
 
   public static async getBibleVersion(
-    versionAbbr: string
+    versionAbbr: string,
   ): Promise<RawChapterVersion[]> {
     versionAbbr = versionAbbr.trim().toLowerCase();
 
@@ -75,12 +78,12 @@ export class BibleVersionsRepository extends StaticClass {
       throw new Error(`Version ${versionAbbr.toUpperCase()} not found.`);
     }
 
-    return Array.from(bibleVersion)
+    return Array.from(bibleVersion);
   }
 
   public static async getBookWithVersion(
     versionAbbr: string,
-    bookAbbr: string
+    bookAbbr: string,
   ): Promise<RawChapterVersion> {
     versionAbbr = versionAbbr.trim().toLowerCase();
     bookAbbr = bookAbbr.trim().toLowerCase();
@@ -94,17 +97,17 @@ export class BibleVersionsRepository extends StaticClass {
 
     if (!book) {
       throw new Error(
-        `Book ${bookAbbr.toUpperCase()} not found in version ${versionAbbr.toUpperCase()}.`
+        `Book ${bookAbbr.toUpperCase()} not found in version ${versionAbbr.toUpperCase()}.`,
       );
     }
 
-    return book
+    return book;
   }
 
   public static async getChapterWithVersion(
     versionAbbr: string,
     bookAbbr: string,
-    chapterNumber: number
+    chapterNumber: number,
   ): Promise<Chapter> {
     versionAbbr = versionAbbr.trim().toLowerCase();
     bookAbbr = bookAbbr.trim().toLowerCase();
@@ -115,12 +118,12 @@ export class BibleVersionsRepository extends StaticClass {
       throw new Error("Chapter number must be greater than 0.");
     }
 
-    const book = await this.getBookWithVersion(versionAbbr, bookAbbr)
+    const book = await this.getBookWithVersion(versionAbbr, bookAbbr);
 
     const allBooks = await BooksAndChapters.getBooks();
 
     const bookIndex = allBooks.findIndex(
-      ({ abbr }) => abbr.toLowerCase() === bookAbbr
+      ({ abbr }) => abbr.toLowerCase() === bookAbbr,
     );
     const isLastChapter = chapterNumber === book.chapters.length;
     const isFirstChapter = chapterNumber === 1;
@@ -159,5 +162,121 @@ export class BibleVersionsRepository extends StaticClass {
       previous,
       next,
     } satisfies Chapter;
+  }
+
+  public static async getBookIndex(
+    version: string,
+    bookAbbr: string,
+  ): Promise<number> {
+    version = version?.trim();
+    bookAbbr = bookAbbr?.trim();
+
+    if (!version) throw new Error("Version abbreviation is required.");
+    if (!bookAbbr) throw new Error("Book abbreviation is required.");
+
+    const bibleVersion = await this.getBibleVersion(version);
+
+    const index = bibleVersion.findIndex((b) => b.abbrev === bookAbbr);
+
+    console.log({ index, bookAbbr, version });
+
+    if (index === -1) {
+      throw new Error(
+        `Book ${bookAbbr.toUpperCase()} not found in version ${version.toUpperCase()}.`,
+      );
+    }
+
+    return index;
+  }
+
+  public static async getOriginalText(
+    version: string,
+    bookAbbr: string,
+    chapterNumber: number,
+    verseNumber: number,
+  ): Promise<{ chapter: Chapter; versionMeta: BibleVersion }> {
+    version = version?.trim();
+    bookAbbr = bookAbbr?.trim();
+
+    if (!version) throw new Error("Version abbreviation is required.");
+    if (!bookAbbr) throw new Error("Book abbreviation is required.");
+
+    const bookIndex = await this.getBookIndex(version, bookAbbr);
+
+    const originalVersion = BibleVersions.versions
+      .filter((v) => v.isOriginal)
+      .sort((a, b) => b.startsIn - a.startsIn)
+      .find((v) => bookIndex >= v.startsIn);
+
+    if (!originalVersion) {
+      throw new Error(
+        `Original version not found for book ${bookAbbr} (index ${bookIndex}).`,
+      );
+    }
+
+    const bibleData = await this.getBibleVersion(originalVersion.abbreviation);
+    const relativeIndex = bookIndex - originalVersion.startsIn;
+    const rawBook = bibleData.at(relativeIndex);
+
+    if (!rawBook) {
+      throw new Error(
+        `Book not found in original version ${originalVersion.abbreviation}.`,
+      );
+    }
+
+    const verseText = rawBook.chapters
+      .at(chapterNumber - 1)
+      ?.at(verseNumber - 1);
+
+    if (!verseText) {
+      throw new Error(
+        `Verse [${bookAbbr.toUpperCase()} ${chapterNumber}:${verseNumber}] not found in original version ${originalVersion.abbreviation}.`,
+      );
+    }
+
+    return {
+      chapter: {
+        version: originalVersion.abbreviation,
+        book: {
+          abbrev: rawBook.abbrev,
+          name: rawBook.name,
+          chapter: {
+            number: chapterNumber,
+            verses: [verseText],
+          },
+        },
+        previous: null,
+        next: null,
+      },
+      versionMeta: originalVersion,
+    };
+  }
+
+  public static async getVersionFromName(name?: string): Promise<BibleVersion> {
+    name = name?.trim();
+
+    if (!name) throw new Error("Version name is required.");
+
+    const normalize = (s: string) =>
+      s
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .replace(/[^a-z0-9]/gi, "")
+        .toLowerCase();
+
+    const target = normalize(name);
+
+    const version = BibleVersions.versions.find((v) => {
+      const abbr = normalize(v.abbreviation ?? "");
+      const vname = normalize(v.name ?? "");
+      const path = normalize(v.path ?? "");
+      return abbr === target || vname === target || path === target;
+    });
+
+    if (!version) {
+      throw new Error(`Version ${name} not found.`);
+    }
+
+    return version;
   }
 }

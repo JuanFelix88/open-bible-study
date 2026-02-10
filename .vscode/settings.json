@@ -1,9 +1,13 @@
 {
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/bower_components": true,
+    "**/*.code-search": true
+  },
   "workbench.editor.customLabels.patterns": {
     "**/page.tsx": "${dirname} (page.tsx)",
     "**/route.ts": "${dirname(1)}/${dirname(0)} (route.ts)"
   },
-  "cSpell.words": [
-    "analysation"
-  ]
+  "cSpell.words": ["analysation"]
 }

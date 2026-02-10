@@ -26,25 +26,28 @@ readdirSync("./src/assets/versions").forEach((version) => {
     mkdirSync(outDir, { recursive: true });
   }
 
-  
-  const books = JSON.parse(readFileSync(fullPath, "utf-8"));
-  
-  if (!alreadyCreatedMeta) {
-    writeFileSync(`./src/assets/versions/partitions/meta.json`, JSON.stringify(
-      books.map(({ name, abbrev, chapters }) => ({
-        name,
-        abbr: abbrev,
-        numChapters: chapters.length,
-      }))
-    ));
+  if (version === "originals") return;
 
-    alreadyCreatedMeta = true
+  const books = JSON.parse(readFileSync(fullPath, "utf-8"));
+
+  if (!alreadyCreatedMeta) {
+    writeFileSync(
+      `./src/assets/versions/partitions/meta.json`,
+      JSON.stringify(
+        books.map(({ name, abbrev, chapters }) => ({
+          name,
+          abbr: abbrev,
+          numChapters: chapters.length,
+        })),
+      ),
+    );
+
+    alreadyCreatedMeta = true;
   }
 
-  
   books.forEach((book) => {
     const bookPath = path.join(outDir, `${book.abbrev.toLowerCase()}.json`);
-    
+
     writeFileSync(bookPath, JSON.stringify(book));
   });
 });

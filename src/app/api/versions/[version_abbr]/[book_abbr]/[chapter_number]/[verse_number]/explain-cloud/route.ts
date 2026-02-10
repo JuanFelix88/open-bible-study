@@ -9,18 +9,20 @@ const PROMPT_TEMPLATE = `
 Agora você é um especialista em estudos bíblicos;
 Considere estudos evangélicos, protestantes e históricos (coesos);
 Preciso que de acordo com o trecho bíblico abaixo você me forneça o seguinte JSON,
-considerando que seja quebrado em palavras para tradução do original, pode ser agrupado por frase que faça mais sentido para a tradução, explique cada um em relação a sua tradução do original, considerando o contexto histórico e cultural da época (com fatos históricos comprovados).
-Considere também estudos profundos, significados da língua judaica, curiosidades (enfatizar curiosidades), explicações teológicas e quando for nome de pessoas explique quem foi a pessoa na bíblia.
+considerando que seja quebrado em palavras para tradução, pode ser agrupado por frase que faça mais sentido para a tradução, explique cada um em relação ao idioma destino, considerando o contexto histórico e cultural da época (com fatos históricos comprovados).
+Considere também estudos profundos, significados da língua, curiosidades válidas para o contexto protestante, explicações teológicas, detalhes da tradução e quando for nome de pessoa explique quem foi a pessoa na bíblia.
 Utilize unicamente ** para destacar textos ao invés de ** e afins, use apenas ** para formar bold;
-Considere o seguinte trecho bíblico:
+Considere o seguinte trecho bíblico na língua original com destino:
 
 "@Verse"
 @DisplayVerse
 
+Traduzir para: @DestinyLanguage
+
 Resultado esperado em apenas em JSON:
 Array<[
-    string; // token, texto da tradução @Version que foi enviada (para ser usado para o clique do usuário, aqui é o texto que o usuário verá)
-    string; // texto com a explicação (gerado pela IA)
+    string; // token, texto original, json válido (para ser usado para o clique do usuário, aqui é o texto que o usuário verá)
+    string; // texto com a explicação/tradução/trazer múltiplos significados/sinônimos para tradução (gerado pela IA)
 ]>
 `.trim();
 
@@ -54,6 +56,17 @@ export async function GET(
     if (chapterNumberError) return ResponseError.asError(chapterNumberError);
     if (verseNumberError) return ResponseError.asError(verseNumberError);
 
+    const { chapter: originalVerseChapter, versionMeta: originalMeta } =
+      await BibleVersionsRepository.getOriginalText(
+        abbrVersion,
+        bookAbbr,
+        chapterNumber,
+        verseNumber,
+      );
+
+    const destinyVersion =
+      await BibleVersionsRepository.getVersionFromName(abbrVersion);
+
     const { data: chapter, error: chapterError } =
       await FnNormalizer.getFromPromise(
         BibleVersionsRepository.getChapterWithVersion(
@@ -85,13 +98,14 @@ export async function GET(
         model: "gpt-oss:120b-cloud",
         prompt: PROMPT_TEMPLATE.replace(
           "@Verse",
-          chapter.book.chapter.verses.at(verseNumber - 1) as string,
+          originalVerseChapter.book.chapter.verses.at(0) ?? "",
         )
           .replace(
             "@DisplayVerse",
             `${chapter.book.name} ${chapter.book.chapter.number}:${verseNumber}`,
           )
-          .replace("@Version", abbrVersion.toUpperCase() + " PT-BR"),
+          .replace("@Version", abbrVersion.toUpperCase())
+          .replace("@DestinyLanguage", destinyVersion.language),
         stream: false,
         think: "low",
       }),
@@ -124,6 +138,8 @@ export async function GET(
       {
         headers: {
           "Agent-AI": "gpt-oss:120b-cloud",
+          language: originalMeta.language,
+          version: `${originalMeta.abbreviation} - ${originalMeta.name}`,
         },
       },
     );
