@@ -6,24 +6,44 @@ import { ResponseError } from "@/utils/ResponseError";
 import { NextRequest, NextResponse } from "next/server";
 
 const PROMPT_TEMPLATE = `
-Agora você é um especialista em estudos bíblicos;
-Considere estudos evangélicos, protestantes e históricos (coesos);
-Preciso que de acordo com o trecho bíblico abaixo você me forneça o seguinte JSON,
-considerando que seja quebrado em palavras para tradução, pode ser agrupado por frase que faça mais sentido para a tradução, explique cada um em relação ao idioma destino, considerando o contexto histórico e cultural da época (com fatos históricos comprovados).
-Considere também estudos profundos, significados da língua, curiosidades válidas para o contexto protestante, explicações teológicas, detalhes da tradução e quando for nome de pessoa explique quem foi a pessoa na bíblia.
-Utilize unicamente ** para destacar textos ao invés de ** e afins, use apenas ** para formar bold;
-Considere o seguinte trecho bíblico na língua original com destino:
+Você é um especialista em estudos bíblicos com foco evangélico e protestante.
+
+# Tarefa
+
+Analise o versículo abaixo na língua original e produza uma explicação detalhada, traduzindo e explicando cada trecho para o idioma destino.
+
+## Versículo original
 
 "@Verse"
 @DisplayVerse
 
-Traduzir para: @DestinyLanguage
+## Idioma destino
 
-Resultado esperado em apenas em JSON:
-Array<[
-    string; // token, texto original, json válido (para ser usado para o clique do usuário, aqui é o texto que o usuário verá)
-    string; // texto com a explicação/tradução/trazer múltiplos significados/sinônimos para tradução (gerado pela IA)
-]>
+@DestinyLanguage
+
+## Regras
+
+1. Divida o versículo original em tokens. Cada token é uma palavra ou grupo curto de palavras que formam uma unidade de sentido para tradução.
+2. Para cada token, escreva uma explicação no idioma destino contendo:
+   - Tradução literal e possíveis sinônimos.
+   - Significado no idioma original (hebraico, grego ou aramaico).
+   - Contexto histórico e cultural comprovado da época.
+   - Quando o token for um nome próprio, explique quem foi a pessoa na Bíblia.
+   - Curiosidades teológicas relevantes ao contexto protestante.
+3. Use apenas **texto** (dois asteriscos) para destacar palavras em negrito nas explicações. Não use outros formatos como *itálico*, __sublinhado__ ou # títulos.
+4. Cada token deve preservar o texto exatamente como aparece no versículo original, incluindo pontuação adjacente.
+
+## Formato de saída
+
+Responda APENAS com um JSON válido, sem texto antes ou depois, sem blocos de código markdown.
+O JSON deve ser um array de arrays, onde cada elemento interno tem exatamente 2 strings: [token, explicação].
+
+Exemplo de formato (não copie o conteúdo, apenas a estrutura):
+
+[
+  ["בְּרֵאשִׁית", "**Bereshit** — Significa **No princípio** ou **No começo**. Vem da raiz hebraica **rosh** (cabeça, início). Indica o ponto de partida absoluto da criação."],
+  ["בָּרָא", "**Bará** — Verbo hebraico que significa **criou**. Usado exclusivamente para a ação criadora de Deus, diferente de **asah** (fazer/formar)."]
+]
 `.trim();
 
 export async function GET(
