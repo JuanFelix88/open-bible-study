@@ -115,7 +115,7 @@ export async function GET(
 
     const response = await fetch("https://ollama.com/api/generate", {
       body: JSON.stringify({
-        model: "gpt-oss:120b-cloud",
+        model: "glm-5:cloud",
         prompt: PROMPT_TEMPLATE.replace(
           "@Verse",
           originalVerseChapter.book.chapter.verses.at(0) ?? "",
@@ -157,7 +157,7 @@ export async function GET(
       ),
       {
         headers: {
-          "Agent-AI": "gpt-oss:120b-cloud",
+          "Agent-AI": "glm-5:cloud",
           language: originalMeta.language,
           version: `${originalMeta.abbreviation} - ${originalMeta.name}`,
         },
