@@ -19,6 +19,11 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   description: "A advanced Bible study app to explore texts in depth.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "BibleStudy",
+  },
 };
 
 export default async function RootLayout({
