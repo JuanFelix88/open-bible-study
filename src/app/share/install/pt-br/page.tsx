@@ -15,6 +15,7 @@ export default function Page() {
       iosButtonText="Instalar no iOS"
       androidButtonText="Instalar no Android"
       installedText="Instalado"
+      backButtonText="Voltar para a Página Inicial"
       iosInstructions={{
         step1: "Toque no botão Compartilhar no menu do navegador",
         step2: "Role para baixo e encontre 'Adicionar à Tela de Início'",

@@ -20,6 +20,7 @@ interface InstallPageProps {
     step2: string;
     step3: string;
   };
+  backButtonText: string;
 }
 
 export default function InstallPage({
@@ -29,6 +30,7 @@ export default function InstallPage({
   androidButtonText,
   installedText,
   iosInstructions,
+  backButtonText,
 }: InstallPageProps) {
   const { isInstalled, isIOS, canInstall, install } = usePWAInstall();
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
@@ -149,6 +151,16 @@ export default function InstallPage({
               )}
             </div>
           )}
+
+          {/* Back Button */}
+          <div className="pt-4">
+            <a
+              href="/"
+              className="inline-block rounded-xl bg-background px-6 py-3 text-lg font-semibold text-text transition-all active:scale-[0.98]"
+            >
+              {backButtonText}
+            </a>
+          </div>
         </div>
       </div>
     </div>

@@ -15,6 +15,7 @@ export default function Page() {
       iosButtonText="Install on iOS"
       androidButtonText="Install on Android"
       installedText="Installed"
+      backButtonText="Back to Home"
       iosInstructions={{
         step1: "Tap the Share button in your browser menu",
         step2: "Scroll down and find 'Add to Home Screen'",
