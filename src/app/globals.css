@@ -93,6 +93,24 @@
   --color-border: #c686f15d;
 }
 
+[data-theme="oled"] {
+  --color-primary: #4da6ff;
+  --color-secondary: #2d4a6f;
+  --color-success: #2ea043;
+  --color-danger: #da3633;
+  --color-warning: #d29922;
+  --color-info: #58a6ff;
+  --color-light: #e6e6e6;
+  --color-dark: #000000;
+
+  --color-background: #000000;
+  --color-surface: #0d0d0d;
+  --color-surface-strong: #1a1a1a;
+  --color-text: #e6e6e6;
+  --color-text-muted: #7d8590;
+  --color-border: #1a1a1a;
+}
+
 /* ---------------------------------------------- */
 
 body {

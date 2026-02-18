@@ -6,6 +6,7 @@ export class Themes extends StaticClass {
     "dark",
     "ventura",
     "clean",
-    "midnight"
+    "midnight",
+    "oled"
   ]
 }
