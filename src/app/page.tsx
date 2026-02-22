@@ -31,7 +31,25 @@ export default function Home() {
   });
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-18 px-12 sm:px-24 bg-background text-text">
+    <div className="relative flex min-h-screen flex-col items-center justify-center py-18 px-12 sm:px-24 bg-background text-text">
+      <Link
+        href="/mode/set-theme"
+        className="fixed sm:absolute bottom-4 sm:bottom-auto right-4 top-auto sm:top-4 z-50 flex items-center gap-2 rounded-full border border-border bg-surface/60 px-3 py-2 text-sm font-semibold hover:bg-surface/90 active:scale-[0.98] transition"
+        aria-label="Open theme selector"
+      >
+        <span className="relative flex h-5 w-5 items-center justify-center overflow-hidden rounded-full border border-border bg-background">
+          <span
+            className="absolute inset-0 opacity-90"
+            style={{
+              background:
+                "conic-gradient(from 180deg, var(--color-primary), var(--color-secondary), var(--color-info), var(--color-warning), var(--color-primary))",
+            }}
+          />
+          <span className="relative z-10 h-2.5 w-2.5 rounded-full bg-background border border-border" />
+        </span>
+        Theme
+      </Link>
+
       <div className="relative flex justify-center items-center drop-shadow-xl drop-shadow-text/20 mb-2 w-16 h-16 overflow-hidden rounded-[14px]">
         <Image
           src={BibleIcon}
@@ -76,10 +94,6 @@ export default function Home() {
         <DocumentIcon width={16} height={16} className="mr-1 text-text/80" />O
         poder da Oração e do Jejum
       </button>
-
-      <Link href="/mode/set-theme" className="flex text-center mt-3 underline">
-        Set other theme
-      </Link>
     </div>
   );
 }
