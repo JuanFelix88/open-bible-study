@@ -92,8 +92,7 @@ export default function OPoderReader() {
 
   const paragraphs = data?.content
     ?.split("\n")
-    .filter((p) => p.trim().length > 0)
-    .filter((p) => !/^[0-9]{0,}$/.test(p.trim()));
+    .filter((p) => p.trim().length > 0);
 
   return (
     <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-16 sm:pb-36 bg-background relative text-text max-w-[750px] w-full">
@@ -102,8 +101,11 @@ export default function OPoderReader() {
           <div className="flex items-center max-w-[750px] mx-auto">
             <div className="flex flex-col">
               <h1 className="text-xl sm:text-2xl font-bold -mr-30 sm:-mr-8">
-                {data?.title ?? "..."}
+                Livro
               </h1>
+              <h2 className="text-sm font-bold text-text/80">
+                {data?.title ?? "..."}
+              </h2>
               <h3 className="text-xs font-bold text-text/50">
                 Página {currentPage}
                 {data ? ` de ${data.totalPages}` : ""}
@@ -126,8 +128,11 @@ export default function OPoderReader() {
             className="text-xl sm:text-2xl font-bold -mr-30 sm:-mr-8"
             ref={refHeader}
           >
-            {data?.title ?? "..."}
+            Livro
           </h1>
+          <h2 className="text-sm font-bold text-text/80">
+            {data?.title ?? "..."}
+          </h2>
           <h3 className="text-xs font-bold text-text/50">
             Página {currentPage}
             {data ? ` de ${data.totalPages}` : ""}
