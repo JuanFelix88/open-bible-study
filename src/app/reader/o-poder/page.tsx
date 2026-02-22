@@ -103,7 +103,7 @@ export default function OPoderReader() {
               <h1 className="text-xl sm:text-2xl font-bold -mr-30 sm:-mr-8">
                 Livro
               </h1>
-              <h2 className="text-sm font-bold text-text/80">
+              <h2 className="text-sm font-bold text-text/80 max-w-[220px] text-start">
                 {data?.title ?? "..."}
               </h2>
               <h3 className="text-xs font-bold text-text/50">
@@ -130,7 +130,7 @@ export default function OPoderReader() {
           >
             Livro
           </h1>
-          <h2 className="text-sm font-bold text-text/80">
+          <h2 className="text-sm font-bold text-text/80 max-w-[220px] text-start">
             {data?.title ?? "..."}
           </h2>
           <h3 className="text-xs font-bold text-text/50">
