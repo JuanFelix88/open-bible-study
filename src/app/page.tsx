@@ -4,11 +4,20 @@ import Link from "next/link";
 import SearchIcon from "./components/icons/SearchIcon";
 import BibleIcon from "./favicon.ico";
 import CompareIcon from "./components/icons/CompareIcon";
+import DocumentIcon from "./components/icons/DocumentIcon";
 import { useQuery } from "@tanstack/react-query";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { Version } from "@/entities/Version";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+
+  function handleOpenBook() {
+    const savedPage = localStorage.getItem("o-poder-progress") || "1";
+    router.push(`/reader/o-poder?page=${savedPage}`);
+  }
+
   useQuery({
     queryKey: ["versions"],
     staleTime: 5_000,
@@ -60,6 +69,13 @@ export default function Home() {
         <CompareIcon width={16} height={16} className="mr-1 text-text/80" />
         Select chapter
       </Link>
+      <button
+        className="flex mt-5 justify-center items-center rounded-md border bg-surface/70 border-border/80 p-2 w-full hover:bg-surface/20 max-w-sm cursor-pointer"
+        onClick={handleOpenBook}
+      >
+        <DocumentIcon width={16} height={16} className="mr-1 text-text/80" />O
+        poder da Oração e do Jejum
+      </button>
 
       <Link href="/mode/set-theme" className="flex text-center mt-3 underline">
         Set other theme
