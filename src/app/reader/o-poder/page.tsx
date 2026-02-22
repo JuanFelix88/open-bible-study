@@ -101,7 +101,7 @@ export default function OPoderReader() {
         <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-40 shadow animate-show-from-top">
           <div className="flex items-center max-w-[750px] mx-auto">
             <div className="flex flex-col">
-              <h1 className="text-xl sm:text-2xl font-bold -mr-25 sm:-mr-6">
+              <h1 className="text-xl sm:text-2xl font-bold -mr-30 sm:-mr-8">
                 {data?.title ?? "..."}
               </h1>
               <h3 className="text-xs font-bold text-text/50">
@@ -123,7 +123,7 @@ export default function OPoderReader() {
       <div className="flex items-center select-none">
         <div className="flex flex-col mb-2">
           <h1
-            className="text-xl sm:text-2xl font-bold -mr-25 sm:-mr-6"
+            className="text-xl sm:text-2xl font-bold -mr-30 sm:-mr-8"
             ref={refHeader}
           >
             {data?.title ?? "..."}
@@ -155,7 +155,7 @@ export default function OPoderReader() {
       )}
 
       {paragraphs && (
-        <div className="mt-4 flex flex-col gap-2">
+        <div className="mt-4 flex flex-col gap-1">
           {paragraphs.map((paragraph, i) => (
             <p key={i} className="text-lg leading-relaxed text-text/95">
               <BibleRefText>{paragraph}</BibleRefText>
