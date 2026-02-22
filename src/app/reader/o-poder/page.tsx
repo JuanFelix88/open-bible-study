@@ -7,7 +7,7 @@ import { useInView } from "react-intersection-observer";
 import BibleRefText from "../../components/BibleRefText";
 import ArrowLeftIcon from "../../components/icons/ArrowLeftIcon";
 import ArrowRightIcon from "../../components/icons/ArrowRightIcon";
-import HomeIcon from "../../components/icons/HomeIcon";
+import ReaderMenu from "../../components/ReaderMenu";
 
 interface PageResponse {
   title: string;
@@ -15,6 +15,8 @@ interface PageResponse {
   page: number;
   content: string;
 }
+
+const HIDDEN_MENU_ITEMS = ["Search", "Books", "Switch versions"];
 
 export default function OPoderReader() {
   const { ref: refHeader, inView: inViewHeader } = useInView({});
@@ -112,12 +114,14 @@ export default function OPoderReader() {
               </h3>
               <ProgressBar current={maxReadPage} total={data?.totalPages} />
             </div>
-            <NavigationButtons
-              currentPage={currentPage}
-              totalPages={data?.totalPages}
-              onPrevious={handlePreviousPage}
-              onNext={handleNextPage}
-            />
+            <div className="flex ml-auto">
+              <ReaderMenu
+                versionAbbr=""
+                bookAbbr=""
+                chapterNumber={null}
+                hideItems={HIDDEN_MENU_ITEMS}
+              />
+            </div>
           </div>
         </div>
       )}
@@ -139,12 +143,14 @@ export default function OPoderReader() {
           </h3>
           <ProgressBar current={maxReadPage} total={data?.totalPages} />
         </div>
-        <NavigationButtons
-          currentPage={currentPage}
-          totalPages={data?.totalPages}
-          onPrevious={handlePreviousPage}
-          onNext={handleNextPage}
-        />
+        <div className="flex ml-auto pr-2">
+          <ReaderMenu
+            versionAbbr=""
+            bookAbbr=""
+            chapterNumber={null}
+            hideItems={HIDDEN_MENU_ITEMS}
+          />
+        </div>
       </div>
 
       {isLoading && (
@@ -170,25 +176,25 @@ export default function OPoderReader() {
       )}
 
       {data && (
-        <div className="flex items-center justify-between mt-10 pt-6 border-t border-border/50 mr-4">
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 rounded-full border border-border bg-surface/80 backdrop-blur-md shadow-lg shadow-background/30 px-1.5 py-1.5">
           <button
-            className="flex items-center gap-1 px-4 py-2 rounded-md bg-surface border border-border hover:bg-surface-strong cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-background/60 active:scale-95 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
             onClick={handlePreviousPage}
             disabled={currentPage <= 1}
           >
-            <ArrowLeftIcon width={20} height={20} />
-            Anterior
+            <ArrowLeftIcon width={22} height={22} />
+            <span className="hidden sm:inline">Anterior</span>
           </button>
-          <span className="text-sm text-text/50">
+          <span className="text-xs text-text-muted font-semibold px-2 select-none">
             {currentPage} / {data.totalPages}
           </span>
           <button
-            className="flex items-center gap-1 px-4 py-2 rounded-md bg-surface border border-border hover:bg-surface-strong cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-background/60 active:scale-95 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
             onClick={handleNextPage}
             disabled={currentPage >= data.totalPages}
           >
-            Próxima
-            <ArrowRightIcon width={20} height={20} />
+            <span className="hidden sm:inline">Próxima</span>
+            <ArrowRightIcon width={22} height={22} />
           </button>
         </div>
       )}
@@ -209,43 +215,6 @@ function ProgressBar({ current, total }: { current: number; total?: number }) {
         />
       </div>
       <span className="text-[0.6rem] text-text/40">{percent}%</span>
-    </div>
-  );
-}
-
-function NavigationButtons({
-  currentPage,
-  totalPages,
-  onPrevious,
-  onNext,
-}: {
-  currentPage: number;
-  totalPages?: number;
-  onPrevious: () => void;
-  onNext: () => void;
-}) {
-  return (
-    <div className="flex ml-auto min-w-[140px] pr-2">
-      <a
-        href="/"
-        className="cursor-pointer ml-4 mt-1.5 p-2 rounded-md hover:bg-surface opacity-80"
-      >
-        <HomeIcon width={25} height={25} />
-      </a>
-      <button
-        className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80 disabled:opacity-30"
-        onClick={onPrevious}
-        disabled={currentPage <= 1}
-      >
-        <ArrowLeftIcon width={30} height={30} />
-      </button>
-      <button
-        className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80 disabled:opacity-30"
-        onClick={onNext}
-        disabled={!totalPages || currentPage >= totalPages}
-      >
-        <ArrowRightIcon width={30} height={30} />
-      </button>
     </div>
   );
 }

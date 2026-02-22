@@ -6,7 +6,6 @@ import { SingleEvent } from "@/entities/SingleEvent";
 import { useDialog } from "@/hooks/useDialog";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MouseEvent, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
@@ -15,11 +14,13 @@ import ArrowRightIcon from "../components/icons/ArrowRightIcon";
 import CompareIcon from "../components/icons/CompareIcon";
 import DocumentIcon from "../components/icons/DocumentIcon";
 import RefIcon from "../components/icons/RefIcon";
-import SearchIcon from "../components/icons/SearchIcon";
 import ShareIcon from "../components/icons/ShareIcon";
 import { ReadingMarker } from "@/entities/ReadingMarker";
 import CopyIcon from "../components/icons/CopyIcon";
 import MarkerIcon from "../components/icons/MarkerIcon";
+import ReaderMenu from "../components/ReaderMenu";
+import BookChapterPicker from "../components/BookChapterPicker";
+import ReaderSearch from "../components/ReaderSearch";
 import { StringCompare } from "@/utils/StringCompare";
 import { Version } from "@/entities/Version";
 
@@ -43,6 +44,7 @@ function referencesIncludesVerse(
 
 export default function Reader() {
   const { ref: refHeader, inView: inViewHeader } = useInView({});
+  const pickerOpenRef = useRef<null | (() => void)>(null);
   const searchParams = useSearchParams();
   const bookAbbr = searchParams.get("book") || "";
   const selectedVerseParam = searchParams.get("verse");
@@ -59,6 +61,7 @@ export default function Reader() {
   );
   const [readingMarkers, setReadingMarkers] = useState<ReadingMarker[]>([]);
   const [markerName, setMarkerName] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const { data: books, isLoading: isLoadingBooks } = useQuery({
     queryKey: ["books"],
@@ -474,79 +477,93 @@ export default function Reader() {
       {!inViewHeader && (
         <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-40 shadow animate-show-from-top">
           <div className="flex items-center max-w-[750px] mx-auto">
-            <div className="flex flex-col">
+            <div className="flex flex-col relative">
               {isLoadingBooks ? (
                 <div className="w-10/12 h-6 rounded-sm bg-surface animate-pulse mb-1" />
               ) : (
-                <h1 className="text-2xl sm:text-4xl font-bold">
-                  {bookName} {chapterText}
-                  {selectedVerse !== null ? (
-                    <span className="text-text/80">{`:${selectedVerse}`}</span>
-                  ) : (
-                    ""
-                  )}
-                </h1>
+                <BookChapterPicker
+                  books={books}
+                  isLoading={isLoadingBooks}
+                  currentBookAbbr={bookAbbr}
+                  currentChapter={chapterNumber}
+                  versionAbbr={versionAbbr}
+                  bookName={bookName}
+                  selectedVerse={selectedVerse}
+                  trigger={(open) => {
+                    pickerOpenRef.current = open;
+                    return (
+                      <button
+                        type="button"
+                        onClick={open}
+                        className="text-left cursor-pointer hover:bg-surface/60 rounded-lg px-1 -mx-1 py-0.5 transition active:scale-[0.98]"
+                      >
+                        <h1 className="text-2xl sm:text-4xl font-bold leading-tight">
+                          {bookName} {chapterText}
+                          {selectedVerse !== null && (
+                            <span className="text-text/80">
+                              :{selectedVerse}
+                            </span>
+                          )}
+                        </h1>
+                      </button>
+                    );
+                  }}
+                />
               )}
               <h3 className="text-xs font-bold text-text/50">{versionText}</h3>
             </div>
             <div className="flex ml-auto">
-              <Link
-                href={`/search?version=${versionAbbr}`}
-                className="cursor-pointer ml-4 mt-1.5 p-2 rounded-md hover:bg-surface opacity-80"
-              >
-                <SearchIcon width={25} height={25} />
-              </Link>
-              <button
-                className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
-                onClick={handlePreviousChapter}
-                disabled={!chapter?.previous}
-              >
-                <ArrowLeftIcon width={30} height={30} />
-              </button>
-              <button
-                className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
-                onClick={handleNextChapter}
-                disabled={!chapter?.next}
-              >
-                <ArrowRightIcon width={30} height={30} />
-              </button>
+              <ReaderMenu
+                versionAbbr={versionAbbr}
+                bookAbbr={bookAbbr}
+                chapterNumber={chapterNumber}
+                onSearchOpen={() => setSearchOpen(true)}
+                onBooksOpen={() => pickerOpenRef.current?.()}
+              />
             </div>
           </div>
         </div>
       )}
       <div className="flex items-center select-none">
-        <div className="flex flex-col mb-2">
-          <h1 className="text-2xl sm:text-4xl font-bold" ref={refHeader}>
-            {bookName} {chapterText}
-            {selectedVerse !== null ? (
-              <span className="text-text/80">{`:${selectedVerse}`}</span>
-            ) : (
-              ""
-            )}
-          </h1>
+        <div className="flex flex-col mb-2 relative">
+          <div ref={refHeader}>
+            <BookChapterPicker
+              books={books}
+              isLoading={isLoadingBooks}
+              currentBookAbbr={bookAbbr}
+              currentChapter={chapterNumber}
+              versionAbbr={versionAbbr}
+              bookName={bookName}
+              selectedVerse={selectedVerse}
+              trigger={(open) => {
+                pickerOpenRef.current = open;
+                return (
+                  <button
+                    type="button"
+                    onClick={open}
+                    className="text-left cursor-pointer hover:bg-surface/60 rounded-lg px-1 -mx-1 py-0.5 transition active:scale-[0.98]"
+                  >
+                    <h1 className="text-2xl sm:text-4xl font-bold leading-tight">
+                      {bookName} {chapterText}
+                      {selectedVerse !== null && (
+                        <span className="text-text/80">:{selectedVerse}</span>
+                      )}
+                    </h1>
+                  </button>
+                );
+              }}
+            />
+          </div>
           <h3 className="text-xs font-bold text-text/50">{versionText}</h3>
         </div>
-        <div className="flex ml-auto min-w-[180px] pr-2">
-          <Link
-            href={`/search?version=${versionAbbr}`}
-            className="cursor-pointer ml-4 mt-1.5 p-2 rounded-md hover:bg-surface opacity-80"
-          >
-            <SearchIcon width={25} height={25} />
-          </Link>
-          <button
-            className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
-            onClick={handlePreviousChapter}
-            disabled={!chapter?.previous}
-          >
-            <ArrowLeftIcon width={30} height={30} />
-          </button>
-          <button
-            className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
-            onClick={handleNextChapter}
-            disabled={!chapter?.next}
-          >
-            <ArrowRightIcon width={30} height={30} />
-          </button>
+        <div className="flex ml-auto pr-2">
+          <ReaderMenu
+            versionAbbr={versionAbbr}
+            bookAbbr={bookAbbr}
+            chapterNumber={chapterNumber}
+            onSearchOpen={() => setSearchOpen(true)}
+            onBooksOpen={() => pickerOpenRef.current?.()}
+          />
         </div>
       </div>
 
@@ -674,7 +691,7 @@ export default function Reader() {
                     width={12}
                     height={12}
                   />
-                  Exp.
+                  Trad.
                 </button>
                 <button
                   className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
@@ -773,6 +790,39 @@ export default function Reader() {
           <p className="text-xs text-text/50 text-center">{versionLicense}</p>
         </footer>
       )}
+
+      {/* Floating chapter navigation */}
+      {chapter && (
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 rounded-full border border-border bg-surface/80 backdrop-blur-md shadow-lg shadow-background/30 px-1.5 py-1.5">
+          <button
+            className="flex items-center gap-1 rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-background/60 active:scale-95 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+            onClick={handlePreviousChapter}
+            disabled={!chapter.previous}
+          >
+            <ArrowLeftIcon width={22} height={22} />
+            <span className="hidden sm:inline">Prev</span>
+          </button>
+          <span className="text-xs text-text-muted font-semibold px-2 select-none">
+            {chapterText}
+          </span>
+          <button
+            className="flex items-center gap-1 rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-background/60 active:scale-95 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+            onClick={handleNextChapter}
+            disabled={!chapter.next}
+          >
+            <span className="hidden sm:inline">Next</span>
+            <ArrowRightIcon width={22} height={22} />
+          </button>
+        </div>
+      )}
+
+      <ReaderSearch
+        versionAbbr={versionAbbr}
+        bookAbbr={bookAbbr}
+        chapterNumber={chapterNumber}
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
     </div>
   );
 }
