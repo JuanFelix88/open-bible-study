@@ -8,6 +8,7 @@ import CheckIcon from "./icons/CheckIcon";
 import ShareIcon from "./icons/ShareIcon";
 import AddIcon from "./icons/AddIcon";
 import Image from "next/image";
+import BibleIcon from "./../favicon.ico";
 
 interface InstallPageProps {
   title: string;
@@ -34,7 +35,6 @@ export default function InstallPage({
 }: InstallPageProps) {
   const { isInstalled, isIOS, canInstall, install } = usePWAInstall();
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
-
   const handleIOSClick = () => {
     setShowIOSInstructions(!showIOSInstructions);
   };
@@ -43,14 +43,24 @@ export default function InstallPage({
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6 text-center">
       <div className="w-full max-w-md space-y-8 rounded-2xl bg-surface p-8 shadow-xl ring-1 ring-border">
         <div className="space-y-4">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-surface text-white shadow-lg overflow-hidden">
+          <div className="relative mx-auto flex justify-center items-center drop-shadow-xl drop-shadow-text/20 mb-2 w-16 h-16 overflow-hidden rounded-[14px]">
             <Image
-              src="/manifest-icons/icon-192.png"
-              alt="App Icon"
-              width={80}
-              height={80}
-              className="h-full w-full object-cover"
+              src={BibleIcon}
+              alt="Bible Icon"
+              width={64}
+              height={64}
+              className="relative z-10"
             />
+            <div className="absolute inset-0 z-20 pointer-events-none">
+              <div
+                className="absolute top-0 -left-[100%] w-[150%] h-full animate-shine mix-blend-overlay"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-primary) 30%, transparent), color-mix(in srgb, var(--color-secondary) 80%, transparent), color-mix(in srgb, var(--color-primary) 30%, transparent), transparent)",
+                  transform: "skewX(-20deg)",
+                }}
+              />
+            </div>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-text">
             {title}

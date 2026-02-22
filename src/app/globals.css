@@ -150,6 +150,23 @@ body {
   display: none;
 }
 
+@keyframes shine {
+  0% {
+    left: -150%;
+  }
+  20% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.animate-shine {
+  animation: shine 4s infinite linear;
+}
+
+
 @keyframes fade-in-from-bottom {
   from {
     opacity: 0;

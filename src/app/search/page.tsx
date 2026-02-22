@@ -23,11 +23,10 @@ export default function Search() {
   const searchParams = useSearchParams();
   const [versionAbbrParam] = Params.getParamFromSearchParams(
     "version",
-    searchParams
+    searchParams,
   );
-  const [isSelectingVersion, setIsSelectingVersion] = useState(
-    !versionAbbrParam
-  );
+  const [isSelectingVersion, setIsSelectingVersion] =
+    useState(!versionAbbrParam);
   const [searchVersionText, setSearchVersionText] = useState("");
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
   const [searchText, setSearchText] = useState("");
@@ -57,13 +56,13 @@ export default function Search() {
       const versionsResponse = displayVersionRegex.test(debouncedSearchText)
         ? await fetch(
             `/api/versions/${versionAbbr}/search?q=${encodeURIComponent(
-              debouncedSearchText
-            )}`
+              debouncedSearchText,
+            )}`,
           )
         : await fetch(
             `/api/versions/${versionAbbr}/search/deep?q=${encodeURIComponent(
-              debouncedSearchText
-            )}&count=100`
+              debouncedSearchText,
+            )}&count=100`,
           );
 
       ThrowByResponse.throwsIfNotOk(versionsResponse);
@@ -77,8 +76,8 @@ export default function Search() {
 
     setSelectedVersion(
       versions?.find((v) =>
-        StringCompare.isEqualIgnoringCase(DEFAULT_VERSION, v.abbreviation)
-      ) ?? null
+        StringCompare.isEqualIgnoringCase(DEFAULT_VERSION, v.abbreviation),
+      ) ?? null,
     );
     setIsSelectingVersion(false);
   }, [versions]);
@@ -87,7 +86,7 @@ export default function Search() {
     if (!versionAbbrParam || !versions) return;
 
     const matchedVersion = versions.find((v) =>
-      StringCompare.isEqualIgnoringCase(v.abbreviation, versionAbbrParam)
+      StringCompare.isEqualIgnoringCase(v.abbreviation, versionAbbrParam),
     );
 
     setSelectedVersion(matchedVersion || null);
@@ -104,12 +103,12 @@ export default function Search() {
       !searchVersionText ||
       StringCompare.containsIgnoreCaseAndDiacritics(
         v.name,
-        searchVersionText
+        searchVersionText,
       ) ||
       StringCompare.containsIgnoreCaseAndDiacritics(
         v.abbreviation,
-        searchVersionText
-      )
+        searchVersionText,
+      ),
   );
 
   const isLoadingResults =
@@ -122,7 +121,7 @@ export default function Search() {
         <Link
           href="/"
           className="mb-4 flex items-center gap-2 text-text/70 hover:opacity-70 transition-opacity cursor-pointer"
-          >
+        >
           <span>←</span>
           <span>Back to home</span>
         </Link>
@@ -135,9 +134,9 @@ export default function Search() {
           <Image
             src={BibleIcon}
             alt="Bible Icon"
-            width={30}
-            height={30}
-            className=""
+            width={26}
+            height={26}
+            className="ml-2"
           />
         </div>
 
