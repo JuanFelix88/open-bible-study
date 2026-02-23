@@ -1,8 +1,9 @@
 "use client";
 import AIIcon from "@/app/components/icons/AIIcon";
 import ArrowLeftIcon from "@/app/components/icons/ArrowLeftIcon";
+import LoadingIcon from "@/app/components/icons/LoadingIcon";
 import { BookInfo } from "@/entities/BookInfo";
-import { ChapterWithDiffs } from "@/entities/ChapterWithDiffs";
+import { Chapter } from "@/entities/Chapter";
 import { useStreamAnalysis } from "@/hooks/useStreamAnalysis";
 import { Params } from "@/utils/Params";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
@@ -74,14 +75,15 @@ export default function DeepAnalysis() {
     },
   });
 
-  const { data: verseVersions, isLoading: isLoadingVerseVersions } = useQuery({
-    queryKey: ["compare", bookAbbr, chapterNumber, verseNumber],
+  const { data: chapter, isLoading: isLoadingChapter } = useQuery({
+    queryKey: ["chapter", version, bookAbbr, chapterNumber],
+    enabled: !!(version && bookAbbr && chapterNumber),
     queryFn: async () => {
-      const versesCompareResponse = await fetch(
-        `/api/versions/compare/${bookAbbr}/${chapterNumber}/${verseNumber}`,
+      const chapterResponse = await fetch(
+        `/api/versions/${version}/${bookAbbr}/${chapterNumber}`,
       );
-      await ThrowByResponse.throwsIfNotOk(versesCompareResponse);
-      return (await versesCompareResponse.json()) as ChapterWithDiffs[];
+      await ThrowByResponse.throwsIfNotOk(chapterResponse);
+      return (await chapterResponse.json()) as Chapter;
     },
   });
 
@@ -95,6 +97,7 @@ export default function DeepAnalysis() {
     meta: streamMeta,
     isLoading: isLoadingVerseAnalysis,
     isStreaming,
+    lastTokenIndex,
   } = useStreamAnalysis(
     streamUrl,
     `deep-analysis-${version}-${bookAbbr}-${chapterNumber}-${verseNumber}`,
@@ -139,6 +142,28 @@ export default function DeepAnalysis() {
       setIaLoadingText("Finishing analysis...");
     })();
   }, []);
+
+  const selectedVerseText =
+    chapter && verseNumber
+      ? chapter.book.chapter.verses.at(verseNumber - 1)
+      : null;
+
+  const remainingText = (() => {
+    if (!selectedVerseText || streamTokens.length === 0)
+      return selectedVerseText ?? "";
+    const loadedText = streamTokens.map((t) => t.token).join(" ");
+    if (selectedVerseText.startsWith(loadedText)) {
+      return selectedVerseText.slice(loadedText.length).trimStart();
+    }
+    const lastToken = streamTokens[streamTokens.length - 1].token;
+    const lastIdx = selectedVerseText
+      .toLowerCase()
+      .lastIndexOf(lastToken.toLowerCase());
+    if (lastIdx !== -1) {
+      return selectedVerseText.slice(lastIdx + lastToken.length).trimStart();
+    }
+    return "";
+  })();
 
   const chapterText = chapterNumber?.toString() ?? "...";
 
@@ -194,8 +219,7 @@ export default function DeepAnalysis() {
         <div className="flex items-center max-w-[750px] mx-auto">
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold">
-              {verseVersions?.at(0)?.book.name || "..."} {chapterText}:
-              {verseNumber || "..."}
+              {chapter?.book.name || "..."} {chapterText}:{verseNumber || "..."}
             </h1>
             <h4 className="text-xs font-bold opacity-70">Deep analysis:</h4>
           </div>
@@ -211,8 +235,10 @@ export default function DeepAnalysis() {
       </div>
       <hr className="mt-13 opacity-0" />
 
-      {(isLoadingVerseVersions ||
-        (isLoadingVerseAnalysis && streamTokens.length === 0)) && (
+      {(isLoadingChapter ||
+        (isLoadingVerseAnalysis &&
+          streamTokens.length === 0 &&
+          !selectedVerseText)) && (
         <div className="flex flex-col gap-2">
           <div
             className="flex gap-1 text-text/60 animate-show-from-bottom-slow items-center"
@@ -249,24 +275,52 @@ export default function DeepAnalysis() {
         className="text-text/95 w-full mt-1 pt-3 text-lg select-none rounded-md px-1 py-[2px] hide-buttons"
         dir="ltr"
       >
-        {streamTokens.map((analysation) => (
+        {streamTokens.length === 0 && selectedVerseText && (
+          <span className="text-text/20 px-1 py-0.5">{selectedVerseText}</span>
+        )}
+        {streamTokens.map((analysation, idx) => (
           <Fragment key={analysation.token_index}>
             <span className="mr-0.5" hidden={analysation.token_index === 0}>
               {" "}
             </span>
             <span
-              className={
-                selectedTokenIndex === analysation.token_index
-                  ? "rounded-sm px-1 py-0.5 bg-secondary text-text underline underline-offset-2 decoration-dashed decoration-primary"
-                  : "rounded-sm px-1 cursor-pointer py-0.5 hover:bg-surface text-text"
-              }
+              className={`
+                rounded-sm px-1 cursor-pointer py-0.5
+                ${
+                  selectedTokenIndex === analysation.token_index
+                    ? "bg-secondary text-text underline underline-offset-2 decoration-dashed decoration-primary"
+                    : "hover:bg-surface text-text"
+                }
+                ${isStreaming && idx === lastTokenIndex ? "animate-token-slide-up" : ""}
+              `}
               onClick={() => setSelectedTokenIndex(analysation.token_index)}
             >
               {analysation.token}
             </span>
           </Fragment>
         ))}
+        {streamTokens.length > 0 &&
+          remainingText &&
+          (isStreaming || isLoadingVerseAnalysis) && (
+            <>
+              <span className="mr-0.5"> </span>
+              <span className="text-text/20 px-1 py-0.5">{remainingText}</span>
+            </>
+          )}
       </div>
+
+      {(isStreaming || (isLoadingVerseAnalysis && selectedVerseText)) && (
+        <div className="flex items-center gap-2 py-6 animate-show-from-bottom-slow">
+          <LoadingIcon
+            width={18}
+            height={18}
+            className="animate-spin text-text/50 opacity-70"
+          />
+          <span className="text-sm text-text/50 animate-pulse">
+            {iaLoadingText}
+          </span>
+        </div>
+      )}
 
       {streamMeta && (
         <div className="text-text/50 text-xs mt-2 italic">

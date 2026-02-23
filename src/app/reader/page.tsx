@@ -57,6 +57,12 @@ export default function Reader() {
   const refSelected = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { setDialog } = useDialog();
+  const selectedVerseRef = useRef<number | null>(null);
+  const chapterRef = useRef<Chapter | null>(null);
+  const bookAbbrRef = useRef(bookAbbr);
+  const versionAbbrRef = useRef(versionAbbr);
+  const chapterNumberRef = useRef(chapterNumber);
+
   const [candidateToMarker, setCandidateToMarker] = useState<number | null>(
     null,
   );
@@ -105,6 +111,20 @@ export default function Reader() {
     },
   });
 
+  useEffect(() => {
+    selectedVerseRef.current = selectedVerse;
+  }, [selectedVerse]);
+
+  useEffect(() => {
+    chapterRef.current = chapter ?? null;
+  }, [chapter]);
+
+  useEffect(() => {
+    bookAbbrRef.current = bookAbbr;
+    versionAbbrRef.current = versionAbbr;
+    chapterNumberRef.current = chapterNumber;
+  }, [bookAbbr, versionAbbr, chapterNumber]);
+
   const { data: references } = useQuery({
     queryKey: ["references", bookAbbr, chapterNumber],
     staleTime: 1_000 * 3,
@@ -151,15 +171,15 @@ export default function Reader() {
     );
   }
 
-  function handleUnselectVerse() {
-    setSelectedVerse(null);
-    router.replace(
-      `/reader?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}`,
-      {
-        scroll: false,
-      },
-    );
-  }
+  // function handleUnselectVerse() {
+  //   setSelectedVerse(null);
+  //   router.replace(
+  //     `/reader?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}`,
+  //     {
+  //       scroll: false,
+  //     },
+  //   );
+  // }
 
   function handlePreviousChapter() {
     if (chapter?.previous) {
@@ -301,80 +321,90 @@ export default function Reader() {
     setMarkerName("");
   }
 
-  function handleOnKeyDown(event: KeyboardEvent) {
-    const selected = document.querySelector(
-      "div:has(.control-buttons):not(.hidden-buttons)",
-    );
+  // function handleOnKeyDown(event: KeyboardEvent) {
+  //   if (!chapter || isLoadingChapter) return;
 
-    const verseNumber = parseInt(refSelected.current?.id ?? "1", 10);
-    if (!selected) return;
+  //   const selected = document.querySelector(
+  //     "div:has(.control-buttons):not(.hidden-buttons)",
+  //   );
 
-    if (event.key === "Escape") {
-      event.preventDefault();
-      handleUnselectVerse();
-      return;
-    }
+  //   if (!selected) return;
 
-    if (event.key === "1") {
-      event.preventDefault();
-      handleOpenReferences(event, verseNumber - 1);
-      return;
-    }
+  //   const verseNumber = parseInt(refSelected.current?.id ?? "", 10);
+  //   if (!verseNumber || isNaN(verseNumber)) {
+  //     if (event.key === "Escape") {
+  //       event.preventDefault();
+  //       handleUnselectVerse();
+  //     }
+  //     return;
+  //   }
 
-    if (event.key === "2") {
-      event.preventDefault();
-      handleCompare(event, verseNumber - 1);
-      return;
-    }
+  //   if (event.key === "Escape") {
+  //     event.preventDefault();
+  //     handleUnselectVerse();
+  //     return;
+  //   }
 
-    if (event.key === "3") {
-      event.preventDefault();
-      handleShare(event, verseNumber);
-      return;
-    }
+  //   if (event.key === "1") {
+  //     event.preventDefault();
+  //     handleOpenReferences(event, verseNumber - 1);
+  //     return;
+  //   }
 
-    if (event.key === "4") {
-      event.preventDefault();
-      handleExplain(event, verseNumber);
-      return;
-    }
+  //   if (event.key === "2") {
+  //     event.preventDefault();
+  //     handleCompare(event, verseNumber - 1);
+  //     return;
+  //   }
 
-    if (event.key === "5") {
-      event.preventDefault();
-      handleDeepAnalysis(event, verseNumber);
-      return;
-    }
+  //   if (event.key === "3") {
+  //     event.preventDefault();
+  //     handleShare(event, verseNumber);
+  //     return;
+  //   }
 
-    if (event.key === "6") {
-      event.preventDefault();
-      handleMarkerCandidate(event, verseNumber);
-      return;
-    }
+  //   if (event.key === "4") {
+  //     event.preventDefault();
+  //     handleExplain(event, verseNumber);
+  //     return;
+  //   }
 
-    if (event.key === "ArrowUp") {
-      event.preventDefault();
-      handlePreviousVerse();
-      return;
-    }
+  //   if (event.key === "5") {
+  //     event.preventDefault();
+  //     handleDeepAnalysis(event, verseNumber);
+  //     return;
+  //   }
 
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      handleNextVerse();
-      return;
-    }
+  //   if (event.key === "6") {
+  //     event.preventDefault();
+  //     handleMarkerCandidate(event, verseNumber);
+  //     return;
+  //   }
 
-    if (event.key === "ArrowRight" && event.ctrlKey) {
-      event.preventDefault();
-      handleNextChapter();
-      return;
-    }
+  //   if (event.key === "ArrowUp") {
+  //     event.preventDefault();
+  //     handlePreviousVerse();
+  //     return;
+  //   }
 
-    if (event.key === "ArrowLeft" && event.ctrlKey) {
-      event.preventDefault();
-      handlePreviousChapter();
-      return;
-    }
-  }
+  //   if (event.key === "ArrowDown") {
+  //     event.preventDefault();
+  //     handleNextVerse();
+  //     return;
+  //   }
+
+  //   if (event.key === "ArrowRight" && event.ctrlKey) {
+  //     event.preventDefault();
+  //     handleNextChapter();
+  //     return;
+  //   }
+
+  //   if (event.key === "ArrowLeft" && event.ctrlKey) {
+  //     event.preventDefault();
+  //     handlePreviousChapter();
+  //     return;
+  //   }
+  // }
 
   function handleOpenReferences(event: SingleEvent, verseIndex: number) {
     event.stopPropagation();
@@ -384,37 +414,37 @@ export default function Reader() {
     );
   }
 
-  function handlePreviousVerse() {
-    setSelectedVerse((prev) => {
-      if (prev === null) return null;
-      if (prev <= 1) return prev;
-      const previousVerse = prev - 1;
-      queueMicrotask(() =>
-        refSelected.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        }),
-      );
-      return previousVerse;
-    });
-  }
+  // function handlePreviousVerse() {
+  //   setSelectedVerse((prev) => {
+  //     if (prev === null) return null;
+  //     if (prev <= 1) return prev;
+  //     const previousVerse = prev - 1;
+  //     queueMicrotask(() =>
+  //       refSelected.current?.scrollIntoView({
+  //         behavior: "smooth",
+  //         block: "center",
+  //       }),
+  //     );
+  //     return previousVerse;
+  //   });
+  // }
 
-  function handleNextVerse() {
-    setSelectedVerse((prev) => {
-      if (prev === null) prev = 0;
-      if (prev >= chapter!.book.chapter.verses.length) return prev;
-      const nextVerse = prev + 1;
+  // function handleNextVerse() {
+  //   setSelectedVerse((prev) => {
+  //     if (prev === null) prev = 0;
+  //     if (prev >= chapter!.book.chapter.verses.length) return prev;
+  //     const nextVerse = prev + 1;
 
-      queueMicrotask(() =>
-        refSelected.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        }),
-      );
+  //     queueMicrotask(() =>
+  //       refSelected.current?.scrollIntoView({
+  //         behavior: "smooth",
+  //         block: "center",
+  //       }),
+  //     );
 
-      return nextVerse;
-    });
-  }
+  //     return nextVerse;
+  //   });
+  // }
 
   useEffect(() => {
     if (selectedVerse === null) return;
@@ -423,25 +453,155 @@ export default function Reader() {
       `/reader?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${selectedVerse}`,
       { scroll: false },
     );
-  }, [selectedVerse, chapter]);
+  }, [selectedVerse, chapter, bookAbbr, versionAbbr, chapterNumber]);
 
   useEffect(() => {
     refSelected.current?.scrollIntoView({
       behavior: "smooth",
       block: "center",
     });
-  }, [refSelected.current]);
+  }, [selectedVerse]);
 
   useEffect(() => {
-    window.addEventListener("keydown", handleOnKeyDown);
-    return () => window.removeEventListener("keydown", handleOnKeyDown);
-  }, [bookAbbr, chapterNumber, chapter, selectedVerse]);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const currentChapter = chapterRef.current;
+      // const currentSelectedVerse = selectedVerseRef.current;
+
+      if (!currentChapter) return;
+
+      const selected = document.querySelector(
+        "div:has(.control-buttons):not(.hidden-buttons)",
+      );
+
+      if (!selected) return;
+
+      const verseNumber = parseInt(refSelected.current?.id ?? "", 10);
+      if (!verseNumber || isNaN(verseNumber)) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          setSelectedVerse(null);
+        }
+        return;
+      }
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setSelectedVerse(null);
+        router.replace(
+          `/reader?book=${bookAbbrRef.current}&version=${versionAbbrRef.current}&chapter=${chapterNumberRef.current}`,
+          { scroll: false },
+        );
+        return;
+      }
+
+      if (event.key === "1") {
+        event.preventDefault();
+        router.push(
+          `/reader/references?version=${versionAbbrRef.current}&book=${bookAbbrRef.current}&chapter=${chapterNumberRef.current}&verse=${verseNumber}`,
+        );
+        return;
+      }
+
+      if (event.key === "2") {
+        event.preventDefault();
+        router.push(
+          `/reader/compare?book=${bookAbbrRef.current}&version=${versionAbbrRef.current}&chapter=${chapterNumberRef.current}&verse=${verseNumber}`,
+        );
+        return;
+      }
+
+      if (event.key === "3") {
+        event.preventDefault();
+        navigator.clipboard.writeText(
+          `${window.location.origin}/share?book=${bookAbbrRef.current}&version=${versionAbbrRef.current}&chapter=${chapterNumberRef.current}&verse=${verseNumber}`,
+        );
+        setDialog({
+          title: "Link copied!",
+          message: `Verse ${verseNumber} ready to share.`,
+          ms: 3500,
+        });
+        return;
+      }
+
+      if (event.key === "4") {
+        event.preventDefault();
+        router.push(
+          `/reader/explain?book=${bookAbbrRef.current}&version=${versionAbbrRef.current}&chapter=${chapterNumberRef.current}&verse=${verseNumber}`,
+        );
+        return;
+      }
+
+      if (event.key === "5") {
+        event.preventDefault();
+        router.push(
+          `/reader/deep-analysis?book=${bookAbbrRef.current}&version=${versionAbbrRef.current}&chapter=${chapterNumberRef.current}&verse=${verseNumber}`,
+        );
+        return;
+      }
+
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setSelectedVerse((prev) => {
+          if (prev === null || prev <= 1) return prev;
+          queueMicrotask(() =>
+            refSelected.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            }),
+          );
+          return prev - 1;
+        });
+        return;
+      }
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setSelectedVerse((prev) => {
+          if (prev === null) prev = 0;
+          if (prev >= currentChapter.book.chapter.verses.length) return prev;
+          queueMicrotask(() =>
+            refSelected.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            }),
+          );
+          return prev + 1;
+        });
+        return;
+      }
+
+      if (event.key === "ArrowRight" && event.ctrlKey) {
+        event.preventDefault();
+        if (currentChapter.next) {
+          setSelectedVerse(null);
+          router.push(
+            `/reader?book=${currentChapter.next.abbrev}&version=${versionAbbrRef.current}&chapter=${currentChapter.next.numChapter}`,
+          );
+        }
+        return;
+      }
+
+      if (event.key === "ArrowLeft" && event.ctrlKey) {
+        event.preventDefault();
+        if (currentChapter.previous) {
+          setSelectedVerse(null);
+          router.push(
+            `/reader?book=${currentChapter.previous.abbrev}&version=${versionAbbrRef.current}&chapter=${currentChapter.previous.numChapter}`,
+          );
+        }
+        return;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [router, setDialog]);
 
   useEffect(() => {
     if (selectedVerseParam && /[0-9]+/.test(selectedVerseParam)) {
       setSelectedVerse(parseInt(selectedVerseParam, 10) || null);
     }
-  }, [bookAbbr, chapterNumber]);
+  }, [bookAbbr, chapterNumber, selectedVerseParam]);
 
   useEffect(() => {
     if (chapter?.previous) {

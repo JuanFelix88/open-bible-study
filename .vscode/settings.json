@@ -5,6 +5,14 @@
     "**/bower_components": true,
     "**/*.code-search": true
   },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/.next": true
+  },
   "workbench.editor.customLabels.patterns": {
     "**/page.tsx": "${dirname} (page.tsx)",
     "**/route.ts": "${dirname(1)}/${dirname(0)} (route.ts)"

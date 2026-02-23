@@ -4,7 +4,8 @@ import {
   parseStreamingTokens,
   stripCodeFences,
 } from "@/utils/StreamingJsonParser";
-import { useEffect, useRef, useState } from "react";
+import { streamAnalysisCache } from "@/utils/StreamAnalysisCache";
+import { useEffect, useState } from "react";
 
 export interface StreamAnalysisMeta {
   modelName: string;
@@ -17,6 +18,7 @@ export interface StreamAnalysisResult {
   meta: StreamAnalysisMeta | null;
   isLoading: boolean;
   isStreaming: boolean;
+  lastTokenIndex: number;
 }
 
 export function useStreamAnalysis(
@@ -27,17 +29,16 @@ export function useStreamAnalysis(
   const [meta, setMeta] = useState<StreamAnalysisMeta | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isStreaming, setIsStreaming] = useState(false);
-  const cacheRef = useRef<
-    Map<string, { tokens: VerseAnalysis[]; meta: StreamAnalysisMeta }>
-  >(new Map());
+  const [lastTokenIndex, setLastTokenIndex] = useState(-1);
 
   useEffect(() => {
     if (!url) return;
 
-    const cached = cacheRef.current.get(cacheKey);
+    const cached = streamAnalysisCache.get(cacheKey);
     if (cached) {
       setTokens(cached.tokens);
       setMeta(cached.meta);
+      setLastTokenIndex(cached.tokens.length - 1);
       setIsLoading(false);
       setIsStreaming(false);
       return;
@@ -113,6 +114,7 @@ export function useStreamAnalysis(
           const parsed = parseStreamingTokens(clean);
           if (parsed.length > 0 && !cancelled) {
             setTokens([...parsed]);
+            setLastTokenIndex(parsed.length - 1);
           }
         }
       }
@@ -121,14 +123,12 @@ export function useStreamAnalysis(
         const clean = stripCodeFences(accumulated).trim();
         const finalTokens = parseStreamingTokens(clean);
         setTokens(finalTokens);
+        setLastTokenIndex(finalTokens.length - 1);
         setIsStreaming(false);
         setIsLoading(false);
 
         if (parsedMeta && finalTokens.length > 0) {
-          cacheRef.current.set(cacheKey, {
-            tokens: finalTokens,
-            meta: parsedMeta,
-          });
+          streamAnalysisCache.set(cacheKey, finalTokens, parsedMeta);
         }
       }
     })();
@@ -138,5 +138,5 @@ export function useStreamAnalysis(
     };
   }, [url, cacheKey]);
 
-  return { tokens, meta, isLoading, isStreaming };
+  return { tokens, meta, isLoading, isStreaming, lastTokenIndex };
 }

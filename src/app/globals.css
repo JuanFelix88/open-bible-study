@@ -201,6 +201,34 @@ body {
   }
 }
 
+@keyframes token-slide-up {
+  from {
+    opacity: 0;
+    filter: drop-shadow(0 0 16px var(--color-primary));
+  }
+  to {
+    opacity: 1;
+    filter: drop-shadow(0 0 0px var(--color-primary));
+  }
+}
+
+@keyframes loading-placeholder-pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.animate-token-slide-up {
+  animation: token-slide-up 0.6s ease forwards;
+}
+
+.animate-loading-placeholder {
+  animation: loading-placeholder-pulse 1.2s ease-in-out infinite;
+}
+
 @keyframes fade-out-to-bottom {
   from {
     opacity: 1;
@@ -267,4 +295,17 @@ body {
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+@keyframes blink-cursor {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.animate-blink-cursor {
+  animation: blink-cursor 0.8s step-end infinite;
 }

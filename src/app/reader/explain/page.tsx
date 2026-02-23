@@ -1,7 +1,7 @@
 "use client";
-import AIIcon from "@/app/components/icons/AIIcon";
 import ArrowLeftIcon from "@/app/components/icons/ArrowLeftIcon";
-import { ChapterWithDiffs } from "@/entities/ChapterWithDiffs";
+import LoadingIcon from "@/app/components/icons/LoadingIcon";
+import { Chapter } from "@/entities/Chapter";
 import { Language } from "@/entities/Language";
 import { useStreamAnalysis } from "@/hooks/useStreamAnalysis";
 import { Params } from "@/utils/Params";
@@ -12,6 +12,12 @@ import { useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import Markdown from "react-markdown";
 import { Fragment } from "react/jsx-dev-runtime";
+
+type OriginalVerseResponse = {
+  text: string;
+  version: string;
+  language: Language;
+};
 
 export default function Explain() {
   const router = useRouter();
@@ -38,18 +44,27 @@ export default function Explain() {
 
   const refVerse = useRef<HTMLDivElement>(null);
 
-  const { data: verseVersions, isLoading: isLoadingVerseVersions } = useQuery({
-    queryKey: ["compare", bookAbbr, chapterNumber, verseNumber],
+  const { data: chapter } = useQuery({
+    queryKey: ["chapter", version, bookAbbr, chapterNumber],
+    enabled: !!(version && bookAbbr && chapterNumber),
     queryFn: async () => {
-      const versesCompareResponse = await fetch(
-        `/api/versions/compare/${bookAbbr}/${chapterNumber}/${verseNumber}`,
+      const chapterResponse = await fetch(
+        `/api/versions/${version}/${bookAbbr}/${chapterNumber}`,
       );
+      await ThrowByResponse.throwsIfNotOk(chapterResponse);
+      return (await chapterResponse.json()) as Chapter;
+    },
+  });
 
-      await ThrowByResponse.throwsIfNotOk(versesCompareResponse);
-
-      const chapterData = await versesCompareResponse.json();
-
-      return chapterData as ChapterWithDiffs[];
+  const { data: originalVerse } = useQuery({
+    queryKey: ["original-verse", version, bookAbbr, chapterNumber, verseNumber],
+    enabled: !!(version && bookAbbr && chapterNumber && verseNumber),
+    queryFn: async () => {
+      const originalResponse = await fetch(
+        `/api/versions/${version}/${bookAbbr}/${chapterNumber}/${verseNumber}/original`,
+      );
+      await ThrowByResponse.throwsIfNotOk(originalResponse);
+      return (await originalResponse.json()) as OriginalVerseResponse;
     },
   });
 
@@ -63,6 +78,7 @@ export default function Explain() {
     meta: streamMeta,
     isLoading: isLoadingVerseAnalysis,
     isStreaming,
+    lastTokenIndex,
   } = useStreamAnalysis(
     streamUrl,
     `explain-${version}-${bookAbbr}-${chapterNumber}-${verseNumber}`,
@@ -108,6 +124,28 @@ export default function Explain() {
     })();
   }, []);
 
+  const selectedVerseText = originalVerse?.text ?? null;
+
+  const remainingText = (() => {
+    if (!selectedVerseText || streamTokens.length === 0)
+      return selectedVerseText ?? "";
+
+    const loadedText = streamTokens.map((t) => t.token).join(" ");
+    if (selectedVerseText.startsWith(loadedText)) {
+      return selectedVerseText.slice(loadedText.length).trimStart();
+    }
+
+    const lastToken = streamTokens[streamTokens.length - 1].token;
+    const lastIdx = selectedVerseText
+      .toLowerCase()
+      .lastIndexOf(lastToken.toLowerCase());
+    if (lastIdx !== -1) {
+      return selectedVerseText.slice(lastIdx + lastToken.length).trimStart();
+    }
+
+    return "";
+  })();
+
   const chapterText = chapterNumber?.toString() ?? "...";
 
   return (
@@ -116,8 +154,7 @@ export default function Explain() {
         <div className="flex items-center max-w-[750px] mx-auto">
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold">
-              {verseVersions?.at(0)?.book.name || "..."} {chapterText}:
-              {verseNumber || "..."}
+              {chapter?.book.name || "..."} {chapterText}:{verseNumber || "..."}
             </h1>
             <h4 className="text-xs font-bold opacity-70">Explain verse:</h4>
           </div>
@@ -133,33 +170,6 @@ export default function Explain() {
       </div>
       <hr className="mt-13 opacity-0" />
 
-      {/* Loading verses */}
-      {(isLoadingVerseVersions ||
-        (isLoadingVerseAnalysis && streamTokens.length === 0)) && (
-        <div className="flex flex-col gap-2">
-          <div
-            className="flex gap-1 text-text/60 animate-show-from-bottom-slow items-center"
-            key={iaLoadingText}
-          >
-            <AIIcon width={18} height={18} className="-mt-0.5 animate-pulse" />
-            <span className="animate-pulse animate-pulse-[2s]">
-              {iaLoadingText}
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
-            <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
-            <div className="w-full h-6 rounded-sm bg-surface animate-pulse mb-1" />
-            <br />
-            <div className="w-5/6 h-4 rounded-sm bg-surface animate-pulse mb-1" />
-            <div className="w-2/6 h-4 rounded-sm bg-surface animate-pulse mb-1" />
-            <div className="w-3/6 h-4 rounded-sm bg-surface animate-pulse mb-1" />
-            <div className="w-2/6 h-4 rounded-sm bg-surface animate-pulse mb-1" />
-          </div>
-        </div>
-      )}
-
       {/* spacer */}
       <div
         ref={refSelectedVersion}
@@ -170,27 +180,61 @@ export default function Explain() {
       />
 
       <div
-        className="text-text/95 w-full mt-1pt-3 text-lg select-none rounded-md px-1 py-[2px] hide-buttons"
-        dir={streamMeta?.language === Language.HE ? "rtl" : "ltr"}
+        className="text-text/95 w-full mt-1 pt-3 text-lg select-none rounded-md px-1 py-[2px] hide-buttons"
+        dir={
+          (originalVerse?.language ?? streamMeta?.language) === Language.HE
+            ? "rtl"
+            : "ltr"
+        }
       >
-        {streamTokens.map((analysation) => (
+        {streamTokens.length === 0 && selectedVerseText && (
+          <span className="text-text/20 px-1 py-0.5">{selectedVerseText}</span>
+        )}
+
+        {streamTokens.map((analysation, idx) => (
           <Fragment key={analysation.token_index}>
-            <span className="mr-0.5" hidden={analysation.token_index === 0}>
+            <span className="" hidden={analysation.token_index === 0}>
               {" "}
             </span>
             <span
-              className={
-                selectedTokenIndex === analysation.token_index
-                  ? "rounded-sm px-1 py-0.5 bg-secondary text-text underline underline-offset-2 decoration-dashed decoration-primary"
-                  : "rounded-sm px-1 cursor-pointer py-0.5 hover:bg-surface text-text"
-              }
+              className={`
+                rounded-sm px-1 cursor-pointer py-0.5
+                ${
+                  selectedTokenIndex === analysation.token_index
+                    ? "bg-secondary text-text underline underline-offset-2 decoration-dashed decoration-primary"
+                    : "hover:bg-surface text-text"
+                }
+                ${isStreaming && idx === lastTokenIndex ? "animate-token-slide-up" : ""}
+              `}
               onClick={() => setSelectedTokenIndex(analysation.token_index)}
             >
               {analysation.token}
             </span>
           </Fragment>
         ))}
+
+        {streamTokens.length > 0 &&
+          remainingText &&
+          (isStreaming || isLoadingVerseAnalysis) && (
+            <>
+              <span className="mr-0.5"> </span>
+              <span className="text-text/20 px-1 py-0.5">{remainingText}</span>
+            </>
+          )}
       </div>
+
+      {(isStreaming || (isLoadingVerseAnalysis && selectedVerseText)) && (
+        <div className="flex items-center gap-2 py-6 animate-show-from-bottom-slow">
+          <LoadingIcon
+            width={18}
+            height={18}
+            className="animate-spin text-text/50 opacity-70"
+          />
+          <span className="text-sm text-text/50 animate-pulse">
+            {iaLoadingText}
+          </span>
+        </div>
+      )}
 
       <hr
         className="border-dashed border-gray-400 w-full pt-2 pb-0"
