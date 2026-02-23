@@ -1,5 +1,4 @@
 "use client";
-import HighlitableText from "@/app/components/HighlitableText";
 import AIIcon from "@/app/components/icons/AIIcon";
 import ArrowLeftIcon from "@/app/components/icons/ArrowLeftIcon";
 import { ChapterWithDiffs } from "@/entities/ChapterWithDiffs";
@@ -11,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
+import Markdown from "react-markdown";
 import { Fragment } from "react/jsx-dev-runtime";
 
 export default function Explain() {
@@ -214,39 +214,42 @@ export default function Explain() {
       {selectedTokenIndex !== null && (
         <div className="flex flex-col mt-4 w-full">
           <div
-            className="animate-show-from-bottom-slow"
+            className="animate-show-from-bottom-slow prose-explain"
             key={selectedTokenIndex}
           >
-            <HighlitableText
-              text={
-                verseAnalysis?.explainData.at(selectedTokenIndex)?.explanation
-              }
-            />
-            {/* <span>
-              {verseAnalysis?.explainData
-                .at(selectedTokenIndex)
-                ?.explanation.split(" ")
-                .map((word, i) => {
-                  const isTagged =
-                    word.trim().startsWith(`'`) && word.trim().endsWith(`'`);
-                  const endsWithNewLine = word.endsWith("\n");
-
-                  return (
-                    <Fragment key={word + i}>
-                      <span
-                        className={
-                          isTagged
-                            ? "bg-surface-strong px-0.5 rounded-sm text-text"
-                            : ""
-                        }
-                      >
-                        {isTagged ? word.substring(1, word.length - 1) : word}
-                      </span>
-                      {endsWithNewLine ? <br /> : " "}
-                    </Fragment>
-                  );
-                })}
-            </span> */}
+            <Markdown
+              components={{
+                p: ({ children }) => (
+                  <p className="text-text mb-2 leading-relaxed">{children}</p>
+                ),
+                strong: ({ children }) => (
+                  <strong className="text-primary font-bold">{children}</strong>
+                ),
+                em: ({ children }) => (
+                  <em className="text-text/80 italic">{children}</em>
+                ),
+                ul: ({ children }) => (
+                  <ul className="list-disc list-inside text-text mb-2 space-y-1">
+                    {children}
+                  </ul>
+                ),
+                ol: ({ children }) => (
+                  <ol className="list-decimal list-inside text-text mb-2 space-y-1">
+                    {children}
+                  </ol>
+                ),
+                li: ({ children }) => (
+                  <li className="text-text/90">{children}</li>
+                ),
+                blockquote: ({ children }) => (
+                  <blockquote className="border-l-3 border-primary bg-surface rounded-r-md px-3 py-2 my-2 text-text/80 italic">
+                    {children}
+                  </blockquote>
+                ),
+              }}
+            >
+              {verseAnalysis?.explainData.at(selectedTokenIndex)?.explanation}
+            </Markdown>
           </div>
           <div
             className="mt-3 italic text-xs text-text/50 animate-show-from-bottom-slow"

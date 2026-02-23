@@ -1,5 +1,6 @@
 import { VerseAnalysis } from "@/entities/VerseAnalysis";
 import { BibleVersionsRepository } from "@/repositories/BibleVersionsRepository";
+import { CLIProxyAPIIntegration } from "@/services/CLIProxyApi";
 import { FnNormalizer } from "@/utils/FnNormalizer";
 import { Params, ParamType } from "@/utils/Params";
 import { ResponseError } from "@/utils/ResponseError";
@@ -24,25 +25,25 @@ Analise o versículo abaixo na língua original e produza uma explicação detal
 ## Regras
 
 1. Divida o versículo original em tokens. Cada token é uma palavra ou grupo curto de palavras que formam uma unidade de sentido para tradução.
-2. Para cada token, escreva uma explicação no idioma destino contendo:
+2. Para cada token, escreva uma explicação no idioma destino usando Markdown completo:
    - Tradução literal e possíveis sinônimos.
    - Significado no idioma original (hebraico, grego ou aramaico).
    - Contexto histórico e cultural comprovado da época.
    - Quando o token for um nome próprio, explique quem foi a pessoa na Bíblia.
    - Curiosidades teológicas relevantes ao contexto protestante.
-3. Use apenas **texto** (dois asteriscos) para destacar palavras em negrito nas explicações. Não use outros formatos como *itálico*, __sublinhado__ ou # títulos.
+3. Use formatação Markdown rica nas explicações: **negrito**, *itálico*, listas com - ou 1., e > para citações. Não use títulos com #.
 4. Cada token deve preservar o texto exatamente como aparece no versículo original, incluindo pontuação adjacente.
 
 ## Formato de saída
 
 Responda APENAS com um JSON válido, sem texto antes ou depois, sem blocos de código markdown.
-O JSON deve ser um array de arrays, onde cada elemento interno tem exatamente 2 strings: [token, explicação].
+O JSON deve ser um array de arrays, onde cada elemento interno tem exatamente 2 strings: [token, explicação_em_markdown].
 
 Exemplo de formato (não copie o conteúdo, apenas a estrutura):
 
 [
-  ["בְּרֵאשִׁית", "**Bereshit** — Significa **No princípio** ou **No começo**. Vem da raiz hebraica **rosh** (cabeça, início). Indica o ponto de partida absoluto da criação."],
-  ["בָּרָא", "**Bará** — Verbo hebraico que significa **criou**. Usado exclusivamente para a ação criadora de Deus, diferente de **asah** (fazer/formar)."]
+  ["בְּרֵאשִׁית", "**Bereshit** — Significa *No princípio* ou *No começo*.\n\n- Vem da raiz hebraica **rosh** (cabeça, início).\n- Indica o ponto de partida absoluto da criação.\n\n> Curiosidade: a palavra aparece apenas neste contexto de criação divina."],
+  ["בָּרָא", "**Bará** — Verbo hebraico que significa *criou*.\n\n- Usado exclusivamente para a ação criadora de Deus, diferente de **asah** (fazer/formar).\n- Transmite a ideia de criar algo do nada (*creatio ex nihilo*)."]
 ]
 `.trim();
 
@@ -113,36 +114,44 @@ export async function GET(
       );
     }
 
-    const response = await fetch("https://ollama.com/api/generate", {
-      body: JSON.stringify({
-        model: "gpt-oss:120b-cloud",
-        prompt: PROMPT_TEMPLATE.replace(
-          "@Verse",
-          originalVerseChapter.book.chapter.verses.at(0) ?? "",
-        )
-          .replace(
-            "@DisplayVerse",
-            `${chapter.book.name} ${chapter.book.chapter.number}:${verseNumber}`,
-          )
-          .replace("@Version", abbrVersion.toUpperCase())
-          .replace("@DestinyLanguage", destinyVersion.language),
-        stream: false,
-        think: "low",
-      }),
-      headers: {
-        Authorization: `Bearer ${process.env.AI_OLLAMA_API_KEY}`,
-      },
-      method: "POST",
-    });
-
-    if (!response.ok) {
-      throw new Error("Unable to get result from OLLAMA api");
+    if (!process.env.CLI_PROXY_HOST) {
+      return ResponseError.asError("CLI_PROXY_HOST is not defined", 400);
     }
 
-    const { response: text }: { response: string } = await response.json();
+    if (!process.env.CLI_PROXY_KEY) {
+      return ResponseError.asError("CLI_PROXY_KEY is not defined", 400);
+    }
+
+    const integration = new CLIProxyAPIIntegration({
+      apiUrl: process.env.CLI_PROXY_HOST,
+      apiKey: process.env.CLI_PROXY_KEY,
+      authMode: { kind: "authorization" },
+    });
+
+    const prompt = PROMPT_TEMPLATE.replace(
+      "@Verse",
+      originalVerseChapter.book.chapter.verses.at(0) ?? "",
+    )
+      .replace(
+        "@DisplayVerse",
+        `${chapter.book.name} ${chapter.book.chapter.number}:${verseNumber}`,
+      )
+      .replace("@Version", abbrVersion.toUpperCase())
+      .replace("@DestinyLanguage", destinyVersion.language);
+
+    const text = await integration.processInput(
+      prompt,
+      process.env.CLI_PROXY_MODEL,
+    );
 
     let textSanitized = text.split("```json").at(-1)?.trim() ?? "[]";
     textSanitized = textSanitized.replace(/```$/, "").trim();
+    textSanitized = textSanitized.replace(/"(?:[^"\\]|\\.)*"/g, (match) =>
+      match
+        .replaceAll("\n", "\\n")
+        .replaceAll("\r", "\\r")
+        .replaceAll("\t", "\\t"),
+    );
 
     const data: string[][] = JSON.parse(textSanitized);
 
@@ -157,7 +166,7 @@ export async function GET(
       ),
       {
         headers: {
-          "Agent-AI": "gpt-oss:120b-cloud",
+          "Agent-AI": process.env.CLI_PROXY_MODEL ?? "cli-proxy",
           language: originalMeta.language,
           version: `${originalMeta.abbreviation} - ${originalMeta.name}`,
         },
