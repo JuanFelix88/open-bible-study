@@ -84,8 +84,11 @@ export class CLIProxyAPIIntegration extends AIIntegration {
     return content;
   }
 
-  async *streamFrom(input: string): AsyncIterable<string> {
-    const model = await this.resolveModel();
+  async *streamFrom(
+    input: string,
+    requestModel: string | undefined = undefined,
+  ): AsyncIterable<string> {
+    const model = requestModel ?? (await this.resolveModel());
 
     const req: OpenAIChatCompletionsRequest = {
       model,

@@ -1,4 +1,3 @@
-import { VerseAnalysis } from "@/entities/VerseAnalysis";
 import { BibleVersionsRepository } from "@/repositories/BibleVersionsRepository";
 import { CLIProxyAPIIntegration } from "@/services/CLIProxyApi";
 import { FnNormalizer } from "@/utils/FnNormalizer";
@@ -161,39 +160,46 @@ export async function GET(
         destinyVersion.language === "he" ? "Hebraico" : "Grego",
       );
 
-    const text = await integration.processInput(
-      prompt,
-      process.env.CLI_PROXY_MODEL,
-    );
+    const meta = {
+      model: process.env.CLI_PROXY_MODEL ?? "cli-proxy",
+      language: originalMeta.language,
+      version: `${originalMeta.abbreviation} - ${originalMeta.name}`,
+    };
 
-    let textSanitized = text.split("```json").at(-1)?.trim() ?? "[]";
-    textSanitized = textSanitized.replace(/```$/, "").trim();
-    textSanitized = textSanitized.replace(/"(?:[^"\\]|\\.)*"/g, (match) =>
-      match
-        .replaceAll("\n", "\\n")
-        .replaceAll("\r", "\\r")
-        .replaceAll("\t", "\\t"),
-    );
-
-    const data: string[][] = JSON.parse(textSanitized);
-
-    return NextResponse.json(
-      data.map(
-        (item, index) =>
-          ({
-            token: item[0],
-            explanation: item[1],
-            token_index: index,
-          }) as VerseAnalysis,
-      ),
-      {
-        headers: {
-          "Agent-AI": process.env.CLI_PROXY_MODEL ?? "cli-proxy",
-          language: originalMeta.language,
-          version: `${originalMeta.abbreviation} - ${originalMeta.name}`,
-        },
+    const encoder = new TextEncoder();
+    const readable = new ReadableStream({
+      async start(controller) {
+        controller.enqueue(
+          encoder.encode(`event: meta\ndata: ${JSON.stringify(meta)}\n\n`),
+        );
+        try {
+          for await (const chunk of integration.streamFrom(
+            prompt,
+            process.env.CLI_PROXY_MODEL,
+          )) {
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`),
+            );
+          }
+        } catch (err) {
+          controller.enqueue(
+            encoder.encode(
+              `event: error\ndata: ${JSON.stringify({ message: (err as Error).message })}\n\n`,
+            ),
+          );
+        }
+        controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
+        controller.close();
       },
-    );
+    });
+
+    return new Response(readable, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
   } catch (error) {
     console.log(error);
     return NextResponse.json(

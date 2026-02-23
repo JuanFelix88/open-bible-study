@@ -19,7 +19,10 @@
  */
 export abstract class AIIntegration {
   abstract processInput(input: string): Promise<string>;
-  abstract streamFrom(input: string): AsyncIterable<string>;
+  abstract streamFrom(
+    input: string,
+    requestModel?: string,
+  ): AsyncIterable<string>;
   abstract apiUrl: string;
   abstract apiKey: string;
 }
