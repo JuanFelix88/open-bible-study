@@ -3,7 +3,7 @@ import { CLIProxyAPIIntegration } from "@/services/CLIProxyApi";
 import { FnNormalizer } from "@/utils/FnNormalizer";
 import { Params, ParamType } from "@/utils/Params";
 import { ResponseError } from "@/utils/ResponseError";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const PROMPT_TEMPLATE = `
 Você é um especialista em estudos bíblicos com foco evangélico e protestante.
