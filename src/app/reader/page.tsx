@@ -16,6 +16,7 @@ import DocumentIcon from "../components/icons/DocumentIcon";
 import RefIcon from "../components/icons/RefIcon";
 import ShareIcon from "../components/icons/ShareIcon";
 import { ReadingMarker } from "@/entities/ReadingMarker";
+import AIIcon from "../components/icons/AIIcon";
 import CopyIcon from "../components/icons/CopyIcon";
 import MarkerIcon from "../components/icons/MarkerIcon";
 import ReaderMenu from "../components/ReaderMenu";
@@ -196,6 +197,15 @@ export default function Reader() {
     ev.stopPropagation();
   }
 
+  function handleDeepAnalysis(ev: SingleEvent, verseNumber: number) {
+    router.push(
+      `/reader/deep-analysis?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${
+        verseNumber
+      }`,
+    );
+    ev.stopPropagation();
+  }
+
   function handleShare(ev: SingleEvent, verseNumber: number) {
     ev.stopPropagation();
 
@@ -330,6 +340,12 @@ export default function Reader() {
     }
 
     if (event.key === "5") {
+      event.preventDefault();
+      handleDeepAnalysis(event, verseNumber);
+      return;
+    }
+
+    if (event.key === "6") {
       event.preventDefault();
       handleMarkerCandidate(event, verseNumber);
       return;
@@ -635,7 +651,8 @@ export default function Reader() {
                     width={12}
                     height={12}
                   />
-                  Ref.
+                  <span className="sm:block hidden">Refs</span>
+                  <span className="sm:hidden">R.</span>
                 </button>
                 <button
                   className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
@@ -649,7 +666,8 @@ export default function Reader() {
                     width={12}
                     height={12}
                   />
-                  Comp.
+                  <span className="sm:block hidden">Versions</span>
+                  <span className="sm:hidden">V.</span>
                 </button>
                 <button
                   className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
@@ -663,7 +681,8 @@ export default function Reader() {
                     width={12}
                     height={12}
                   />
-                  Share
+                  <span className="sm:block hidden">Share</span>
+                  <span className="sm:hidden">S.</span>
                 </button>
                 {/* <button
                   className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
@@ -691,14 +710,30 @@ export default function Reader() {
                     width={12}
                     height={12}
                   />
-                  Tr.
+                  <span className="sm:block hidden">Original</span>
+                  <span className="sm:hidden">O.</span>
+                </button>
+                <button
+                  className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                  onClick={(e) => handleDeepAnalysis(e, verseIndex + 1)}
+                >
+                  <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                    [5]
+                  </span>
+                  <AIIcon
+                    className="sm:hidden mr-1 opacity-80"
+                    width={12}
+                    height={12}
+                  />
+                  <span className="sm:block hidden">Deep</span>
+                  <span className="sm:hidden">D.</span>
                 </button>
                 <button
                   className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
                   onClick={(e) => handleMarkerCandidate(e, verseIndex + 1)}
                 >
                   <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                    [5]
+                    [6]
                   </span>
                   <MarkerIcon
                     className="sm:hidden mr-1 opacity-80"
