@@ -103,6 +103,9 @@ export default function DeepAnalysis() {
     `deep-analysis-${version}-${bookAbbr}-${chapterNumber}-${verseNumber}`,
   );
 
+  const streamTokensRef = useRef(streamTokens);
+  streamTokensRef.current = streamTokens;
+
   function handleOnPrevious() {
     router.back();
   }
@@ -110,6 +113,17 @@ export default function DeepAnalysis() {
   function handleOnKeyDown(e: KeyboardEvent) {
     if (e.key === "Escape") {
       router.back();
+    } else if (e.key === "ArrowRight") {
+      setSelectedTokenIndex((prev) => {
+        const tokens = streamTokensRef.current;
+        if (prev === null) return tokens.length > 0 ? 0 : null;
+        return prev < tokens.length - 1 ? prev + 1 : prev;
+      });
+    } else if (e.key === "ArrowLeft") {
+      setSelectedTokenIndex((prev) => {
+        if (prev === null) return streamTokensRef.current.length > 0 ? 0 : null;
+        return prev > 0 ? prev - 1 : prev;
+      });
     }
   }
 
@@ -121,6 +135,12 @@ export default function DeepAnalysis() {
     window.addEventListener("keydown", handleOnKeyDown);
     return () => window.removeEventListener("keydown", handleOnKeyDown);
   }, []);
+
+  useEffect(() => {
+    if (streamTokens.length > 0 && selectedTokenIndex === null) {
+      setSelectedTokenIndex(0);
+    }
+  }, [streamTokens.length, selectedTokenIndex]);
 
   useEffect(() => {
     (async () => {
