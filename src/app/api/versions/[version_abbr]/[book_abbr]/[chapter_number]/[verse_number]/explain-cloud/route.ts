@@ -1,8 +1,8 @@
 import { BibleVersionsRepository } from "@/repositories/BibleVersionsRepository";
 import { CLIProxyAPIIntegration } from "@/services/CLIProxyApi";
-import { FnNormalizer } from "@/utils/FnNormalizer";
-import { Params, ParamType } from "@/utils/Params";
-import { ResponseError } from "@/utils/ResponseError";
+import { getCLIProxyConfigOrError } from "@/config/cliProxy";
+import { extractVerseParams } from "@/utils/RouteHelpers";
+import { createStreamingResponse } from "@/utils/StreamingResponse";
 import { NextRequest, NextResponse } from "next/server";
 
 const PROMPT_TEMPLATE = `
@@ -56,30 +56,10 @@ export async function GET(
   ctx: { params: Promise<Record<string, string>> },
 ) {
   try {
-    const params = await ctx.params;
-    const [abbrVersion, abbrVersionError] = Params.getRequiredParam(
-      "version_abbr",
-      params,
-    );
-    const [bookAbbr, bookAbbrError] = Params.getRequiredParam(
-      "book_abbr",
-      params,
-    );
-    const [chapterNumber, chapterNumberError] = Params.getRequiredParam(
-      "chapter_number",
-      params,
-      ParamType.NUMBER,
-    );
-    const [verseNumber, verseNumberError] = Params.getRequiredParam(
-      "verse_number",
-      params,
-      ParamType.NUMBER,
-    );
+    const paramsResult = await extractVerseParams(ctx);
+    if (!paramsResult.ok) return paramsResult.error;
 
-    if (abbrVersionError) return ResponseError.asError(abbrVersionError);
-    if (bookAbbrError) return ResponseError.asError(bookAbbrError);
-    if (chapterNumberError) return ResponseError.asError(chapterNumberError);
-    if (verseNumberError) return ResponseError.asError(verseNumberError);
+    const { versionAbbr: abbrVersion, bookAbbr, chapterNumber, verseNumber } = paramsResult.data;
 
     const { chapter: originalVerseChapter, versionMeta: originalMeta } =
       await BibleVersionsRepository.getOriginalText(
@@ -92,43 +72,26 @@ export async function GET(
     const destinyVersion =
       await BibleVersionsRepository.getVersionFromName(abbrVersion);
 
-    const { data: chapter, error: chapterError } =
-      await FnNormalizer.getFromPromise(
-        BibleVersionsRepository.getChapterWithVersion(
-          abbrVersion,
-          bookAbbr,
-          chapterNumber,
-        ),
-      );
+    const chapterOrError = await BibleVersionsRepository.getChapterOrError(
+      abbrVersion,
+      bookAbbr,
+      chapterNumber
+    );
 
-    if (
-      chapterError instanceof Error &&
-      /not found/i.test(chapterError.message)
-    ) {
-      return ResponseError.asError(
-        `Chapter [${bookAbbr.toUpperCase()} ${chapterNumber}] not found in version [${abbrVersion.toUpperCase()}].`,
-        404,
-      );
+    if (chapterOrError instanceof Response) {
+      return chapterOrError;
     }
 
-    if (!!chapterError) {
-      return ResponseError.asError(
-        `Error fetching chapter: ${chapterError?.message ?? "Unknown error"}`,
-        400,
-      );
-    }
+    const chapter = chapterOrError;
 
-    if (!process.env.CLI_PROXY_HOST) {
-      return ResponseError.asError("CLI_PROXY_HOST is not defined", 400);
-    }
-
-    if (!process.env.CLI_PROXY_KEY) {
-      return ResponseError.asError("CLI_PROXY_KEY is not defined", 400);
+    const cliConfig = getCLIProxyConfigOrError();
+    if (cliConfig instanceof Response) {
+      return cliConfig;
     }
 
     const integration = new CLIProxyAPIIntegration({
-      apiUrl: process.env.CLI_PROXY_HOST,
-      apiKey: process.env.CLI_PROXY_KEY,
+      apiUrl: cliConfig.apiUrl,
+      apiKey: cliConfig.apiKey,
       authMode: { kind: "authorization" },
     });
 
@@ -144,47 +107,16 @@ export async function GET(
       .replace("@DestinyLanguage", destinyVersion.language);
 
     const meta = {
-      model: process.env.CLI_PROXY_MODEL ?? "cli-proxy",
+      model: cliConfig.model ?? "cli-proxy",
       language: originalMeta.language,
       version: `${originalMeta.abbreviation} - ${originalMeta.name}`,
     };
 
-    const encoder = new TextEncoder();
-    const readable = new ReadableStream({
-      async start(controller) {
-        controller.enqueue(
-          encoder.encode(`event: meta\ndata: ${JSON.stringify(meta)}\n\n`),
-        );
-        try {
-          for await (const chunk of integration.streamFrom(
-            prompt,
-            process.env.CLI_PROXY_MODEL,
-          )) {
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`),
-            );
-          }
-        } catch (err) {
-          controller.enqueue(
-            encoder.encode(
-              `event: error\ndata: ${JSON.stringify({ message: (err as Error).message })}\n\n`,
-            ),
-          );
-        }
-        controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
-        controller.close();
-      },
-    });
-
-    return new Response(readable, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    });
+    return createStreamingResponse(
+      meta,
+      integration.streamFrom(prompt, cliConfig.model)
+    );
   } catch (error) {
-    console.log(error);
     return NextResponse.json(
       {
         error: (error as Error).message || "Unknown error occurred",

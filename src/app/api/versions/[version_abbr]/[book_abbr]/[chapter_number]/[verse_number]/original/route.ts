@@ -1,7 +1,7 @@
 import { BibleVersionsRepository } from "@/repositories/BibleVersionsRepository";
 import { FnNormalizer } from "@/utils/FnNormalizer";
-import { Params, ParamType } from "@/utils/Params";
 import { ResponseError } from "@/utils/ResponseError";
+import { extractVerseParams } from "@/utils/RouteHelpers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -9,31 +9,10 @@ export async function GET(
   ctx: { params: Promise<Record<string, string>> },
 ) {
   try {
-    const params = await ctx.params;
+    const paramsResult = await extractVerseParams(ctx);
+    if (!paramsResult.ok) return paramsResult.error;
 
-    const [abbrVersion, abbrVersionError] = Params.getRequiredParam(
-      "version_abbr",
-      params,
-    );
-    const [bookAbbr, bookAbbrError] = Params.getRequiredParam(
-      "book_abbr",
-      params,
-    );
-    const [chapterNumber, chapterNumberError] = Params.getRequiredParam(
-      "chapter_number",
-      params,
-      ParamType.NUMBER,
-    );
-    const [verseNumber, verseNumberError] = Params.getRequiredParam(
-      "verse_number",
-      params,
-      ParamType.NUMBER,
-    );
-
-    if (abbrVersionError) return ResponseError.asError(abbrVersionError);
-    if (bookAbbrError) return ResponseError.asError(bookAbbrError);
-    if (chapterNumberError) return ResponseError.asError(chapterNumberError);
-    if (verseNumberError) return ResponseError.asError(verseNumberError);
+    const { versionAbbr: abbrVersion, bookAbbr, chapterNumber, verseNumber } = paramsResult.data;
 
     const { data: original, error: originalError } =
       await FnNormalizer.getFromPromise(

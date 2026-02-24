@@ -1,6 +1,5 @@
 "use client";
-import type { Payload as PutReferecenPayload } from "@/app/api/references/details/[reference_id]/route";
-import type { Payload as PostReferencePayload } from "@/app/api/references/route";
+import type { ReferencePayload } from "@/entities/ReferencePayload";
 import AddIcon from "@/app/components/icons/AddIcon";
 import ArrowLeftIcon from "@/app/components/icons/ArrowLeftIcon";
 import DocumentIcon from "@/app/components/icons/DocumentIcon";
@@ -87,7 +86,7 @@ export default function ReferenceMutation() {
   });
 
   const handleAddReference = useMutation({
-    mutationFn: (data: PostReferencePayload) =>
+    mutationFn: (data: ReferencePayload) =>
       fetch(`/api/references`, {
         method: "POST",
         body: JSON.stringify(data),
@@ -96,7 +95,7 @@ export default function ReferenceMutation() {
   });
 
   const handleUpdateReference = useMutation({
-    mutationFn: async (data: PutReferecenPayload) => {
+    mutationFn: async (data: ReferencePayload & { id: number }) => {
       const response = await fetch(`/api/references/details/${data.id}`, {
         method: "PUT",
         body: JSON.stringify(data),

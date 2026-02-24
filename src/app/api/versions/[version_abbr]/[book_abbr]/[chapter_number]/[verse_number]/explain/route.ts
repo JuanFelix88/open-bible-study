@@ -1,9 +1,7 @@
 import { VerseAnalysis } from "@/entities/VerseAnalysis";
 import { BibleVersionsRepository } from "@/repositories/BibleVersionsRepository";
 import { IAService } from "@/services/IAService";
-import { FnNormalizer } from "@/utils/FnNormalizer";
-import { Params, ParamType } from "@/utils/Params";
-import { ResponseError } from "@/utils/ResponseError";
+import { extractVerseParams } from "@/utils/RouteHelpers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -11,56 +9,22 @@ export async function GET(
   ctx: { params: Promise<Record<string, string>> }
 ) {
   try {
-    const params = await ctx.params;
-    const [abbrVersion, abbrVersionError] = Params.getRequiredParam(
-      "version_abbr",
-      params
-    );
-    const [bookAbbr, bookAbbrError] = Params.getRequiredParam(
-      "book_abbr",
-      params
-    );
-    const [chapterNumber, chapterNumberError] = Params.getRequiredParam(
-      "chapter_number",
-      params,
-      ParamType.NUMBER
-    );
-    const [verseNumber, verseNumberError] = Params.getRequiredParam(
-      "verse_number",
-      params,
-      ParamType.NUMBER
+    const paramsResult = await extractVerseParams(ctx);
+    if (!paramsResult.ok) return paramsResult.error;
+
+    const { versionAbbr: abbrVersion, bookAbbr, chapterNumber, verseNumber } = paramsResult.data;
+
+    const chapterOrError = await BibleVersionsRepository.getChapterOrError(
+      abbrVersion,
+      bookAbbr,
+      chapterNumber
     );
 
-    if (abbrVersionError) return ResponseError.asError(abbrVersionError);
-    if (bookAbbrError) return ResponseError.asError(bookAbbrError);
-    if (chapterNumberError) return ResponseError.asError(chapterNumberError);
-    if (verseNumberError) return ResponseError.asError(verseNumberError);
-
-    const { data: chapter, error: chapterError } =
-      await FnNormalizer.getFromPromise(
-        BibleVersionsRepository.getChapterWithVersion(
-          abbrVersion,
-          bookAbbr,
-          chapterNumber
-        )
-      );
-
-    if (
-      chapterError instanceof Error &&
-      /not found/i.test(chapterError.message)
-    ) {
-      return ResponseError.asError(
-        `Chapter [${bookAbbr.toUpperCase()} ${chapterNumber}] not found in version [${abbrVersion.toUpperCase()}].`,
-        404
-      );
+    if (chapterOrError instanceof Response) {
+      return chapterOrError;
     }
 
-    if (!!chapterError) {
-      return ResponseError.asError(
-        `Error fetching chapter: ${chapterError?.message ?? "Unknown error"}`,
-        400
-      );
-    }
+    const chapter = chapterOrError;
 
     const iaResponse = await IAService.request(
       `De acordo com o texto da bíblia ${chapter.book.name} ${chapter.book.chapter.number}:${verseNumber}, ` +
@@ -86,7 +50,6 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.log(error);
     return NextResponse.json(
       {
         error: (error as Error).message || "Unknown error occurred",

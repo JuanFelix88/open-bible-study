@@ -6,6 +6,8 @@ import { LinkToChapter } from "@/entities/LinkToChapter";
 import { Nullable } from "@/entities/Nullable";
 import { RawChapterVersion } from "@/entities/RawBibleVersion";
 import { StaticClass } from "@/entities/StaticClass";
+import { FnNormalizer } from "@/utils/FnNormalizer";
+import { ResponseError } from "@/utils/ResponseError";
 
 export class BibleVersionsRepository extends StaticClass {
   public static async getAllVersionsWithVerse(
@@ -162,6 +164,32 @@ export class BibleVersionsRepository extends StaticClass {
       previous,
       next,
     } satisfies Chapter;
+  }
+
+  public static async getChapterOrError(
+    versionAbbr: string,
+    bookAbbr: string,
+    chapterNumber: number
+  ): Promise<Chapter | Response> {
+    const { data, error } = await FnNormalizer.getFromPromise(
+      this.getChapterWithVersion(versionAbbr, bookAbbr, chapterNumber)
+    );
+
+    if (error instanceof Error && /not found/i.test(error.message)) {
+      return ResponseError.asError(
+        `Chapter [${bookAbbr.toUpperCase()} ${chapterNumber}] not found in version [${versionAbbr.toUpperCase()}].`,
+        404
+      );
+    }
+
+    if (error) {
+      return ResponseError.asError(
+        `Error fetching chapter: ${error?.message ?? "Unknown error"}`,
+        400
+      );
+    }
+
+    return data;
   }
 
   public static async getBookIndex(
