@@ -1,11 +1,11 @@
 import { Language } from "@/entities/Language";
 import { VerseAnalysis } from "@/entities/VerseAnalysis";
 import {
-  parseStreamingTokens,
+  parseStreamingTokensAsync,
   stripCodeFences,
 } from "@/utils/StreamingJsonParser";
 import { streamAnalysisCache } from "@/utils/StreamAnalysisCache";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface StreamAnalysisMeta {
   modelName: string;
@@ -21,6 +21,14 @@ export interface StreamAnalysisResult {
   lastTokenIndex: number;
 }
 
+const BATCH_SIZE = 5;
+const UPDATE_INTERVAL_MS = 100;
+
+const yieldToMain: () => Promise<void> =
+  "scheduler" in globalThis && "yield" in (globalThis as unknown as { scheduler: { yield: () => Promise<void> } }).scheduler
+    ? () => (globalThis as unknown as { scheduler: { yield: () => Promise<void> } }).scheduler.yield()
+    : () => new Promise((resolve) => setTimeout(resolve, 0));
+
 export function useStreamAnalysis(
   url: string | null,
   cacheKey: string,
@@ -30,6 +38,56 @@ export function useStreamAnalysis(
   const [isLoading, setIsLoading] = useState(true);
   const [isStreaming, setIsStreaming] = useState(false);
   const [lastTokenIndex, setLastTokenIndex] = useState(-1);
+
+  const pendingTokensRef = useRef<VerseAnalysis[]>([]);
+  const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastUpdateRef = useRef<number>(0);
+
+  const flushPendingTokens = useCallback(() => {
+    const pending = pendingTokensRef.current;
+    if (pending.length === 0) return;
+
+    setTokens((prev) => {
+      const combined = [...prev, ...pending];
+      return combined;
+    });
+    setLastTokenIndex((prev) => prev + pending.length);
+    pendingTokensRef.current = [];
+    lastUpdateRef.current = performance.now();
+  }, []);
+
+  const scheduleUpdate = useCallback(() => {
+    const now = performance.now();
+    const timeSinceLastUpdate = now - lastUpdateRef.current;
+
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+    }
+
+    if (timeSinceLastUpdate >= UPDATE_INTERVAL_MS) {
+      flushPendingTokens();
+    } else {
+      updateTimeoutRef.current = setTimeout(
+        flushPendingTokens,
+        UPDATE_INTERVAL_MS - timeSinceLastUpdate,
+      );
+    }
+  }, [flushPendingTokens]);
+
+  const addTokens = useCallback(
+    (newTokens: VerseAnalysis[]) => {
+      if (newTokens.length === 0) return;
+
+      pendingTokensRef.current.push(...newTokens);
+
+      if (pendingTokensRef.current.length >= BATCH_SIZE) {
+        flushPendingTokens();
+      } else {
+        scheduleUpdate();
+      }
+    },
+    [flushPendingTokens, scheduleUpdate],
+  );
 
   useEffect(() => {
     if (!url) return;
@@ -49,6 +107,8 @@ export function useStreamAnalysis(
     setMeta(null);
     setIsLoading(true);
     setIsStreaming(false);
+    pendingTokensRef.current = [];
+    lastUpdateRef.current = 0;
 
     (async () => {
       const response = await fetch(url);
@@ -63,6 +123,7 @@ export function useStreamAnalysis(
       let accumulated = "";
       let buffer = "";
       let parsedMeta: StreamAnalysisMeta | null = null;
+      let lastParsedLength = 0;
 
       if (!cancelled) setIsStreaming(true);
 
@@ -111,17 +172,35 @@ export function useStreamAnalysis(
           }
 
           const clean = stripCodeFences(accumulated);
-          const parsed = parseStreamingTokens(clean);
-          if (parsed.length > 0 && !cancelled) {
-            setTokens([...parsed]);
-            setLastTokenIndex(parsed.length - 1);
+          
+          await yieldToMain();
+          
+          if (cancelled) break;
+
+          const result = await parseStreamingTokensAsync(clean, {
+            yieldEvery: 30,
+          });
+          const newTokens = result.tokens.slice(lastParsedLength);
+          lastParsedLength = result.tokens.length;
+
+          if (newTokens.length > 0 && !cancelled) {
+            addTokens(newTokens);
           }
         }
+
+        await yieldToMain();
+      }
+
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
       }
 
       if (!cancelled) {
+        flushPendingTokens();
+
         const clean = stripCodeFences(accumulated).trim();
-        const finalTokens = parseStreamingTokens(clean);
+        const finalResult = await parseStreamingTokensAsync(clean);
+        const finalTokens = finalResult.tokens;
         setTokens(finalTokens);
         setLastTokenIndex(finalTokens.length - 1);
         setIsStreaming(false);
@@ -135,8 +214,11 @@ export function useStreamAnalysis(
 
     return () => {
       cancelled = true;
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
     };
-  }, [url, cacheKey]);
+  }, [url, cacheKey, addTokens, flushPendingTokens]);
 
   return { tokens, meta, isLoading, isStreaming, lastTokenIndex };
 }
