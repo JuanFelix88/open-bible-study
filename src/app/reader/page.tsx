@@ -7,7 +7,8 @@ import { useDialog } from "@/hooks/useDialog";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import { MouseEvent, useEffect, useRef, useState } from "react";
+import { MouseEvent, useEffect, useRef, useState, useTransition } from "react";
+import LoadingIcon from "../components/icons/LoadingIcon";
 import { useInView } from "react-intersection-observer";
 import ArrowLeftIcon from "../components/icons/ArrowLeftIcon";
 import ArrowRightIcon from "../components/icons/ArrowRightIcon";
@@ -57,6 +58,7 @@ export default function Reader() {
   const refSelected = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { setDialog } = useDialog();
+  const [isNavigating, startNavigation] = useTransition();
   const selectedVerseRef = useRef<number | null>(null);
   const chapterRef = useRef<Chapter | null>(null);
   const bookAbbrRef = useRef(bookAbbr);
@@ -69,6 +71,7 @@ export default function Reader() {
   const [readingMarkers, setReadingMarkers] = useState<ReadingMarker[]>([]);
   const [markerName, setMarkerName] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [chapterTransition, setChapterTransition] = useState(false);
 
   const { data: books, isLoading: isLoadingBooks } = useQuery({
     queryKey: ["books"],
@@ -181,9 +184,10 @@ export default function Reader() {
   //   );
   // }
 
-  function handlePreviousChapter() {
+function handlePreviousChapter() {
     if (chapter?.previous) {
       setSelectedVerse(null);
+      setChapterTransition(true);
       router.push(
         `/reader?book=${chapter?.previous.abbrev}&version=${versionAbbr}&chapter=${chapter?.previous.numChapter}`,
       );
@@ -193,6 +197,7 @@ export default function Reader() {
   function handleNextChapter() {
     if (chapter?.next) {
       setSelectedVerse(null);
+      setChapterTransition(true);
       router.push(
         `/reader?book=${chapter?.next.abbrev}&version=${versionAbbr}&chapter=${chapter?.next.numChapter}`,
       );
@@ -200,30 +205,36 @@ export default function Reader() {
   }
 
   function handleCompare(ev: SingleEvent, verseIndex: number) {
-    router.push(
-      `/reader/compare?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${
-        verseIndex + 1
-      }`,
-    );
     ev.stopPropagation();
+    startNavigation(() => {
+      router.push(
+        `/reader/compare?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${
+          verseIndex + 1
+        }`,
+      );
+    });
   }
 
   function handleExplain(ev: SingleEvent, verseNumber: number) {
-    router.push(
-      `/reader/explain?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${
-        verseNumber
-      }`,
-    );
     ev.stopPropagation();
+    startNavigation(() => {
+      router.push(
+        `/reader/explain?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${
+          verseNumber
+        }`,
+      );
+    });
   }
 
   function handleDeepAnalysis(ev: SingleEvent, verseNumber: number) {
-    router.push(
-      `/reader/deep-analysis?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${
-        verseNumber
-      }`,
-    );
     ev.stopPropagation();
+    startNavigation(() => {
+      router.push(
+        `/reader/deep-analysis?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${
+          verseNumber
+        }`,
+      );
+    });
   }
 
   function handleShare(ev: SingleEvent, verseNumber: number) {
@@ -409,9 +420,11 @@ export default function Reader() {
   function handleOpenReferences(event: SingleEvent, verseIndex: number) {
     event.stopPropagation();
     const verseNumber = verseIndex + 1;
-    router.push(
-      `/reader/references?version=${versionAbbr}&book=${bookAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`,
-    );
+    startNavigation(() => {
+      router.push(
+        `/reader/references?version=${versionAbbr}&book=${bookAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`,
+      );
+    });
   }
 
   // function handlePreviousVerse() {
@@ -617,7 +630,7 @@ export default function Reader() {
     }
   }, [chapter]);
 
-  useEffect(() => {
+useEffect(() => {
     const markersStr = localStorage.getItem("markers");
 
     if (!markersStr) return;
@@ -628,6 +641,13 @@ export default function Reader() {
 
     setReadingMarkers(markers);
   }, []);
+
+  useEffect(() => {
+    if (chapterTransition && chapter) {
+      const timer = setTimeout(() => setChapterTransition(false), 250);
+      return () => clearTimeout(timer);
+    }
+  }, [chapterTransition, chapter]);
 
   const bookName =
     books?.find((b) => b.abbr.toLowerCase() === bookAbbr.toLowerCase())?.name ??
@@ -650,6 +670,19 @@ export default function Reader() {
 
   return (
     <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-16 sm:pb-36 bg-background relative text-text max-w-[750px] w-full">
+      {/* Navigation loading overlay */}
+      {isNavigating && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm animate-nav-overlay">
+          <div className="flex flex-col items-center gap-3 animate-nav-spinner">
+            <LoadingIcon
+              width={32}
+              height={32}
+              className="animate-spin text-text/60"
+            />
+            <span className="text-sm text-text/60 font-medium">Loading...</span>
+          </div>
+        </div>
+      )}
       {!inViewHeader && (
         <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-40 shadow animate-show-from-top">
           <div className="flex items-center max-w-[750px] mx-auto">
@@ -760,9 +793,10 @@ export default function Reader() {
         </div>
       )}
 
-      {/* Verses */}
-      {chapter?.book.chapter.verses.map((verse, verseIndex) => (
-        <div key={verseIndex} className="flex flex-col">
+{/* Verses */}
+      <div className={chapterTransition ? "animate-chapter-fade" : ""}>
+        {chapter?.book.chapter.verses.map((verse, verseIndex) => (
+          <div key={verseIndex} className="flex flex-col">
           {readingMarkers.some((m) =>
             m.compareTo(bookAbbr, chapterNumber, verseIndex + 1),
           ) && (
@@ -978,6 +1012,7 @@ export default function Reader() {
           </div>
         </div>
       ))}
+      </div>
 
       {/* Footer with license */}
       {versionLicense && (

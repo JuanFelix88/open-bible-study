@@ -264,6 +264,49 @@ body {
   animation: fade-in-from-bottom 0.2s ease-in-out reverse forwards;
 }
 
+.animate-chapter-fade {
+  animation: chapter-fade 0.25s ease-out;
+}
+
+@keyframes chapter-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-nav-overlay {
+  animation: nav-overlay-in 0.15s ease-out;
+}
+
+.animate-nav-spinner {
+  animation: nav-spinner-in 0.2s ease-out;
+}
+
+@keyframes nav-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes nav-spinner-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @keyframes show-ref-icon {
   from {
     opacity: 0;

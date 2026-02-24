@@ -6,34 +6,35 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  ctx: { params: Promise<Record<string, string>> }
+  ctx: { params: Promise<Record<string, string>> },
 ) {
   const params = await ctx.params;
   const [abbrVersion, abbrVersionError] = Params.getRequiredParam(
     "version_abbr",
-    params
+    params,
   );
   const [bookAbbr, bookAbbrError] = Params.getRequiredParam(
     "book_abbr",
-    params
+    params,
   );
   const [chapterNumber, chapterNumberError] = Params.getRequiredParam(
     "chapter_number",
     params,
-    ParamType.NUMBER
+    ParamType.NUMBER,
   );
 
   if (abbrVersionError) return ResponseError.asError(abbrVersionError);
   if (bookAbbrError) return ResponseError.asError(bookAbbrError);
   if (chapterNumberError) return ResponseError.asError(chapterNumberError);
 
-  const { data: chapter, error: chapterError } = await FnNormalizer.getFromPromise(
-    BibleVersionsRepository.getChapterWithVersion(
-      abbrVersion,
-      bookAbbr,
-      chapterNumber
-    )
-  );
+  const { data: chapter, error: chapterError } =
+    await FnNormalizer.getFromPromise(
+      BibleVersionsRepository.getChapterWithVersion(
+        abbrVersion,
+        bookAbbr,
+        chapterNumber,
+      ),
+    );
 
   if (
     chapterError instanceof Error &&
@@ -41,16 +42,14 @@ export async function GET(
   ) {
     return ResponseError.asError(
       `Chapter [${bookAbbr.toUpperCase()} ${chapterNumber}] not found in version [${abbrVersion.toUpperCase()}].`,
-      404
+      404,
     );
   }
 
   if (!!chapterError) {
     return ResponseError.asError(
-      `Error fetching chapter: ${
-        chapterError?.message ?? "Unknown error"
-      }`,
-      400
+      `Error fetching chapter: ${chapterError?.message ?? "Unknown error"}`,
+      400,
     );
   }
 
