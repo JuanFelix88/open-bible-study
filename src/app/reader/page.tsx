@@ -25,6 +25,7 @@ import BookChapterPicker from "../components/BookChapterPicker";
 import ReaderSearch from "../components/ReaderSearch";
 import { StringCompare } from "@/utils/StringCompare";
 import { Version } from "@/entities/Version";
+import ShareDropdown from "../components/ShareDropdown";
 
 function referencesIncludesVerse(
   references: Reference[] | undefined,
@@ -64,6 +65,9 @@ export default function Reader() {
   const bookAbbrRef = useRef(bookAbbr);
   const versionAbbrRef = useRef(versionAbbr);
   const chapterNumberRef = useRef(chapterNumber);
+
+  const [shareMenuVerse, setShareMenuVerse] = useState<number | null>(null);
+  const [shareMenuAutoFocus, setShareMenuAutoFocus] = useState(false);
 
   const [candidateToMarker, setCandidateToMarker] = useState<number | null>(
     null,
@@ -237,15 +241,38 @@ function handlePreviousChapter() {
     });
   }
 
-  function handleShare(ev: SingleEvent, verseNumber: number) {
+  function handleToggleShareMenu(ev: SingleEvent, verseNumber: number) {
     ev.stopPropagation();
+    setShareMenuVerse((prev) => {
+      if (prev === verseNumber) return null;
+      return verseNumber;
+    });
+    setShareMenuAutoFocus(false);
+  }
 
-    navigator.clipboard.writeText(
-      `${window.location.origin}/share?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`,
-    );
-
+  function handleShareLinkOnly(ev: SingleEvent, verseNumber: number) {
+    ev.stopPropagation();
+    const url = `${window.location.origin}/share?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`;
+    navigator.clipboard.writeText(url);
+    setShareMenuVerse(null);
+    setShareMenuAutoFocus(false);
     setDialog({
       title: "Link copied!",
+      message: `Verse ${verseNumber} ready to share.`,
+      ms: 3500,
+    });
+  }
+
+  function handleShareLinkAndText(ev: SingleEvent, verseNumber: number) {
+    ev.stopPropagation();
+    const url = `${window.location.origin}/share?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`;
+    const verseText = chapter?.book.chapter.verses.at(verseNumber - 1) ?? "";
+    const text = `${bookName} ${chapterNumber}:${verseNumber}\n${verseText}\n\n${url}`;
+    navigator.clipboard.writeText(text);
+    setShareMenuVerse(null);
+    setShareMenuAutoFocus(false);
+    setDialog({
+      title: "Link + text copied!",
       message: `Verse ${verseNumber} ready to share.`,
       ms: 3500,
     });
@@ -460,6 +487,11 @@ function handlePreviousChapter() {
   // }
 
   useEffect(() => {
+    setShareMenuVerse(null);
+    setShareMenuAutoFocus(false);
+  }, [selectedVerse]);
+
+  useEffect(() => {
     if (selectedVerse === null) return;
 
     router.replace(
@@ -525,14 +557,8 @@ function handlePreviousChapter() {
 
       if (event.key === "3") {
         event.preventDefault();
-        navigator.clipboard.writeText(
-          `${window.location.origin}/share?book=${bookAbbrRef.current}&version=${versionAbbrRef.current}&chapter=${chapterNumberRef.current}&verse=${verseNumber}`,
-        );
-        setDialog({
-          title: "Link copied!",
-          message: `Verse ${verseNumber} ready to share.`,
-          ms: 3500,
-        });
+        setShareMenuVerse((prev) => (prev === verseNumber ? null : verseNumber));
+        setShareMenuAutoFocus(true);
         return;
       }
 
@@ -863,21 +889,31 @@ useEffect(() => {
                   <span className="sm:block hidden">Versions</span>
                   <span className="sm:hidden">V.</span>
                 </button>
-                <button
-                  className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                  onClick={(e) => handleShare(e, verseIndex + 1)}
-                >
-                  <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                    [3]
-                  </span>
-                  <ShareIcon
-                    className="sm:hidden mr-1 opacity-80"
-                    width={12}
-                    height={12}
-                  />
-                  <span className="sm:block hidden">Share</span>
-                  <span className="sm:hidden">S.</span>
-                </button>
+                <div className="relative">
+                  <button
+                    className={`border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed text-sm flex cursor-pointer transition ${shareMenuVerse === verseIndex + 1 ? "bg-primary/20 border-primary text-primary" : "border-border bg-background hover:bg-background/70"}`}
+                    onClick={(e) => handleToggleShareMenu(e, verseIndex + 1)}
+                  >
+                    <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                      [3]
+                    </span>
+                    <ShareIcon
+                      className="sm:hidden mr-1 opacity-80"
+                      width={12}
+                      height={12}
+                    />
+                    <span className="sm:block hidden">Share</span>
+                    <span className="sm:hidden">S.</span>
+                  </button>
+                  {shareMenuVerse === verseIndex + 1 && (
+                    <ShareDropdown
+                      autoFocus={shareMenuAutoFocus}
+                      onLinkOnly={() => handleShareLinkOnly({ stopPropagation: () => {} } as SingleEvent, verseIndex + 1)}
+                      onLinkAndText={() => handleShareLinkAndText({ stopPropagation: () => {} } as SingleEvent, verseIndex + 1)}
+                      onClose={() => setShareMenuVerse(null)}
+                    />
+                  )}
+                </div>
                 {/* <button
                   className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
                   onClick={(e) => handleCopyVerse(e, verseIndex + 1)}
