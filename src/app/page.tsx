@@ -208,7 +208,7 @@ export default function Home() {
 
       <Link
         href="/mode/set-theme"
-        className="fixed sm:relative bottom-4 sm:bottom-auto right-4 sm:right-auto sm:top-auto sm:mt-8 z-50 flex items-center gap-2 rounded-full border border-border bg-surface/60 px-3 py-2 text-sm font-semibold hover:bg-surface/90 active:scale-[0.98] transition"
+        className="fixed sm:relative bottom-4 sm:bottom-auto right-4 sm:right-auto sm:top-auto sm:mt-8 z-50 flex items-center gap-2 rounded-full border border-border bg-surface/60 px-3 py-2 text-sm font-semibold hover:bg-surface/90"
         aria-label="Open theme selector"
       >
         <span className="relative flex h-5 w-5 items-center justify-center overflow-hidden rounded-full border border-border bg-background">

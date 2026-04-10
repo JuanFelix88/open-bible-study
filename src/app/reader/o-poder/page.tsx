@@ -176,9 +176,9 @@ export default function OPoderReader() {
       )}
 
       {data && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 rounded-full border border-border bg-surface/80 backdrop-blur-md shadow-lg shadow-background/30 px-1.5 py-1.5">
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 rounded-full border border-border bg-surface shadow-lg shadow-background/30 px-1.5 py-1.5">
           <button
-            className="flex items-center gap-1 rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-background/60 active:scale-95 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-background/60 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
             onClick={handlePreviousPage}
             disabled={currentPage <= 1}
           >
@@ -189,7 +189,7 @@ export default function OPoderReader() {
             {currentPage} / {data.totalPages}
           </span>
           <button
-            className="flex items-center gap-1 rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-background/60 active:scale-95 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-background/60 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
             onClick={handleNextPage}
             disabled={currentPage >= data.totalPages}
           >

@@ -89,7 +89,7 @@ export default function Welcome() {
                   <button
                     key={book.abbr}
                     onClick={() => handleSelectBook(book.abbr)}
-                    className="px-4 py-3 rounded-md border bg-surface border-border hover:bg-surface/80 hover:border-primary/50 active:scale-[0.97] transition-all cursor-pointer text-sm font-medium"
+                    className="px-4 py-3 rounded-md border bg-surface border-border hover:bg-surface/80 hover:border-primary/50 cursor-pointer text-sm font-medium"
                   >
                     {book.name}
                   </button>
@@ -120,7 +120,7 @@ export default function Welcome() {
                     <button
                       key={index}
                       onClick={() => handleSelectChapter(index + 1)}
-                      className="px-3 py-2 rounded-md border bg-surface border-border hover:bg-surface/80 hover:border-primary/50 active:scale-[0.97] transition-all cursor-pointer text-sm font-medium"
+                      className="px-3 py-2 rounded-md border bg-surface border-border hover:bg-surface/80 hover:border-primary/50 cursor-pointer text-sm font-medium"
                     >
                       {index + 1}
                     </button>

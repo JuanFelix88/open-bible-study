@@ -93,7 +93,7 @@ export default function DarkMode() {
                   e.stopPropagation();
                   handleSelectTheme(mode);
                 }}
-                className="flex cursor-pointer items-center gap-1 text-xs font-semibold rounded-full px-3 py-1.5 border border-border bg-background/60 hover:bg-background/90 active:scale-[0.98] transition"
+                className="flex cursor-pointer items-center gap-1 text-xs font-semibold rounded-full px-3 py-1.5 border border-border bg-background/60 hover:bg-background/90"
                 aria-pressed={currentTheme === mode}
               >
                 {currentTheme === mode ? (

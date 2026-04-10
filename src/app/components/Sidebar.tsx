@@ -53,7 +53,7 @@ export default function Sidebar({
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-200 ${
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         onClick={onClose}
@@ -62,7 +62,7 @@ export default function Sidebar({
 
       {/* Sidebar Panel */}
       <div
-        className={`fixed inset-y-0 z-50 w-full max-w-md bg-background shadow-xl ring-1 ring-border transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 z-50 w-full max-w-md bg-background shadow-xl ring-1 ring-border transition-transform duration-200 ease-in-out ${
           position === "right" ? "right-0" : "left-0"
         } ${isOpen ? "translate-x-0" : position === "right" ? "translate-x-full" : "-translate-x-full"}`}
         role="dialog"

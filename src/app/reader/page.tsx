@@ -501,33 +501,52 @@ function handlePreviousChapter() {
   }, [selectedVerse, chapter, bookAbbr, versionAbbr, chapterNumber]);
 
   useEffect(() => {
-    refSelected.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
-  }, [selectedVerse]);
+    if (selectedVerse === null) return;
+    queueMicrotask(() =>
+      refSelected.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      }),
+    );
+  }, [selectedVerse, chapter]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const currentChapter = chapterRef.current;
-      // const currentSelectedVerse = selectedVerseRef.current;
-
       if (!currentChapter) return;
 
-      const selected = document.querySelector(
-        "div:has(.control-buttons):not(.hidden-buttons)",
-      );
-
-      if (!selected) return;
-
-      const verseNumber = parseInt(refSelected.current?.id ?? "", 10);
-      if (!verseNumber || isNaN(verseNumber)) {
-        if (event.key === "Escape") {
-          event.preventDefault();
+      if (event.key === "ArrowRight" && event.ctrlKey) {
+        event.preventDefault();
+        if (currentChapter.next) {
           setSelectedVerse(null);
+          setChapterTransition(true);
+          router.push(
+            `/reader?book=${currentChapter.next.abbrev}&version=${versionAbbrRef.current}&chapter=${currentChapter.next.numChapter}`,
+          );
         }
         return;
       }
+
+      if (event.key === "ArrowLeft" && event.ctrlKey) {
+        event.preventDefault();
+        if (currentChapter.previous) {
+          setSelectedVerse(null);
+          setChapterTransition(true);
+          router.push(
+            `/reader?book=${currentChapter.previous.abbrev}&version=${versionAbbrRef.current}&chapter=${currentChapter.previous.numChapter}`,
+          );
+        }
+        return;
+      }
+
+      if (event.key === "ArrowDown" && selectedVerseRef.current === null) {
+        event.preventDefault();
+        setSelectedVerse(1);
+        return;
+      }
+
+      const currentSelected = selectedVerseRef.current;
+      if (!currentSelected) return;
 
       if (event.key === "Escape") {
         event.preventDefault();
@@ -542,7 +561,7 @@ function handlePreviousChapter() {
       if (event.key === "1") {
         event.preventDefault();
         router.push(
-          `/reader/references?version=${versionAbbrRef.current}&book=${bookAbbrRef.current}&chapter=${chapterNumberRef.current}&verse=${verseNumber}`,
+          `/reader/references?version=${versionAbbrRef.current}&book=${bookAbbrRef.current}&chapter=${chapterNumberRef.current}&verse=${currentSelected}`,
         );
         return;
       }
@@ -550,14 +569,14 @@ function handlePreviousChapter() {
       if (event.key === "2") {
         event.preventDefault();
         router.push(
-          `/reader/compare?book=${bookAbbrRef.current}&version=${versionAbbrRef.current}&chapter=${chapterNumberRef.current}&verse=${verseNumber}`,
+          `/reader/compare?book=${bookAbbrRef.current}&version=${versionAbbrRef.current}&chapter=${chapterNumberRef.current}&verse=${currentSelected}`,
         );
         return;
       }
 
       if (event.key === "3") {
         event.preventDefault();
-        setShareMenuVerse((prev) => (prev === verseNumber ? null : verseNumber));
+        setShareMenuVerse((prev) => (prev === currentSelected ? null : currentSelected));
         setShareMenuAutoFocus(true);
         return;
       }
@@ -565,7 +584,7 @@ function handlePreviousChapter() {
       if (event.key === "4") {
         event.preventDefault();
         router.push(
-          `/reader/explain?book=${bookAbbrRef.current}&version=${versionAbbrRef.current}&chapter=${chapterNumberRef.current}&verse=${verseNumber}`,
+          `/reader/explain?book=${bookAbbrRef.current}&version=${versionAbbrRef.current}&chapter=${chapterNumberRef.current}&verse=${currentSelected}`,
         );
         return;
       }
@@ -573,7 +592,7 @@ function handlePreviousChapter() {
       if (event.key === "5") {
         event.preventDefault();
         router.push(
-          `/reader/deep-analysis?book=${bookAbbrRef.current}&version=${versionAbbrRef.current}&chapter=${chapterNumberRef.current}&verse=${verseNumber}`,
+          `/reader/deep-analysis?book=${bookAbbrRef.current}&version=${versionAbbrRef.current}&chapter=${chapterNumberRef.current}&verse=${currentSelected}`,
         );
         return;
       }
@@ -582,12 +601,6 @@ function handlePreviousChapter() {
         event.preventDefault();
         setSelectedVerse((prev) => {
           if (prev === null || prev <= 1) return prev;
-          queueMicrotask(() =>
-            refSelected.current?.scrollIntoView({
-              behavior: "smooth",
-              block: "center",
-            }),
-          );
           return prev - 1;
         });
         return;
@@ -596,38 +609,10 @@ function handlePreviousChapter() {
       if (event.key === "ArrowDown") {
         event.preventDefault();
         setSelectedVerse((prev) => {
-          if (prev === null) prev = 0;
+          if (prev === null) return 1;
           if (prev >= currentChapter.book.chapter.verses.length) return prev;
-          queueMicrotask(() =>
-            refSelected.current?.scrollIntoView({
-              behavior: "smooth",
-              block: "center",
-            }),
-          );
           return prev + 1;
         });
-        return;
-      }
-
-      if (event.key === "ArrowRight" && event.ctrlKey) {
-        event.preventDefault();
-        if (currentChapter.next) {
-          setSelectedVerse(null);
-          router.push(
-            `/reader?book=${currentChapter.next.abbrev}&version=${versionAbbrRef.current}&chapter=${currentChapter.next.numChapter}`,
-          );
-        }
-        return;
-      }
-
-      if (event.key === "ArrowLeft" && event.ctrlKey) {
-        event.preventDefault();
-        if (currentChapter.previous) {
-          setSelectedVerse(null);
-          router.push(
-            `/reader?book=${currentChapter.previous.abbrev}&version=${versionAbbrRef.current}&chapter=${currentChapter.previous.numChapter}`,
-          );
-        }
         return;
       }
     };
@@ -698,7 +683,7 @@ useEffect(() => {
     <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-16 sm:pb-36 bg-background relative text-text max-w-[750px] w-full">
       {/* Navigation loading overlay */}
       {isNavigating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm animate-nav-overlay">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 animate-nav-overlay">
           <div className="flex flex-col items-center gap-3 animate-nav-spinner">
             <LoadingIcon
               width={32}
@@ -730,7 +715,7 @@ useEffect(() => {
                       <button
                         type="button"
                         onClick={open}
-                        className="text-left cursor-pointer hover:bg-surface/60 rounded-lg px-1 -mx-1 py-0.5 transition active:scale-[0.98]"
+                        className="text-left cursor-pointer hover:bg-surface/60 rounded-lg px-1 -mx-1 py-0.5"
                       >
                         <h1 className="text-2xl sm:text-4xl font-bold leading-tight">
                           {bookName} {chapterText}
@@ -776,7 +761,7 @@ useEffect(() => {
                   <button
                     type="button"
                     onClick={open}
-                    className="text-left cursor-pointer hover:bg-surface/60 rounded-lg px-1 -mx-1 py-0.5 transition active:scale-[0.98]"
+                    className="text-left cursor-pointer hover:bg-surface/60 rounded-lg px-1 -mx-1 py-0.5"
                   >
                     <h1 className="text-2xl sm:text-4xl font-bold leading-tight">
                       {bookName} {chapterText}
@@ -1059,9 +1044,9 @@ useEffect(() => {
 
       {/* Floating chapter navigation */}
       {chapter && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 rounded-full border border-border bg-surface/80 backdrop-blur-md shadow-lg shadow-background/30 px-1.5 py-1.5">
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 rounded-full border border-border bg-surface shadow-lg shadow-background/30 px-1.5 py-1.5">
           <button
-            className="flex items-center gap-1 rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-background/60 active:scale-95 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-background/60 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
             onClick={handlePreviousChapter}
             disabled={!chapter.previous}
           >
@@ -1072,7 +1057,7 @@ useEffect(() => {
             {chapterText}
           </span>
           <button
-            className="flex items-center gap-1 rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-background/60 active:scale-95 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-background/60 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
             onClick={handleNextChapter}
             disabled={!chapter.next}
           >

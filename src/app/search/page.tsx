@@ -155,7 +155,7 @@ export default function Search() {
             {filteredVersions?.map((version) => (
               <button
                 key={version.abbreviation}
-                className="mt-3 w-full items-center flex bg-surface rounded p-2 gap-1 hover:bg-info/30 active:scale-95 transition-[scale] border border-border/80 cursor-pointer"
+                className="mt-3 w-full items-center flex bg-surface rounded p-2 gap-1 hover:bg-info/30 border border-border/80 cursor-pointer"
                 onClick={() => {
                   setSelectedVersion(version);
                   setIsSelectingVersion(false);
@@ -240,7 +240,7 @@ export default function Search() {
               <Link
                 key={result.displayText}
                 href={`/reader?version=${selectedVersion?.abbreviation}&book=${result.bookAbbr}&chapter=${result.chapter}&verse=${result.verse}`}
-                className="mt-3 w-full flex items-start flex-col bg-surface rounded p-2 gap-1 hover:bg-info/30 active:scale-[0.97] transition-[scale] border border-dashed border-border/80 cursor-pointer"
+                className="mt-3 w-full flex items-start flex-col bg-surface rounded p-2 gap-1 hover:bg-info/30 border border-dashed border-border/80 cursor-pointer"
               >
                 <div className="flex gap-1 items-center w-full">
                   <span className="items-start">

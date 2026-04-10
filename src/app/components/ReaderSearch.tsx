@@ -188,7 +188,7 @@ export default function ReaderSearch({
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] sm:pt-[12vh]">
       <div
-        className="absolute inset-0 bg-background/70 backdrop-blur-md"
+        className="absolute inset-0 bg-background/85"
         onClick={onClose}
       />
 
@@ -196,7 +196,7 @@ export default function ReaderSearch({
         ref={overlayRef}
         className="relative z-10 w-[95vw] max-w-lg flex flex-col max-h-[75vh] animate-fade-in-from-bottom"
       >
-        <div className="flex items-center gap-2 rounded-t-2xl border border-border bg-surface/95 backdrop-blur-md px-4 py-3 shadow-xl shadow-background/40">
+        <div className="flex items-center gap-2 rounded-t-2xl border border-border bg-surface px-4 py-3 shadow-xl shadow-background/40">
           <SearchIcon
             width={18}
             height={18}
@@ -213,13 +213,13 @@ export default function ReaderSearch({
           />
           <button
             onClick={onClose}
-            className="text-text/50 hover:text-text transition cursor-pointer p-1"
+            className="text-text/50 hover:text-text cursor-pointer p-1"
           >
             <CloseIcon width={18} height={18} />
           </button>
         </div>
 
-        <div className="overflow-y-auto rounded-b-2xl border border-t-0 border-border bg-surface/80 backdrop-blur-md shadow-xl shadow-background/40 reader-search-scroll">
+        <div className="overflow-y-auto rounded-b-2xl border border-t-0 border-border bg-surface shadow-xl shadow-background/40 reader-search-scroll">
           {!searchText && (
             <div className="px-4 py-8 text-center">
               <p className="text-text/40 text-sm">
@@ -269,10 +269,10 @@ export default function ReaderSearch({
                   <button
                     key={`${result.bookAbbr}-${result.chapter}-${result.verse}`}
                     onClick={() => handleNavigate(result)}
-                    className={`group w-full text-left rounded-xl p-3 transition-all duration-100 cursor-pointer ${
+                    className={`group w-full text-left rounded-xl p-3 cursor-pointer ${
                       isSelected
-                        ? "bg-primary/15 ring-1 ring-primary/40 scale-[1.01]"
-                        : "bg-background/50 hover:bg-background/80 active:scale-[0.98]"
+                        ? "bg-primary/15 ring-1 ring-primary/40"
+                        : "bg-background/50 hover:bg-background/80"
                     }`}
                   >
                     <div className="flex items-baseline gap-2 mb-1">

@@ -23,8 +23,8 @@ export default function DialogToast() {
       <div
         className={
           dialog.fadeOut
-            ? "pointer-events-auto max-w-xl w-full rounded-lg bg-background/60 shadow-lg ring-1 ring-text/10 backdrop-blur p-4 animate-fade-out-from-bottom"
-            : "pointer-events-auto max-w-xl w-full rounded-lg bg-background/60 shadow-lg ring-1 ring-text/10 backdrop-blur p-4 animate-fade-in-from-bottom"
+            ? "pointer-events-auto max-w-xl w-full rounded-lg bg-background shadow-lg ring-1 ring-text/10 p-4 animate-fade-out-from-bottom"
+            : "pointer-events-auto max-w-xl w-full rounded-lg bg-background shadow-lg ring-1 ring-text/10 p-4 animate-fade-in-from-bottom"
         }
       >
         {dialog.title && (
