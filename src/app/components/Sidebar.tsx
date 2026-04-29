@@ -82,9 +82,7 @@ export default function Sidebar({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4 text-text">
-            {children}
-          </div>
+          <div className="flex-1 overflow-y-auto p-4 text-text">{children}</div>
         </div>
       </div>
     </>

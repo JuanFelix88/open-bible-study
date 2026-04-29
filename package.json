@@ -2,7 +2,7 @@
   "name": "open-bible-study",
   "version": "0.1.0",
   "scripts": {
-    "dev": "npm run orig && npm run parts && next dev --turbopack",
+    "dev": "npm run orig && npm run parts && portless open-bible  next dev --turbopack",
     "build": "npm run orig && npm run parts && next build",
     "start": "next start",
     "lint": "next lint",

@@ -30,7 +30,7 @@ export default function Welcome() {
   });
 
   const selectedBookInfo = books?.find(
-    (b) => b.abbr.toLowerCase() === selectedBook?.toLowerCase()
+    (b) => b.abbr.toLowerCase() === selectedBook?.toLowerCase(),
   );
 
   const handleSelectBook = (bookAbbr: string) => {
@@ -42,7 +42,7 @@ export default function Welcome() {
     if (!selectedBook) return;
 
     router.push(
-      `/reader?book=${selectedBook}&version=${DEFAULT_VERSION}&chapter=${chapterNumber}`
+      `/reader?book=${selectedBook}&version=${DEFAULT_VERSION}&chapter=${chapterNumber}`,
     );
   };
 
@@ -124,7 +124,7 @@ export default function Welcome() {
                     >
                       {index + 1}
                     </button>
-                  )
+                  ),
                 )}
               </div>
             </div>

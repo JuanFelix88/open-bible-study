@@ -188,7 +188,7 @@ export default function Reader() {
   //   );
   // }
 
-function handlePreviousChapter() {
+  function handlePreviousChapter() {
     if (chapter?.previous) {
       setSelectedVerse(null);
       setChapterTransition(true);
@@ -576,7 +576,9 @@ function handlePreviousChapter() {
 
       if (event.key === "3") {
         event.preventDefault();
-        setShareMenuVerse((prev) => (prev === currentSelected ? null : currentSelected));
+        setShareMenuVerse((prev) =>
+          prev === currentSelected ? null : currentSelected,
+        );
         setShareMenuAutoFocus(true);
         return;
       }
@@ -641,7 +643,7 @@ function handlePreviousChapter() {
     }
   }, [chapter]);
 
-useEffect(() => {
+  useEffect(() => {
     const markersStr = localStorage.getItem("markers");
 
     if (!markersStr) return;
@@ -804,102 +806,112 @@ useEffect(() => {
         </div>
       )}
 
-{/* Verses */}
+      {/* Verses */}
       <div className={chapterTransition ? "animate-chapter-fade" : ""}>
         {chapter?.book.chapter.verses.map((verse, verseIndex) => (
           <div key={verseIndex} className="flex flex-col">
-          {readingMarkers.some((m) =>
-            m.compareTo(bookAbbr, chapterNumber, verseIndex + 1),
-          ) && (
-            <div className="flex flex-row w-full items-center mt-4 mb-1 -ml-2 pr-4">
-              <MarkerIcon
-                className="sm:hidden opacity-80"
-                width={16}
-                height={16}
-              />
-              <span className="min-w-fit mr-2">
-                {
-                  readingMarkers.find((m) =>
-                    m.compareTo(bookAbbr, chapterNumber, verseIndex + 1),
-                  )?.name
+            {readingMarkers.some((m) =>
+              m.compareTo(bookAbbr, chapterNumber, verseIndex + 1),
+            ) && (
+              <div className="flex flex-row w-full items-center mt-4 mb-1 -ml-2 pr-4">
+                <MarkerIcon
+                  className="sm:hidden opacity-80"
+                  width={16}
+                  height={16}
+                />
+                <span className="min-w-fit mr-2">
+                  {
+                    readingMarkers.find((m) =>
+                      m.compareTo(bookAbbr, chapterNumber, verseIndex + 1),
+                    )?.name
+                  }
+                </span>
+                <hr className="border-b border-dashed border-b-primary w-full" />
+              </div>
+            )}
+            <div className="flex flex-row ">
+              <div
+                key={verseIndex}
+                id={(verseIndex + 1).toString()}
+                ref={selectedVerse === verseIndex + 1 ? refSelected : null}
+                className={
+                  selectedVerse === verseIndex + 1
+                    ? "cursor-cell text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative"
+                    : "cursor-cell text-text/95 w-full mt-1 text-lg hover:bg-surface select-none rounded-md px-1 py-[2px] hide-buttons"
                 }
-              </span>
-              <hr className="border-b border-dashed border-b-primary w-full" />
-            </div>
-          )}
-          <div className="flex flex-row ">
-            <div
-              key={verseIndex}
-              id={(verseIndex + 1).toString()}
-              ref={selectedVerse === verseIndex + 1 ? refSelected : null}
-              className={
-                selectedVerse === verseIndex + 1
-                  ? "cursor-cell text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative"
-                  : "cursor-cell text-text/95 w-full mt-1 text-lg hover:bg-surface select-none rounded-md px-1 py-[2px] hide-buttons"
-              }
-              onClick={handleClickVerse}
-            >
-              <sup className="font-bold border rounded-sm px-[2px]  border-dashed border-gray-400">
-                {verseIndex + 1}
-              </sup>{" "}
-              {verse}
-              <div className="control-buttons absolute left-0 -bottom-9 z-20 rounded-sm bg-secondary border-primary border border-dashed p-1 w-full gap-2 flex flex-wrap">
-                <button
-                  className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                  onClick={(e) => handleOpenReferences(e, verseIndex)}
-                >
-                  <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                    [1]
-                  </span>
-                  <RefIcon
-                    className="sm:hidden mr-1 opacity-80"
-                    width={12}
-                    height={12}
-                  />
-                  <span className="sm:block hidden">Refs</span>
-                  <span className="sm:hidden">R.</span>
-                </button>
-                <button
-                  className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                  onClick={(e) => handleCompare(e, verseIndex)}
-                >
-                  <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                    [2]
-                  </span>
-                  <CompareIcon
-                    className="sm:hidden mr-1 opacity-80"
-                    width={12}
-                    height={12}
-                  />
-                  <span className="sm:block hidden">Versions</span>
-                  <span className="sm:hidden">V.</span>
-                </button>
-                <div className="relative">
+                onClick={handleClickVerse}
+              >
+                <sup className="font-bold border rounded-sm px-[2px]  border-dashed border-gray-400">
+                  {verseIndex + 1}
+                </sup>{" "}
+                {verse}
+                <div className="control-buttons absolute left-0 -bottom-9 z-20 rounded-sm bg-secondary border-primary border border-dashed p-1 w-full gap-2 flex flex-wrap">
                   <button
-                    className={`border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed text-sm flex cursor-pointer transition ${shareMenuVerse === verseIndex + 1 ? "bg-primary/20 border-primary text-primary" : "border-border bg-background hover:bg-background/70"}`}
-                    onClick={(e) => handleToggleShareMenu(e, verseIndex + 1)}
+                    className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                    onClick={(e) => handleOpenReferences(e, verseIndex)}
                   >
                     <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                      [3]
+                      [1]
                     </span>
-                    <ShareIcon
+                    <RefIcon
                       className="sm:hidden mr-1 opacity-80"
                       width={12}
                       height={12}
                     />
-                    <span className="sm:block hidden">Share</span>
-                    <span className="sm:hidden">S.</span>
+                    <span className="sm:block hidden">Refs</span>
+                    <span className="sm:hidden">R.</span>
                   </button>
-                  {shareMenuVerse === verseIndex + 1 && (
-                    <ShareDropdown
-                      autoFocus={shareMenuAutoFocus}
-                      onLinkOnly={() => handleShareLinkOnly({ stopPropagation: () => {} } as SingleEvent, verseIndex + 1)}
-                      onLinkAndText={() => handleShareLinkAndText({ stopPropagation: () => {} } as SingleEvent, verseIndex + 1)}
-                      onClose={() => setShareMenuVerse(null)}
+                  <button
+                    className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                    onClick={(e) => handleCompare(e, verseIndex)}
+                  >
+                    <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                      [2]
+                    </span>
+                    <CompareIcon
+                      className="sm:hidden mr-1 opacity-80"
+                      width={12}
+                      height={12}
                     />
-                  )}
-                </div>
-                {/* <button
+                    <span className="sm:block hidden">Versions</span>
+                    <span className="sm:hidden">V.</span>
+                  </button>
+                  <div className="relative">
+                    <button
+                      className={`border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed text-sm flex cursor-pointer transition ${shareMenuVerse === verseIndex + 1 ? "bg-primary/20 border-primary text-primary" : "border-border bg-background hover:bg-background/70"}`}
+                      onClick={(e) => handleToggleShareMenu(e, verseIndex + 1)}
+                    >
+                      <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                        [3]
+                      </span>
+                      <ShareIcon
+                        className="sm:hidden mr-1 opacity-80"
+                        width={12}
+                        height={12}
+                      />
+                      <span className="sm:block hidden">Share</span>
+                      <span className="sm:hidden">S.</span>
+                    </button>
+                    {shareMenuVerse === verseIndex + 1 && (
+                      <ShareDropdown
+                        autoFocus={shareMenuAutoFocus}
+                        onLinkOnly={() =>
+                          handleShareLinkOnly(
+                            { stopPropagation: () => {} } as SingleEvent,
+                            verseIndex + 1,
+                          )
+                        }
+                        onLinkAndText={() =>
+                          handleShareLinkAndText(
+                            { stopPropagation: () => {} } as SingleEvent,
+                            verseIndex + 1,
+                          )
+                        }
+                        onClose={() => setShareMenuVerse(null)}
+                      />
+                    )}
+                  </div>
+                  {/* <button
                   className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
                   onClick={(e) => handleCopyVerse(e, verseIndex + 1)}
                 >
@@ -913,126 +925,130 @@ useEffect(() => {
                   />
                   Copy
                 </button> */}
-                <button
-                  className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                  onClick={(e) => handleExplain(e, verseIndex + 1)}
-                >
-                  <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                    [4]
-                  </span>
-                  <CopyIcon
-                    className="sm:hidden mr-1 opacity-80"
-                    width={12}
-                    height={12}
-                  />
-                  <span className="sm:block hidden">Original</span>
-                  <span className="sm:hidden">O.</span>
-                </button>
-                <button
-                  className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                  onClick={(e) => handleDeepAnalysis(e, verseIndex + 1)}
-                >
-                  <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                    [5]
-                  </span>
-                  <AIIcon
-                    className="sm:hidden mr-1 opacity-80"
-                    width={12}
-                    height={12}
-                  />
-                  <span className="sm:block hidden">Deep</span>
-                  <span className="sm:hidden">D.</span>
-                </button>
-                <button
-                  className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                  onClick={(e) => handleMarkerCandidate(e, verseIndex + 1)}
-                >
-                  <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                    [6]
-                  </span>
-                  <MarkerIcon
-                    className="sm:hidden mr-1 opacity-80"
-                    width={12}
-                    height={12}
-                  />
-                  <span className="sm:block hidden">Marker</span>
-                  <span className="sm:hidden">M.</span>
-                </button>
-                <button
-                  className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                  onClick={() => setSelectedVerse(null)}
-                >
-                  <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                    [Esc]
-                  </span>
-                  <span className="hidden sm:inline">Unselect</span>
-                  <span className="sm:hidden mx-1">X</span>
-                </button>
-              </div>
-              {isSettingMarker && candidateToMarker === verseIndex + 1 && (
-                <div
-                  className="control-buttons absolute left-0 -bottom-33 z-20 flex-col w-full"
-                  onClick={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => e.stopPropagation()}
-                >
-                  <div className="rounded-sm bg-secondary border-primary border border-dashed p-1 w-full gap-2 flex flex-row">
-                    <input
-                      type="text"
-                      autoFocus
-                      value={markerName}
-                      onChange={(e) => setMarkerName(e.target.value)}
-                      placeholder="Marker name"
-                      className="mt-1 w-full p-2 py-1 border-2 border-border bg-background brightness-[1.13] rounded-md"
+                  <button
+                    className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                    onClick={(e) => handleExplain(e, verseIndex + 1)}
+                  >
+                    <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                      [4]
+                    </span>
+                    <CopyIcon
+                      className="sm:hidden mr-1 opacity-80"
+                      width={12}
+                      height={12}
                     />
-                  </div>
-                  <div className="rounded-sm bg-secondary border-primary border border-dashed p-1 w-full gap-2 flex flex-row mt-1">
-                    <button
-                      onClick={handleSaveMarker}
-                      className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                    >
-                      <MarkerIcon
-                        className="sm:hidden mr-1 opacity-80"
-                        width={12}
-                        height={12}
+                    <span className="sm:block hidden">Original</span>
+                    <span className="sm:hidden">O.</span>
+                  </button>
+                  <button
+                    className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                    onClick={(e) => handleDeepAnalysis(e, verseIndex + 1)}
+                  >
+                    <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                      [5]
+                    </span>
+                    <AIIcon
+                      className="sm:hidden mr-1 opacity-80"
+                      width={12}
+                      height={12}
+                    />
+                    <span className="sm:block hidden">Deep</span>
+                    <span className="sm:hidden">D.</span>
+                  </button>
+                  <button
+                    className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                    onClick={(e) => handleMarkerCandidate(e, verseIndex + 1)}
+                  >
+                    <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                      [6]
+                    </span>
+                    <MarkerIcon
+                      className="sm:hidden mr-1 opacity-80"
+                      width={12}
+                      height={12}
+                    />
+                    <span className="sm:block hidden">Marker</span>
+                    <span className="sm:hidden">M.</span>
+                  </button>
+                  <button
+                    className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                    onClick={() => setSelectedVerse(null)}
+                  >
+                    <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
+                      [Esc]
+                    </span>
+                    <span className="hidden sm:inline">Unselect</span>
+                    <span className="sm:hidden mx-1">X</span>
+                  </button>
+                </div>
+                {isSettingMarker && candidateToMarker === verseIndex + 1 && (
+                  <div
+                    className="control-buttons absolute left-0 -bottom-33 z-20 flex-col w-full"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    <div className="rounded-sm bg-secondary border-primary border border-dashed p-1 w-full gap-2 flex flex-row">
+                      <input
+                        type="text"
+                        autoFocus
+                        value={markerName}
+                        onChange={(e) => setMarkerName(e.target.value)}
+                        placeholder="Marker name"
+                        className="mt-1 w-full p-2 py-1 border-2 border-border bg-background brightness-[1.13] rounded-md"
                       />
-                      Set marker
-                    </button>
-                    <button
-                      hidden={
-                        !readingMarkers.some((m) =>
-                          m.compareTo(bookAbbr, chapterNumber, verseIndex + 1),
-                        )
-                      }
-                      onClick={() => handleRemoveMarker()}
-                      className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                    >
-                      Remove marker
-                    </button>
+                    </div>
+                    <div className="rounded-sm bg-secondary border-primary border border-dashed p-1 w-full gap-2 flex flex-row mt-1">
+                      <button
+                        onClick={handleSaveMarker}
+                        className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                      >
+                        <MarkerIcon
+                          className="sm:hidden mr-1 opacity-80"
+                          width={12}
+                          height={12}
+                        />
+                        Set marker
+                      </button>
+                      <button
+                        hidden={
+                          !readingMarkers.some((m) =>
+                            m.compareTo(
+                              bookAbbr,
+                              chapterNumber,
+                              verseIndex + 1,
+                            ),
+                          )
+                        }
+                        onClick={() => handleRemoveMarker()}
+                        className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                      >
+                        Remove marker
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-            <div className="flex flex-start flex-col min-w-[20px] py-2 pl-1">
-              {referencesIncludesVerse(
-                references,
-                chapter.book.abbrev,
-                chapter.book.chapter.number,
-                verseIndex + 1,
-              ) && (
-                <div
-                  className={
-                    selectedVerse === verseIndex + 1
-                      ? "flex rounded-full text-primary animate-fade-in-from-bottom"
-                      : "flex rounded-full text-text/70 animate-fade-in-from-bottom"
-                  }
-                >
-                  <DocumentIcon width={16} height={16} />
-                </div>
-              )}
+                )}
+              </div>
+              <div className="flex flex-start flex-col min-w-[20px] py-2 pl-1">
+                {referencesIncludesVerse(
+                  references,
+                  chapter.book.abbrev,
+                  chapter.book.chapter.number,
+                  verseIndex + 1,
+                ) && (
+                  <div
+                    className={
+                      selectedVerse === verseIndex + 1
+                        ? "flex rounded-full text-primary animate-fade-in-from-bottom"
+                        : "flex rounded-full text-text/70 animate-fade-in-from-bottom"
+                    }
+                  >
+                    <DocumentIcon width={16} height={16} />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
       </div>
 
       {/* Footer with license */}

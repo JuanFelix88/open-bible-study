@@ -187,10 +187,7 @@ export default function ReaderSearch({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] sm:pt-[12vh]">
-      <div
-        className="absolute inset-0 bg-background/85"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-background/85" onClick={onClose} />
 
       <div
         ref={overlayRef}
