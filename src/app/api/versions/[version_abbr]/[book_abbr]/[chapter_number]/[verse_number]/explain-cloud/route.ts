@@ -1,6 +1,5 @@
 import { BibleVersionsRepository } from "@/repositories/BibleVersionsRepository";
-import { CLIProxyAPIIntegration } from "@/services/CLIProxyApi";
-import { getCLIProxyConfigOrError } from "@/config/cliProxy";
+import { IAService } from "@/services/IAService";
 import { extractVerseParams } from "@/utils/RouteHelpers";
 import { createStreamingResponse } from "@/utils/StreamingResponse";
 import { NextRequest, NextResponse } from "next/server";
@@ -59,7 +58,12 @@ export async function GET(
     const paramsResult = await extractVerseParams(ctx);
     if (!paramsResult.ok) return paramsResult.error;
 
-    const { versionAbbr: abbrVersion, bookAbbr, chapterNumber, verseNumber } = paramsResult.data;
+    const {
+      versionAbbr: abbrVersion,
+      bookAbbr,
+      chapterNumber,
+      verseNumber,
+    } = paramsResult.data;
 
     const { chapter: originalVerseChapter, versionMeta: originalMeta } =
       await BibleVersionsRepository.getOriginalText(
@@ -75,7 +79,7 @@ export async function GET(
     const chapterOrError = await BibleVersionsRepository.getChapterOrError(
       abbrVersion,
       bookAbbr,
-      chapterNumber
+      chapterNumber,
     );
 
     if (chapterOrError instanceof Response) {
@@ -83,17 +87,6 @@ export async function GET(
     }
 
     const chapter = chapterOrError;
-
-    const cliConfig = getCLIProxyConfigOrError();
-    if (cliConfig instanceof Response) {
-      return cliConfig;
-    }
-
-    const integration = new CLIProxyAPIIntegration({
-      apiUrl: cliConfig.apiUrl,
-      apiKey: cliConfig.apiKey,
-      authMode: { kind: "authorization" },
-    });
 
     const prompt = PROMPT_TEMPLATE.replace(
       "@Verse",
@@ -106,15 +99,17 @@ export async function GET(
       .replace("@Version", abbrVersion.toUpperCase())
       .replace("@DestinyLanguage", destinyVersion.language);
 
+    const model = process.env.AI_API_MODEL ?? "llama3.1";
+
     const meta = {
-      model: cliConfig.model ?? "cli-proxy",
+      model,
       language: originalMeta.language,
       version: `${originalMeta.abbreviation} - ${originalMeta.name}`,
     };
 
     return createStreamingResponse(
       meta,
-      integration.streamFrom(prompt, cliConfig.model)
+      IAService.streamText(prompt, { model }),
     );
   } catch (error) {
     return NextResponse.json(
