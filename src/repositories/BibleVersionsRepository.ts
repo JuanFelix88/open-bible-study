@@ -6,8 +6,10 @@ import { LinkToChapter } from "@/entities/LinkToChapter";
 import { Nullable } from "@/entities/Nullable";
 import { RawChapterVersion } from "@/entities/RawBibleVersion";
 import { StaticClass } from "@/entities/StaticClass";
+import { Verse } from "@/entities/Verse";
 import { FnNormalizer } from "@/utils/FnNormalizer";
 import { ResponseError } from "@/utils/ResponseError";
+import { WordNormalizer } from "@/utils/WordNormalizer";
 
 export class BibleVersionsRepository extends StaticClass {
   public static async getAllVersionsWithVerse(
@@ -278,6 +280,71 @@ export class BibleVersionsRepository extends StaticClass {
       },
       versionMeta: originalVersion,
     };
+  }
+
+  public static async getRelativeVerses({
+    word,
+    versionAbbr,
+    count = 50,
+  }: {
+    word: string;
+    versionAbbr?: string;
+    count?: number;
+  }): Promise<Verse[]> {
+    word = word.trim();
+
+    if (!word) throw new Error("Word is required.");
+
+    const searchTokens = WordNormalizer.getUniqueTokens(word);
+    if (searchTokens.length === 0) return [];
+
+    const versions = versionAbbr
+      ? [await this.getVersionFromName(versionAbbr)]
+      : BibleVersions.versions;
+    const allBooks = await BooksAndChapters.getBooks();
+    const safeCount = Math.max(1, count);
+    const verses: Verse[] = [];
+
+    for (const versionMeta of versions) {
+      const bibleVersion = await this.getBibleVersion(versionMeta.abbreviation);
+
+      for (const [bookIndex, book] of bibleVersion.entries()) {
+        const canonicalBook = allBooks.at(versionMeta.startsIn + bookIndex);
+        const bookAbbr = canonicalBook?.abbr ?? book.abbrev;
+        const bookName = canonicalBook?.name ?? book.name;
+        const displayBook = bookAbbr || bookName;
+
+        for (const [chapterIndex, chapter] of book.chapters.entries()) {
+          for (const [verseIndex, text] of chapter.entries()) {
+            if (!WordNormalizer.containsAllTokens(text, searchTokens)) {
+              continue;
+            }
+
+            const chapterNumber = chapterIndex + 1;
+            const verseNumber = verseIndex + 1;
+
+            verses.push({
+              version: versionMeta.abbreviation,
+              versionName: versionMeta.name,
+              language: versionMeta.language,
+              bookName,
+              bookAbbr,
+              chapter: chapterNumber,
+              verse: verseNumber,
+              text,
+              displayText: `${displayBook} ${chapterNumber}:${verseNumber}`,
+              matchedWords: searchTokens,
+            });
+
+            if (verses.length >= safeCount) {
+              return verses;
+            }
+          }
+        }
+      }
+    }
+
+    return verses;
   }
 
   public static async getVersionFromName(name?: string): Promise<BibleVersion> {

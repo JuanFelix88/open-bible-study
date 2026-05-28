@@ -69,15 +69,7 @@ pnpm dev
 
 - App: `http://localhost:3000`
 
-**Nota:** `pnpm dev` executa passos de geração de dados (`orig` + `parts`) e usa [`portless`](https://www.npmjs.com/package/portless) para TLS local.
-
-Se você não tiver `portless`, rode o Next diretamente:
-
-```bash
-pnpm orig
-pnpm parts
-next dev --turbopack
-```
+**Nota:** `pnpm dev` executa os passos de geração de dados (`orig` + `parts`) antes de iniciar o Next.js.
 
 ### Build + produção
 

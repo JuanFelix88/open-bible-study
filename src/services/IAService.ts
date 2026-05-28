@@ -3,6 +3,7 @@ import { StaticClass } from "@/entities/StaticClass";
 export interface IIARequestOptions {
   model?: string;
   signal?: AbortSignal;
+  think?: boolean;
 }
 
 export interface IIAChunk {
@@ -40,10 +41,20 @@ export class IAService extends StaticClass {
     return headers;
   }
 
+  private static resolveThink(options?: IIARequestOptions): boolean | undefined {
+    if (typeof options?.think === "boolean") return options.think;
+
+    const envThink = process.env.AI_API_THINK?.trim().toLowerCase();
+    if (!envThink) return undefined;
+
+    return ["1", "true", "yes", "on"].includes(envThink);
+  }
+
   public static async request(
     prompt: string,
     options?: IIARequestOptions,
   ): Promise<IIAResponse> {
+    const think = this.resolveThink(options);
     const res = await fetch(`${this.getBaseUrl()}/api/generate`, {
       method: "POST",
       headers: this.buildHeaders(),
@@ -51,6 +62,7 @@ export class IAService extends StaticClass {
         model: options?.model ?? "llama3.1",
         prompt,
         stream: false,
+        ...(typeof think === "boolean" ? { think } : {}),
       }),
       signal: options?.signal,
     });
@@ -69,6 +81,7 @@ export class IAService extends StaticClass {
     prompt: string,
     options?: IIARequestOptions,
   ): AsyncIterable<IIAChunk> {
+    const think = this.resolveThink(options);
     const res = await fetch(`${this.getBaseUrl()}/api/generate`, {
       method: "POST",
       headers: this.buildHeaders(),
@@ -76,6 +89,7 @@ export class IAService extends StaticClass {
         model: options?.model ?? "llama3.1",
         prompt,
         stream: true,
+        ...(typeof think === "boolean" ? { think } : {}),
       }),
       signal: options?.signal,
     });
@@ -114,24 +128,37 @@ async function* readNDJsonLines(
   const reader = body.getReader();
   const decoder = new TextDecoder("utf-8");
   let buffer = "";
+  let completed = false;
 
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) {
+        completed = true;
+        break;
+      }
 
-    buffer += decoder.decode(value, { stream: true });
+      buffer += decoder.decode(value, { stream: true });
 
-    let idx: number;
-    while ((idx = buffer.indexOf("\n")) !== -1) {
-      const rawLine = buffer.slice(0, idx);
-      buffer = buffer.slice(idx + 1);
-      const line = rawLine.replace(/\r$/, "");
-      if (line) yield line;
+      let idx: number;
+      while ((idx = buffer.indexOf("\n")) !== -1) {
+        const rawLine = buffer.slice(0, idx);
+        buffer = buffer.slice(idx + 1);
+        const line = rawLine.replace(/\r$/, "");
+        if (line) yield line;
+      }
     }
-  }
 
-  const tail = buffer.trim();
-  if (tail) yield tail;
+    buffer += decoder.decode();
+    const tail = buffer.trim();
+    if (tail) yield tail;
+  } finally {
+    if (!completed) {
+      await reader.cancel().catch(() => {});
+    }
+
+    reader.releaseLock();
+  }
 }
 
 async function safeReadText(res: Response): Promise<string> {

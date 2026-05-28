@@ -17,6 +17,8 @@ if (existsSync("./src/assets/versions/partitions")) {
 let alreadyCreatedMeta = false;
 
 readdirSync("./src/assets/versions").forEach((version) => {
+  if (!version.toLowerCase().endsWith(".json")) return;
+
   const fullPath = `./src/assets/versions/${version}`;
   const outDir = `./src/assets/versions/partitions/${version
     .toLowerCase()
@@ -25,8 +27,6 @@ readdirSync("./src/assets/versions").forEach((version) => {
   if (!existsSync(outDir)) {
     mkdirSync(outDir, { recursive: true });
   }
-
-  if (version === "originals") return;
 
   const books = JSON.parse(readFileSync(fullPath, "utf-8"));
 

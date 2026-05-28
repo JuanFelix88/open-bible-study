@@ -2,6 +2,7 @@ import { VerseAnalysis } from "@/entities/VerseAnalysis";
 import { BibleVersionsRepository } from "@/repositories/BibleVersionsRepository";
 import { IAService } from "@/services/IAService";
 import { extractVerseParams } from "@/utils/RouteHelpers";
+import { parseThinkParam } from "@/utils/ThinkParam";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -31,12 +32,16 @@ export async function GET(
 
     const chapter = chapterOrError;
 
+    const model = process.env.AI_API_MODEL ?? "llama3.1";
+    const think = parseThinkParam(req.nextUrl.searchParams.get("think"));
+
     const iaResponse = await IAService.request(
       `De acordo com o texto da bíblia ${chapter.book.name} ${chapter.book.chapter.number}:${verseNumber}, ` +
         `gere um retorno apenas em json no formato { token: string, token_index: number, explanation: string }[] (token_index começa com 0), explicando a tradução do texto original em relação` +
         ` ao texto traduzido. Mencione o texto original em explanation, inclua o texto de referência em token, explique a lógica da tradução e mencione traduções alternativas se houver. Dê-me explicações mais profundas, significados aprofundados da palavra. Quando nome de pessoa, explique quem foi essa pessoa. Responda-me somente no formato que mencionei. texto: "${chapter.book.chapter.verses.at(
           verseNumber - 1,
         )}"`,
+      { model, think },
     );
 
     const rawResult = iaResponse.response;

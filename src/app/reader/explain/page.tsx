@@ -1,12 +1,15 @@
 "use client";
 import ArrowLeftIcon from "@/app/components/icons/ArrowLeftIcon";
+import LinkIcon from "@/app/components/icons/LinkIcon";
 import LoadingIcon from "@/app/components/icons/LoadingIcon";
 import { Chapter } from "@/entities/Chapter";
 import { Language } from "@/entities/Language";
+import { Verse } from "@/entities/Verse";
 import { useStreamAnalysis } from "@/hooks/useStreamAnalysis";
 import { Params } from "@/utils/Params";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
@@ -19,11 +22,42 @@ type OriginalVerseResponse = {
   language: Language;
 };
 
+const INITIAL_RELATED_VERSES_COUNT = 5;
+const RELATED_VERSES_FETCH_COUNT = 50;
+const SELECTED_WORD_PARAM = "selectedWord";
+const REFERENCE_MESSAGE_PARAM = "referenceMessage";
+const REFERENCE_SOURCE_PARAM = "referenceSource";
+const REFERENCE_WORD_PARAM = "referenceWord";
+
+function getNormalizedTokens(value: string): string[] {
+  return (
+    value
+      .normalize("NFD")
+      .replace(/\p{Mark}/gu, "")
+      .toLowerCase()
+      .match(/[\p{Letter}\p{Number}]+/gu) ?? []
+  );
+}
+
+function tokenMatchesWord(token: string, word: string): boolean {
+  const tokenParts = getNormalizedTokens(token);
+  const wordParts = getNormalizedTokens(word);
+
+  if (wordParts.length === 0) return false;
+  return wordParts.every((part) => tokenParts.includes(part));
+}
+
 export default function Explain() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [version] = Params.getParamFromSearchParams("version", searchParams);
   const bookAbbr = searchParams.get("book") || "";
+  const selectedWordParam = searchParams.get(SELECTED_WORD_PARAM)?.trim() ?? "";
+  const referenceMessage =
+    searchParams.get(REFERENCE_MESSAGE_PARAM)?.trim() ?? "";
+  const referenceSource =
+    searchParams.get(REFERENCE_SOURCE_PARAM)?.trim() ?? "";
+  const referenceWord = searchParams.get(REFERENCE_WORD_PARAM)?.trim() ?? "";
   const chapterNumber = searchParams.get("chapter")
     ? parseInt(searchParams.get("chapter")!, 10)
     : null;
@@ -33,6 +67,7 @@ export default function Explain() {
   const [selectedTokenIndex, setSelectedTokenIndex] = useState<number | null>(
     null,
   );
+  const [showAllRelatedVerses, setShowAllRelatedVerses] = useState(false);
   const [iaLoadingText, setIaLoadingText] = useState(
     "Loading explanations AI...",
   );
@@ -43,6 +78,15 @@ export default function Explain() {
   });
 
   const refVerse = useRef<HTMLDivElement>(null);
+  const urlContextRef = useRef({
+    bookAbbr,
+    version,
+    chapterNumber,
+    verseNumber,
+    referenceMessage,
+    referenceSource,
+    referenceWord,
+  });
 
   const { data: chapter } = useQuery({
     queryKey: ["chapter", version, bookAbbr, chapterNumber],
@@ -84,8 +128,124 @@ export default function Explain() {
     `explain-${version}-${bookAbbr}-${chapterNumber}-${verseNumber}`,
   );
 
+  const selectedToken =
+    selectedTokenIndex !== null
+      ? (streamTokens.at(selectedTokenIndex)?.token.trim() ?? "")
+      : "";
+  const relatedVersesSearchVersion = originalVerse?.version ?? "";
+
+  const { data: relatedVersesRaw, isFetching: isFetchingRelatedVerses } =
+    useQuery({
+      queryKey: ["relative-verses", relatedVersesSearchVersion, selectedToken],
+      enabled: !!(relatedVersesSearchVersion && selectedToken),
+      staleTime: 1000 * 60 * 60,
+      gcTime: 1000 * 60 * 60 * 3,
+      queryFn: async () => {
+        const relatedVersesResponse = await fetch(
+          `/api/versions/${relatedVersesSearchVersion}/relative-verses?word=${encodeURIComponent(selectedToken)}&count=${RELATED_VERSES_FETCH_COUNT}`,
+        );
+
+        await ThrowByResponse.throwsIfNotOk(relatedVersesResponse);
+        return (await relatedVersesResponse.json()) as Verse[];
+      },
+    });
+
+  const relatedVerses = (relatedVersesRaw ?? []).filter(
+    (relatedVerse) =>
+      !(
+        relatedVerse.version === relatedVersesSearchVersion &&
+        relatedVerse.bookAbbr === bookAbbr &&
+        relatedVerse.chapter === chapterNumber &&
+        relatedVerse.verse === verseNumber
+      ),
+  );
+  const visibleRelatedVerses = showAllRelatedVerses
+    ? relatedVerses
+    : relatedVerses.slice(0, INITIAL_RELATED_VERSES_COUNT);
+  const hasMoreRelatedVerses =
+    relatedVerses.length > INITIAL_RELATED_VERSES_COUNT;
+
   const streamTokensRef = useRef(streamTokens);
+  const appliedUrlSelectionKeyRef = useRef("");
   streamTokensRef.current = streamTokens;
+
+  useEffect(() => {
+    urlContextRef.current = {
+      bookAbbr,
+      version,
+      chapterNumber,
+      verseNumber,
+      referenceMessage,
+      referenceSource,
+      referenceWord,
+    };
+  }, [
+    bookAbbr,
+    version,
+    chapterNumber,
+    verseNumber,
+    referenceMessage,
+    referenceSource,
+    referenceWord,
+  ]);
+
+  function buildExplainUrlWithSelectedWord(word: string) {
+    const context = urlContextRef.current;
+    const params = new URLSearchParams();
+
+    params.set("book", context.bookAbbr);
+    params.set("version", context.version ?? "");
+    params.set("chapter", context.chapterNumber?.toString() ?? "");
+    params.set("verse", context.verseNumber?.toString() ?? "");
+
+    if (word.trim()) params.set(SELECTED_WORD_PARAM, word.trim());
+    if (context.referenceMessage) {
+      params.set(REFERENCE_MESSAGE_PARAM, context.referenceMessage);
+    }
+    if (context.referenceSource) {
+      params.set(REFERENCE_SOURCE_PARAM, context.referenceSource);
+    }
+    if (context.referenceWord) {
+      params.set(REFERENCE_WORD_PARAM, context.referenceWord);
+    }
+
+    return `/reader/explain?${params.toString()}`;
+  }
+
+  function markCurrentUrlSelectionAsConsumed() {
+    if (!selectedWordParam) return;
+
+    appliedUrlSelectionKeyRef.current = [
+      bookAbbr,
+      chapterNumber,
+      verseNumber,
+      selectedWordParam,
+    ].join(":");
+  }
+
+  function handleSelectToken(index: number) {
+    markCurrentUrlSelectionAsConsumed();
+    setSelectedTokenIndex(index);
+  }
+
+  function buildRelatedExplainHref(relatedVerse: Verse) {
+    const params = new URLSearchParams();
+    const sourceReference = `${bookAbbr} ${chapterNumber}:${verseNumber}`;
+
+    params.set("version", version || relatedVerse.version);
+    params.set("book", relatedVerse.bookAbbr);
+    params.set("chapter", relatedVerse.chapter.toString());
+    params.set("verse", relatedVerse.verse.toString());
+    params.set(SELECTED_WORD_PARAM, selectedToken);
+    params.set(REFERENCE_SOURCE_PARAM, sourceReference);
+    params.set(REFERENCE_WORD_PARAM, selectedToken);
+    params.set(
+      REFERENCE_MESSAGE_PARAM,
+      `Previously in ${sourceReference}, reference for ${selectedToken}`,
+    );
+
+    return `/reader/explain?${params.toString()}`;
+  }
 
   function handleOnPrevious() {
     router.back();
@@ -95,12 +255,14 @@ export default function Explain() {
     if (e.key === "Escape") {
       router.back();
     } else if (e.key === "ArrowRight") {
+      markCurrentUrlSelectionAsConsumed();
       setSelectedTokenIndex((prev) => {
         const tokens = streamTokensRef.current;
         if (prev === null) return tokens.length > 0 ? 0 : null;
         return prev < tokens.length - 1 ? prev + 1 : prev;
       });
     } else if (e.key === "ArrowLeft") {
+      markCurrentUrlSelectionAsConsumed();
       setSelectedTokenIndex((prev) => {
         if (prev === null) return streamTokensRef.current.length > 0 ? 0 : null;
         return prev > 0 ? prev - 1 : prev;
@@ -118,10 +280,66 @@ export default function Explain() {
   }, []);
 
   useEffect(() => {
-    if (streamTokens.length > 0 && selectedTokenIndex === null) {
+    if (streamTokens.length === 0) return;
+
+    if (selectedWordParam) {
+      const urlSelectionKey = [
+        bookAbbr,
+        chapterNumber,
+        verseNumber,
+        selectedWordParam,
+      ].join(":");
+      const currentSelectedToken =
+        selectedTokenIndex !== null
+          ? (streamTokens.at(selectedTokenIndex)?.token ?? "")
+          : "";
+
+      if (tokenMatchesWord(currentSelectedToken, selectedWordParam)) {
+        appliedUrlSelectionKeyRef.current = urlSelectionKey;
+        return;
+      }
+
+      if (appliedUrlSelectionKeyRef.current === urlSelectionKey) return;
+
+      const requestedTokenIndex = streamTokens.findIndex(({ token }) =>
+        tokenMatchesWord(token, selectedWordParam),
+      );
+
+      if (requestedTokenIndex !== -1) {
+        appliedUrlSelectionKeyRef.current = urlSelectionKey;
+        setSelectedTokenIndex(requestedTokenIndex);
+        return;
+      }
+
+      if (isLoadingVerseAnalysis || isStreaming) return;
+    }
+
+    if (selectedTokenIndex === null) {
       setSelectedTokenIndex(0);
     }
-  }, [streamTokens.length, selectedTokenIndex]);
+  }, [
+    streamTokens,
+    selectedTokenIndex,
+    selectedWordParam,
+    bookAbbr,
+    chapterNumber,
+    verseNumber,
+    isLoadingVerseAnalysis,
+    isStreaming,
+  ]);
+
+  useEffect(() => {
+    if (!selectedToken) return;
+    if (selectedWordParam === selectedToken) return;
+
+    router.replace(buildExplainUrlWithSelectedWord(selectedToken), {
+      scroll: false,
+    });
+  }, [selectedToken, selectedWordParam, router]);
+
+  useEffect(() => {
+    setShowAllRelatedVerses(false);
+  }, [selectedTokenIndex]);
 
   useEffect(() => {
     (async () => {
@@ -173,9 +391,12 @@ export default function Explain() {
       <div className="select-none fixed top-0 left-0 w-full bg-background border-b border-border p-6 py-2 z-10 shadow">
         <div className="flex items-center max-w-[750px] mx-auto">
           <div className="flex flex-col">
-            <h1 className="text-2xl font-bold">
+            <Link
+              className="text-2xl font-bold hover:text-primary transition-colors"
+              href={`/reader?version=${version ?? ""}&book=${bookAbbr}&chapter=${chapterNumber ?? ""}&verse=${verseNumber ?? ""}`}
+            >
               {chapter?.book.name || "..."} {chapterText}:{verseNumber || "..."}
-            </h1>
+            </Link>
             <h4 className="text-xs font-bold opacity-70">Explain verse:</h4>
           </div>
           <div className="flex ml-auto">
@@ -189,6 +410,25 @@ export default function Explain() {
         </div>
       </div>
       <hr className="mt-13 opacity-0" />
+
+      {(referenceSource || referenceMessage) && (
+        <div className="mt-1 mb-1 text-xs text-text-muted animate-show-from-bottom-slow">
+          {referenceSource ? (
+            <>
+              Previously in{" "}
+              <span className="text-secondary font-semibold">
+                {referenceSource}
+              </span>
+              , reference for{" "}
+              <span className="text-info font-semibold">
+                {referenceWord || selectedWordParam}
+              </span>
+            </>
+          ) : (
+            referenceMessage
+          )}
+        </div>
+      )}
 
       {/* spacer */}
       <div
@@ -226,7 +466,7 @@ export default function Explain() {
                 }
                 ${isStreaming && idx === lastTokenIndex ? "animate-token-slide-up" : ""}
               `}
-              onClick={() => setSelectedTokenIndex(analysation.token_index)}
+              onClick={() => handleSelectToken(analysation.token_index)}
             >
               {analysation.token}
             </span>
@@ -301,6 +541,72 @@ export default function Explain() {
               {streamTokens.at(selectedTokenIndex)?.explanation}
             </Markdown>
           </div>
+
+          {selectedToken && relatedVersesSearchVersion && (
+            <div
+              className="mt-5 border-t border-dashed border-border/70 pt-4 animate-show-from-bottom-slow"
+              key={`${selectedTokenIndex}-related-verses`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-bold uppercase tracking-wide text-primary">
+                  Also found in:
+                </span>
+                <span className="text-xs text-text/40">
+                  {relatedVersesSearchVersion} · {selectedToken}
+                </span>
+              </div>
+
+              {isFetchingRelatedVerses && (
+                <div className="flex items-center gap-2 text-sm text-text/50 py-2">
+                  <LoadingIcon
+                    width={14}
+                    height={14}
+                    className="animate-spin opacity-70"
+                  />
+                  <span>Looking for verses with this word...</span>
+                </div>
+              )}
+
+              {!isFetchingRelatedVerses &&
+                relatedVersesRaw &&
+                relatedVerses.length === 0 && (
+                  <p className="text-sm text-text/50">
+                    No correlated verses found for this fragment.
+                  </p>
+                )}
+
+              {visibleRelatedVerses.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {visibleRelatedVerses.map((relatedVerse) => (
+                    <Link
+                      key={`${relatedVerse.version}-${relatedVerse.bookAbbr}-${relatedVerse.chapter}-${relatedVerse.verse}`}
+                      className="inline-flex items-center text-[0.75rem] bg-surface p-1 px-3 rounded hover:bg-info/30 cursor-pointer text-text/85"
+                      href={buildRelatedExplainHref(relatedVerse)}
+                    >
+                      <LinkIcon
+                        width={13}
+                        height={13}
+                        className="inline -mt-0.5 mr-1"
+                      />
+                      {relatedVerse.displayText}
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              {hasMoreRelatedVerses && (
+                <button
+                  className="mt-3 text-xs bg-surface p-1.5 px-3 rounded hover:bg-secondary/50 cursor-pointer text-text/80"
+                  onClick={() => setShowAllRelatedVerses((prev) => !prev)}
+                >
+                  {showAllRelatedVerses
+                    ? "Show less"
+                    : `Read more (${relatedVerses.length - INITIAL_RELATED_VERSES_COUNT} more)`}
+                </button>
+              )}
+            </div>
+          )}
+
           <div
             className="mt-3 italic text-xs text-text/50 animate-show-from-bottom-slow"
             key={selectedTokenIndex + "-model"}

@@ -2,6 +2,7 @@ import { BibleVersionsRepository } from "@/repositories/BibleVersionsRepository"
 import { IAService } from "@/services/IAService";
 import { extractVerseParams } from "@/utils/RouteHelpers";
 import { createStreamingResponse } from "@/utils/StreamingResponse";
+import { parseThinkParam } from "@/utils/ThinkParam";
 import { NextRequest, NextResponse } from "next/server";
 
 const PROMPT_TEMPLATE = `
@@ -100,6 +101,7 @@ export async function GET(
       .replace("@DestinyLanguage", destinyVersion.language);
 
     const model = process.env.AI_API_MODEL ?? "llama3.1";
+    const think = parseThinkParam(req.nextUrl.searchParams.get("think"));
 
     const meta = {
       model,
@@ -109,7 +111,7 @@ export async function GET(
 
     return createStreamingResponse(
       meta,
-      IAService.streamText(prompt, { model }),
+      IAService.streamText(prompt, { model, think }),
     );
   } catch (error) {
     return NextResponse.json(

@@ -1,7 +1,9 @@
+import { Language } from "@/entities/Language";
 import { BibleVersionsRepository } from "@/repositories/BibleVersionsRepository";
 import { IAService } from "@/services/IAService";
 import { extractVerseParams } from "@/utils/RouteHelpers";
 import { createStreamingResponse } from "@/utils/StreamingResponse";
+import { parseThinkParam } from "@/utils/ThinkParam";
 import { NextRequest, NextResponse } from "next/server";
 
 const PROMPT_TEMPLATE = `
@@ -81,9 +83,6 @@ export async function GET(
         verseNumber,
       );
 
-    const destinyVersion =
-      await BibleVersionsRepository.getVersionFromName(abbrVersion);
-
     const chapterOrError = await BibleVersionsRepository.getChapterOrError(
       abbrVersion,
       bookAbbr,
@@ -96,9 +95,26 @@ export async function GET(
 
     const chapter = chapterOrError;
 
-    const translatedVerse =
-      chapter.book.chapter.verses.at(verseNumber - 1) ?? "";
-    const originalVerse = originalVerseChapter.book.chapter.verses.at(0) ?? "";
+    const translatedVerse = chapter.book.chapter.verses.at(verseNumber - 1);
+    const [selectedOriginalVerse] = originalVerseChapter.book.chapter.verses;
+
+    if (!translatedVerse || !selectedOriginalVerse) {
+      return NextResponse.json({ error: "Verse not found" }, { status: 404 });
+    }
+
+    const originalLanguageNameByCode: Record<string, string> = {
+      [Language.HE]: "Hebraico",
+      [Language.GR]: "Grego",
+    };
+    const originalLanguageName =
+      originalLanguageNameByCode[originalMeta.language];
+
+    if (!originalLanguageName) {
+      return NextResponse.json(
+        { error: `Unsupported original language: ${originalMeta.language}` },
+        { status: 400 },
+      );
+    }
 
     const prompt = PROMPT_TEMPLATE.replace("@Verse", translatedVerse)
       .replace(
@@ -106,17 +122,15 @@ export async function GET(
         `${chapter.book.name} ${chapter.book.chapter.number}:${verseNumber}`,
       )
       .replace("@Version", abbrVersion.toUpperCase())
-      .replace("@OriginalVerse", originalVerse)
+      .replace("@OriginalVerse", selectedOriginalVerse)
       .replace(
         "@OriginalVersion",
         `${originalMeta.abbreviation} - ${originalMeta.name}`,
       )
-      .replaceAll(
-        "@OriginalLanguage",
-        destinyVersion.language === "he" ? "Hebraico" : "Grego",
-      );
+      .replaceAll("@OriginalLanguage", originalLanguageName);
 
     const model = process.env.AI_API_MODEL ?? "llama3.1";
+    const think = parseThinkParam(req.nextUrl.searchParams.get("think"));
 
     const meta = {
       model,
@@ -126,7 +140,7 @@ export async function GET(
 
     return createStreamingResponse(
       meta,
-      IAService.streamText(prompt, { model }),
+      IAService.streamText(prompt, { model, think }),
     );
   } catch (error) {
     return NextResponse.json(
