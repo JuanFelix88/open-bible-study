@@ -7,6 +7,7 @@ import { Language } from "@/entities/Language";
 import { Verse } from "@/entities/Verse";
 import { useStreamAnalysis } from "@/hooks/useStreamAnalysis";
 import { Params } from "@/utils/Params";
+import { ReaderAnalysisUtils } from "@/utils/ReaderAnalysisUtils";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
@@ -22,30 +23,14 @@ type OriginalVerseResponse = {
   language: Language;
 };
 
-const INITIAL_RELATED_VERSES_COUNT = 5;
-const RELATED_VERSES_FETCH_COUNT = 50;
-const SELECTED_WORD_PARAM = "selectedWord";
-const REFERENCE_MESSAGE_PARAM = "referenceMessage";
-const REFERENCE_SOURCE_PARAM = "referenceSource";
-const REFERENCE_WORD_PARAM = "referenceWord";
-
-function getNormalizedTokens(value: string): string[] {
-  return (
-    value
-      .normalize("NFD")
-      .replace(/\p{Mark}/gu, "")
-      .toLowerCase()
-      .match(/[\p{Letter}\p{Number}]+/gu) ?? []
-  );
-}
-
-function tokenMatchesWord(token: string, word: string): boolean {
-  const tokenParts = getNormalizedTokens(token);
-  const wordParts = getNormalizedTokens(word);
-
-  if (wordParts.length === 0) return false;
-  return wordParts.every((part) => tokenParts.includes(part));
-}
+const {
+  INITIAL_RELATED_VERSES_COUNT,
+  RELATED_VERSES_FETCH_COUNT,
+  SELECTED_WORD_PARAM,
+  REFERENCE_MESSAGE_PARAM,
+  REFERENCE_SOURCE_PARAM,
+  REFERENCE_WORD_PARAM,
+} = ReaderAnalysisUtils;
 
 export default function Explain() {
   const router = useRouter();
@@ -190,26 +175,11 @@ export default function Explain() {
   ]);
 
   function buildExplainUrlWithSelectedWord(word: string) {
-    const context = urlContextRef.current;
-    const params = new URLSearchParams();
-
-    params.set("book", context.bookAbbr);
-    params.set("version", context.version ?? "");
-    params.set("chapter", context.chapterNumber?.toString() ?? "");
-    params.set("verse", context.verseNumber?.toString() ?? "");
-
-    if (word.trim()) params.set(SELECTED_WORD_PARAM, word.trim());
-    if (context.referenceMessage) {
-      params.set(REFERENCE_MESSAGE_PARAM, context.referenceMessage);
-    }
-    if (context.referenceSource) {
-      params.set(REFERENCE_SOURCE_PARAM, context.referenceSource);
-    }
-    if (context.referenceWord) {
-      params.set(REFERENCE_WORD_PARAM, context.referenceWord);
-    }
-
-    return `/reader/explain?${params.toString()}`;
+    return ReaderAnalysisUtils.buildSelectedWordUrl({
+      path: "/reader/explain",
+      context: urlContextRef.current,
+      word,
+    });
   }
 
   function markCurrentUrlSelectionAsConsumed() {
@@ -229,22 +199,12 @@ export default function Explain() {
   }
 
   function buildRelatedExplainHref(relatedVerse: Verse) {
-    const params = new URLSearchParams();
-    const sourceReference = `${bookAbbr} ${chapterNumber}:${verseNumber}`;
-
-    params.set("version", version || relatedVerse.version);
-    params.set("book", relatedVerse.bookAbbr);
-    params.set("chapter", relatedVerse.chapter.toString());
-    params.set("verse", relatedVerse.verse.toString());
-    params.set(SELECTED_WORD_PARAM, selectedToken);
-    params.set(REFERENCE_SOURCE_PARAM, sourceReference);
-    params.set(REFERENCE_WORD_PARAM, selectedToken);
-    params.set(
-      REFERENCE_MESSAGE_PARAM,
-      `Previously in ${sourceReference}, reference for ${selectedToken}`,
-    );
-
-    return `/reader/explain?${params.toString()}`;
+    return ReaderAnalysisUtils.buildRelatedAnalysisHref({
+      path: "/reader/explain",
+      current: urlContextRef.current,
+      relatedVerse,
+      selectedToken,
+    });
   }
 
   function handleOnPrevious() {
@@ -270,10 +230,6 @@ export default function Explain() {
     }
   }
 
-  function random(init: number, end: number) {
-    return Math.floor(Math.random() * (end - init + 1)) + init;
-  }
-
   useEffect(() => {
     window.addEventListener("keydown", handleOnKeyDown);
     return () => window.removeEventListener("keydown", handleOnKeyDown);
@@ -294,7 +250,7 @@ export default function Explain() {
           ? (streamTokens.at(selectedTokenIndex)?.token ?? "")
           : "";
 
-      if (tokenMatchesWord(currentSelectedToken, selectedWordParam)) {
+      if (ReaderAnalysisUtils.tokenMatchesWord(currentSelectedToken, selectedWordParam)) {
         appliedUrlSelectionKeyRef.current = urlSelectionKey;
         return;
       }
@@ -302,7 +258,7 @@ export default function Explain() {
       if (appliedUrlSelectionKeyRef.current === urlSelectionKey) return;
 
       const requestedTokenIndex = streamTokens.findIndex(({ token }) =>
-        tokenMatchesWord(token, selectedWordParam),
+        ReaderAnalysisUtils.tokenMatchesWord(token, selectedWordParam),
       );
 
       if (requestedTokenIndex !== -1) {
@@ -343,46 +299,39 @@ export default function Explain() {
 
   useEffect(() => {
     (async () => {
-      await new Promise((resolve) => setTimeout(resolve, random(2_000, 3_000)));
+      await new Promise((resolve) =>
+        setTimeout(resolve, ReaderAnalysisUtils.random(2_000, 3_000)),
+      );
       setIaLoadingText("Loading explanations from AI, please wait...");
 
-      await new Promise((resolve) => setTimeout(resolve, random(500, 7_000)));
+      await new Promise((resolve) =>
+        setTimeout(resolve, ReaderAnalysisUtils.random(500, 7_000)),
+      );
       setIaLoadingText("Looking for references in the original texts...");
 
-      await new Promise((resolve) => setTimeout(resolve, random(1_000, 5_000)));
+      await new Promise((resolve) =>
+        setTimeout(resolve, ReaderAnalysisUtils.random(1_000, 5_000)),
+      );
       setIaLoadingText("Gerating deep explanations, almost there...");
 
       await new Promise((resolve) =>
-        setTimeout(resolve, random(4_000, 10_000)),
+        setTimeout(resolve, ReaderAnalysisUtils.random(4_000, 10_000)),
       );
       setIaLoadingText("Analyzing and correcting text applications...");
 
-      await new Promise((resolve) => setTimeout(resolve, random(3_000, 8_000)));
+      await new Promise((resolve) =>
+        setTimeout(resolve, ReaderAnalysisUtils.random(3_000, 8_000)),
+      );
       setIaLoadingText("Finishing explanation...");
     })();
   }, []);
 
   const selectedVerseText = originalVerse?.text ?? null;
 
-  const remainingText = (() => {
-    if (!selectedVerseText || streamTokens.length === 0)
-      return selectedVerseText ?? "";
-
-    const loadedText = streamTokens.map((t) => t.token).join(" ");
-    if (selectedVerseText.startsWith(loadedText)) {
-      return selectedVerseText.slice(loadedText.length).trimStart();
-    }
-
-    const lastToken = streamTokens[streamTokens.length - 1].token;
-    const lastIdx = selectedVerseText
-      .toLowerCase()
-      .lastIndexOf(lastToken.toLowerCase());
-    if (lastIdx !== -1) {
-      return selectedVerseText.slice(lastIdx + lastToken.length).trimStart();
-    }
-
-    return "";
-  })();
+  const remainingText = ReaderAnalysisUtils.getRemainingText(
+    selectedVerseText,
+    streamTokens,
+  );
 
   const chapterText = chapterNumber?.toString() ?? "...";
 

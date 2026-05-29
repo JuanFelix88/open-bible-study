@@ -6,62 +6,15 @@ import EditIcon from "@/app/components/icons/EditIcon";
 import LinkIcon from "@/app/components/icons/LinkIcon";
 import { BookInfo } from "@/entities/BookInfo";
 import { Chapter } from "@/entities/Chapter";
-import { LinkToVerse } from "@/entities/LinkToVerse";
 import { Reference } from "@/entities/Reference";
 import { Params, ParamType } from "@/utils/Params";
+import { ReferencesUtils } from "@/utils/ReferencesUtils";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
-
-function getVerse(
-  bookAbbr: string,
-  chapterNumber: number,
-  verseNumber: number,
-  verses: LinkToVerse[],
-  chapters: Chapter[],
-  versionAbbr: string,
-) {
-  const otherRelatedVerse = verses.find(
-    (verse) =>
-      `${verse.abbrev.toLowerCase()} ${verse.numChapter}:${verse.numVerse}` !==
-      `${bookAbbr?.toLowerCase()} ${chapterNumber}:${verseNumber}`,
-  );
-
-  if (!otherRelatedVerse) {
-    return {
-      text: null,
-      displayVerse: null,
-      link: null,
-    };
-  }
-
-  const chapter = chapters.find(
-    (c) =>
-      `${c.book.abbrev.toLowerCase()} ${c.book.chapter.number}` ===
-      `${otherRelatedVerse.abbrev.toLowerCase()} ${
-        otherRelatedVerse.numChapter
-      }`,
-  );
-
-  if (!chapter) {
-    return {
-      text: null,
-      displayVerse: null,
-      link: null,
-    };
-  }
-
-  return {
-    text:
-      chapter.book.chapter.verses.at(otherRelatedVerse.numVerse - 1) ?? null,
-    displayVerse: `${chapter.book.name} ${otherRelatedVerse.numChapter}:${otherRelatedVerse.numVerse}`,
-    bookName: chapter.book.name,
-    link: `/reader?book=${otherRelatedVerse.abbrev}&version=${versionAbbr}&chapter=${otherRelatedVerse.numChapter}&verse=${otherRelatedVerse.numVerse}`,
-  };
-}
 
 export default function References() {
   const searchParams = useSearchParams();
@@ -192,7 +145,7 @@ export default function References() {
             text,
             displayVerse,
             link: linkToOpen,
-          } = getVerse(
+          } = ReferencesUtils.getVerse(
             bookAbbr,
             chapterNumber,
             verseNumber,
