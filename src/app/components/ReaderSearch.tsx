@@ -6,85 +6,24 @@ import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {
-  Fragment,
-  ReactNode,
+  type KeyboardEvent as ReactKeyboardEvent,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import SearchIcon from "./icons/SearchIcon";
 import CloseIcon from "./icons/CloseIcon";
+import ReaderSearchResultItem from "./ReaderSearchResultItem";
 
-const displayVersionRegex =
-  /^(?<book>[0-9]? ?[A-Za-zÀ-ÿ0-9]{1,}) (?<chapter>[0-9]{1,}):?(?<verse>[0-9]{1,})?$/;
+const referenceQueryRegex =
+  /^(?<book>[0-9]? ?[A-Za-zÀ-ÿ0-9]+(?:\s+[A-Za-zÀ-ÿ0-9]+)*)\s+(?<chapter>[0-9]+):?(?<verse>[0-9]+)?$/;
 
 interface ReaderSearchProps {
   versionAbbr: string;
-  bookAbbr: string;
-  chapterNumber: number | null;
   open: boolean;
   onClose: () => void;
-}
-
-function highlightTokens(text: string, query: string): ReactNode[] {
-  if (!query.trim()) return [text];
-
-  const tokens = query
-    .trim()
-    .split(/\s+/)
-    .filter((t) => t.length > 1);
-  if (!tokens.length) return [text];
-
-  const escaped = tokens.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  const regex = new RegExp(`(${escaped.join("|")})`, "gi");
-  const parts = text.split(regex);
-
-  return parts.map((part, i) => {
-    if (regex.test(part)) {
-      return (
-        <mark
-          key={i}
-          className="bg-primary/25 text-text rounded-sm px-[1px] font-semibold"
-        >
-          {part}
-        </mark>
-      );
-    }
-    return <Fragment key={i}>{part}</Fragment>;
-  });
-}
-
-function buildSnippet(text: string, query: string, maxLen = 100): string {
-  const tokens = query
-    .trim()
-    .split(/\s+/)
-    .filter((t) => t.length > 1);
-
-  if (!tokens.length) {
-    return text.length > maxLen ? text.slice(0, maxLen) + "…" : text;
-  }
-
-  const lower = text.toLowerCase();
-  let firstIdx = text.length;
-  for (const token of tokens) {
-    const idx = lower.indexOf(token.toLowerCase());
-    if (idx !== -1 && idx < firstIdx) firstIdx = idx;
-  }
-
-  const contextBefore = 30;
-  let start = Math.max(0, firstIdx - contextBefore);
-  const end = Math.min(text.length, start + maxLen);
-
-  if (end - start < maxLen && start > 0) {
-    start = Math.max(0, end - maxLen);
-  }
-
-  const snippet = text.slice(start, end);
-  const prefix = start > 0 ? "… " : "";
-  const suffix = end < text.length ? " …" : "";
-
-  return prefix + snippet.trim() + suffix;
 }
 
 export default function ReaderSearch({
@@ -95,38 +34,58 @@ export default function ReaderSearch({
   const [searchText, setSearchText] = useState("");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const debouncedSearchText = useDebounce(searchText, 180);
+  const trimmedQuery = useMemo(
+    () => debouncedSearchText.trim(),
+    [debouncedSearchText],
+  );
+  const hasQuery = searchText.trim().length > 0;
   const inputRef = useRef<HTMLInputElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const resultsScrollRef = useRef<HTMLDivElement>(null);
+  const resultsRef = useRef<SearchResult[]>([]);
+  const selectedIndexRef = useRef<number | null>(null);
   const router = useRouter();
 
-  const { data: results, isLoading: isLoadingQuery } = useQuery({
-    queryKey: ["reader-search", versionAbbr, debouncedSearchText],
+  const {
+    data: results,
+    isError,
+    isLoading: isLoadingQuery,
+  } = useQuery({
+    queryKey: ["reader-search", versionAbbr, trimmedQuery],
     staleTime: 5_000,
-    enabled: !!debouncedSearchText && !!versionAbbr && open,
-    queryFn: async () => {
-      if (!debouncedSearchText || !versionAbbr) return [];
+    enabled: hasQuery && !!trimmedQuery && !!versionAbbr && open,
+    queryFn: async ({ signal }) => {
+      if (!trimmedQuery || !versionAbbr) return [];
 
       const abbr = versionAbbr.toLowerCase();
-      const isReference = displayVersionRegex.test(debouncedSearchText);
+      const isReference = referenceQueryRegex.test(trimmedQuery);
+      const params = new URLSearchParams({ q: trimmedQuery });
 
       const url = isReference
-        ? `/api/versions/${abbr}/search?q=${encodeURIComponent(debouncedSearchText)}`
-        : `/api/versions/${abbr}/search/deep?q=${encodeURIComponent(debouncedSearchText)}&count=40`;
+        ? `/api/versions/${abbr}/search?${params.toString()}`
+        : `/api/versions/${abbr}/search/deep?${new URLSearchParams({
+            q: trimmedQuery,
+            count: "40",
+          }).toString()}`;
 
-      const response = await fetch(url);
+      const response = await fetch(url, { signal });
       await ThrowByResponse.throwsIfNotOk(response);
       return (await response.json()) as SearchResult[];
     },
   });
 
   const isLoading =
-    isLoadingQuery || (searchText !== debouncedSearchText && !!searchText);
+    isLoadingQuery || (searchText !== debouncedSearchText && hasQuery);
 
   const handleNavigate = useCallback(
     (result: SearchResult) => {
       onClose();
       router.push(
-        `/reader?version=${versionAbbr}&book=${result.bookAbbr}&chapter=${result.chapter}&verse=${result.verse}`,
+        `/reader?${new URLSearchParams({
+          version: versionAbbr,
+          book: result.bookAbbr,
+          chapter: String(result.chapter),
+          verse: String(result.verse),
+        }).toString()}`,
       );
     },
     [versionAbbr, onClose, router],
@@ -140,10 +99,8 @@ export default function ReaderSearch({
     }
   }, [open]);
 
-  useEffect(() => {
-    if (!open) return;
-
-    function handleKeyDown(e: KeyboardEvent) {
+  const handleDialogKeyDown = useCallback(
+    (e: ReactKeyboardEvent<HTMLDivElement>) => {
       if (e.key === "Escape") {
         e.preventDefault();
         e.stopPropagation();
@@ -151,37 +108,100 @@ export default function ReaderSearch({
         return;
       }
 
-      if (!results?.length) return;
+      const currentResults = resultsRef.current;
+      if (!currentResults.length) return;
 
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setSelectedIndex((prev) => {
-          if (prev === null) return 0;
-          return Math.min(prev + 1, results.length - 1);
-        });
+        const currentIndex = selectedIndexRef.current;
+        const next =
+          currentIndex === null
+            ? 0
+            : Math.min(currentIndex + 1, currentResults.length - 1);
+        selectedIndexRef.current = next;
+        setSelectedIndex(next);
+        return;
       }
 
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        setSelectedIndex((prev) => {
-          if (prev === null || prev <= 0) return null;
-          return prev - 1;
-        });
+        const currentIndex = selectedIndexRef.current;
+        const next =
+          currentIndex === null || currentIndex <= 0 ? null : currentIndex - 1;
+        selectedIndexRef.current = next;
+        setSelectedIndex(next);
+        return;
       }
 
-      if (e.key === "Enter" && selectedIndex !== null) {
-        e.preventDefault();
-        handleNavigate(results[selectedIndex]);
-      }
-    }
+      if (e.key !== "Enter" || e.target instanceof HTMLButtonElement) return;
 
-    window.addEventListener("keydown", handleKeyDown, true);
-    return () => window.removeEventListener("keydown", handleKeyDown, true);
-  }, [open, results, selectedIndex, handleNavigate, onClose]);
+      const currentIndex = selectedIndexRef.current;
+      if (currentIndex === null) return;
+
+      const result = currentResults[currentIndex];
+      if (!result) return;
+
+      e.preventDefault();
+      handleNavigate(result);
+    },
+    [handleNavigate, onClose],
+  );
 
   useEffect(() => {
+    resultsRef.current = results ?? [];
+  }, [results]);
+
+  useEffect(() => {
+    selectedIndexRef.current = selectedIndex;
+  }, [selectedIndex]);
+
+  useEffect(() => {
+    selectedIndexRef.current = null;
     setSelectedIndex(null);
-  }, [debouncedSearchText]);
+    resultsScrollRef.current?.scrollTo({ top: 0 });
+  }, [trimmedQuery]);
+
+  useEffect(() => {
+    if (selectedIndex === null) return;
+
+    const scrollContainer = resultsScrollRef.current;
+    const selectedElement = scrollContainer?.querySelector<HTMLElement>(
+      `[data-reader-search-index="${selectedIndex}"]`,
+    );
+
+    if (!scrollContainer || !selectedElement) return;
+
+    const animationFrame = requestAnimationFrame(() => {
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const selectedRect = selectedElement.getBoundingClientRect();
+      const scrollPadding = 12;
+
+      if (selectedRect.top < containerRect.top + scrollPadding) {
+        scrollContainer.scrollTo({
+          top:
+            scrollContainer.scrollTop +
+            selectedRect.top -
+            containerRect.top -
+            scrollPadding,
+          behavior: "smooth",
+        });
+        return;
+      }
+
+      if (selectedRect.bottom > containerRect.bottom - scrollPadding) {
+        scrollContainer.scrollTo({
+          top:
+            scrollContainer.scrollTop +
+            selectedRect.bottom -
+            containerRect.bottom +
+            scrollPadding,
+          behavior: "smooth",
+        });
+      }
+    });
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [selectedIndex, results]);
 
   if (!open) return null;
 
@@ -190,8 +210,11 @@ export default function ReaderSearch({
       <div className="absolute inset-0 bg-background/85" onClick={onClose} />
 
       <div
-        ref={overlayRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search verses"
         className="relative z-10 w-[95vw] max-w-lg flex flex-col max-h-[75vh] animate-fade-in-from-bottom"
+        onKeyDown={handleDialogKeyDown}
       >
         <div className="flex items-center gap-2 rounded-t-2xl border border-border bg-surface px-4 py-3 shadow-xl shadow-background/40">
           <SearchIcon
@@ -203,12 +226,18 @@ export default function ReaderSearch({
             ref={inputRef}
             type="text"
             value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            onKeyDown={(e) => e.stopPropagation()}
+            onChange={(e) => {
+              resultsRef.current = [];
+              selectedIndexRef.current = null;
+              setSelectedIndex(null);
+              setSearchText(e.target.value);
+            }}
+            aria-label="Search verses"
             placeholder="Search verses…"
             className="flex-1 bg-transparent text-text text-base outline-none placeholder:text-text/40"
           />
           <button
+            aria-label="Close search"
             onClick={onClose}
             className="text-text/50 hover:text-text cursor-pointer p-1"
           >
@@ -216,8 +245,11 @@ export default function ReaderSearch({
           </button>
         </div>
 
-        <div className="overflow-y-auto rounded-b-2xl border border-t-0 border-border bg-surface shadow-xl shadow-background/40 reader-search-scroll">
-          {!searchText && (
+        <div
+          ref={resultsScrollRef}
+          className="overflow-y-auto rounded-b-2xl border border-t-0 border-border bg-surface shadow-xl shadow-background/40 reader-search-scroll"
+        >
+          {!hasQuery && (
             <div className="px-4 py-8 text-center">
               <p className="text-text/40 text-sm">
                 Type to search in{" "}
@@ -228,7 +260,7 @@ export default function ReaderSearch({
             </div>
           )}
 
-          {isLoading && !!searchText && (
+          {isLoading && hasQuery && (
             <div className="flex flex-col gap-2 p-3">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div
@@ -246,48 +278,46 @@ export default function ReaderSearch({
             </div>
           )}
 
-          {!isLoading && !!searchText && results && results.length === 0 && (
+          {!isLoading && hasQuery && isError && (
             <div className="px-4 py-8 text-center">
-              <p className="text-text/50 text-sm">No results found</p>
+              <p className="text-text/50 text-sm">
+                Search failed. Please try again.
+              </p>
             </div>
           )}
 
-          {!isLoading && results && results.length > 0 && (
-            <div className="flex flex-col gap-1.5 p-2">
-              {results.map((result, idx) => {
-                const isSelected = selectedIndex === idx;
-                const snippet = buildSnippet(
-                  result.text,
-                  debouncedSearchText,
-                  120,
-                );
+          {!isLoading &&
+            hasQuery &&
+            !isError &&
+            results &&
+            results.length === 0 && (
+              <div className="px-4 py-8 text-center">
+                <p className="text-text/50 text-sm">No results found</p>
+              </div>
+            )}
 
-                return (
-                  <button
+          {!isLoading &&
+            hasQuery &&
+            !isError &&
+            results &&
+            results.length > 0 && (
+              <div className="flex flex-col gap-1.5 p-2">
+                {results.map((result, idx) => (
+                  <div
                     key={`${result.bookAbbr}-${result.chapter}-${result.verse}`}
-                    onClick={() => handleNavigate(result)}
-                    className={`group w-full text-left rounded-xl p-3 cursor-pointer ${
-                      isSelected
-                        ? "bg-primary/15 ring-1 ring-primary/40"
-                        : "bg-background/50 hover:bg-background/80"
-                    }`}
+                    data-reader-search-index={idx}
                   >
-                    <div className="flex items-baseline gap-2 mb-1">
-                      <span className="text-xs font-bold text-primary tracking-wide">
-                        {result.bookName} {result.chapter}:{result.verse}
-                      </span>
-                      <span className="text-[0.6rem] text-text/40 uppercase tracking-widest">
-                        {versionAbbr}
-                      </span>
-                    </div>
-                    <p className="text-sm text-text/80 leading-relaxed line-clamp-2">
-                      {highlightTokens(snippet, debouncedSearchText)}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+                    <ReaderSearchResultItem
+                      result={result}
+                      versionAbbr={versionAbbr}
+                      query={trimmedQuery}
+                      isSelected={selectedIndex === idx}
+                      onNavigate={handleNavigate}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
         </div>
       </div>
     </div>

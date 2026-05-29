@@ -1085,8 +1085,6 @@ export default function Reader() {
 
       <ReaderSearch
         versionAbbr={versionAbbr}
-        bookAbbr={bookAbbr}
-        chapterNumber={chapterNumber}
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
       />

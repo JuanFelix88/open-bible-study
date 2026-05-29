@@ -226,8 +226,6 @@ export default function Home() {
 
       <ReaderSearch
         versionAbbr={DEFAULT_VERSION}
-        bookAbbr=""
-        chapterNumber={null}
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
       />
