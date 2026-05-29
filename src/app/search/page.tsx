@@ -149,7 +149,7 @@ export default function Search() {
               placeholder='Search version (e.g. "ARA")'
               value={searchVersionText}
               onChange={(e) => setSearchVersionText(e.target.value)}
-              className="mt-2 w-full p-2 border-2 border-border bg-background   rightness-[1.13] rounded-md"
+              className="mt-2 w-full p-2 border-2 border-border bg-background brightness-[1.13] rounded-md"
             />
 
             {filteredVersions?.map((version) => (
