@@ -17,7 +17,7 @@ import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
 interface TranslationTemplate {
@@ -317,7 +317,7 @@ export default function OriginalsTranslator() {
     });
   }
 
-  function markCurrentUrlSelectionAsConsumed() {
+  const markCurrentUrlSelectionAsConsumed = useCallback(() => {
     if (!selectedWordParam) return;
 
     appliedUrlSelectionKeyRef.current = [
@@ -326,7 +326,7 @@ export default function OriginalsTranslator() {
       verseNumber,
       selectedWordParam,
     ].join(":");
-  }
+  }, [bookAbbr, chapterNumber, selectedWordParam, verseNumber]);
 
   function handleSelectToken(index: number) {
     markCurrentUrlSelectionAsConsumed();
@@ -369,7 +369,7 @@ export default function OriginalsTranslator() {
 
     window.addEventListener("keydown", handleOnKeyDown);
     return () => window.removeEventListener("keydown", handleOnKeyDown);
-  }, [router, selectedWordParam, bookAbbr, chapterNumber, verseNumber]);
+  }, [markCurrentUrlSelectionAsConsumed, router]);
 
   useEffect(() => {
     if (tokens.length === 0) return;
