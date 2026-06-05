@@ -35,6 +35,7 @@ import { StringCompare } from "@/utils/StringCompare";
 import { Version } from "@/entities/Version";
 import ShareDropdown from "../components/ShareDropdown";
 import CommentsDropdown from "../components/CommentsDropdown";
+import OriginalsDropdown from "../components/OriginalsDropdown";
 
 interface VerseInParagraph {
   text: string;
@@ -133,6 +134,10 @@ export default function Reader() {
     null,
   );
   const [commentsMenuAutoFocus, setCommentsMenuAutoFocus] = useState(false);
+  const [originalsMenuVerse, setOriginalsMenuVerse] = useState<number | null>(
+    null,
+  );
+  const [originalsMenuAutoFocus, setOriginalsMenuAutoFocus] = useState(false);
 
   const [candidateToMarker, setCandidateToMarker] = useState<number | null>(
     null,
@@ -281,13 +286,18 @@ export default function Reader() {
     });
   }
 
-  function handleExplain(ev: SingleEvent, verseNumber: number) {
-    ev.stopPropagation();
+  function handleOpenOriginalsAI(verseNumber: number) {
     startNavigation(() => {
       router.push(
-        `/reader/explain?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${
-          verseNumber
-        }`,
+        `/reader/explain?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`,
+      );
+    });
+  }
+
+  function handleOpenOriginalsTranslator(verseNumber: number) {
+    startNavigation(() => {
+      router.push(
+        `/reader/originals/translator?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`,
       );
     });
   }
@@ -323,6 +333,8 @@ export default function Reader() {
     ev.stopPropagation();
     setCommentsMenuVerse(null);
     setCommentsMenuAutoFocus(false);
+    setOriginalsMenuVerse(null);
+    setOriginalsMenuAutoFocus(false);
     setShareMenuVerse((prev) => {
       if (prev === verseNumber) return null;
       return verseNumber;
@@ -330,10 +342,25 @@ export default function Reader() {
     setShareMenuAutoFocus(false);
   }
 
+  function handleToggleOriginalsMenu(ev: SingleEvent, verseNumber: number) {
+    ev.stopPropagation();
+    setShareMenuVerse(null);
+    setShareMenuAutoFocus(false);
+    setCommentsMenuVerse(null);
+    setCommentsMenuAutoFocus(false);
+    setOriginalsMenuVerse((prev) => {
+      if (prev === verseNumber) return null;
+      return verseNumber;
+    });
+    setOriginalsMenuAutoFocus(false);
+  }
+
   function handleToggleCommentsMenu(ev: SingleEvent, verseNumber: number) {
     ev.stopPropagation();
     setShareMenuVerse(null);
     setShareMenuAutoFocus(false);
+    setOriginalsMenuVerse(null);
+    setOriginalsMenuAutoFocus(false);
     setCommentsMenuVerse((prev) => {
       if (prev === verseNumber) return null;
       return verseNumber;
@@ -678,6 +705,8 @@ export default function Reader() {
         event.preventDefault();
         setCommentsMenuVerse(null);
         setCommentsMenuAutoFocus(false);
+        setOriginalsMenuVerse(null);
+        setOriginalsMenuAutoFocus(false);
         setShareMenuVerse((prev) =>
           prev === currentSelected ? null : currentSelected,
         );
@@ -687,9 +716,14 @@ export default function Reader() {
 
       if (event.key === "4") {
         event.preventDefault();
-        router.push(
-          `/reader/explain?book=${bookAbbrRef.current}&version=${versionAbbrRef.current}&chapter=${chapterNumberRef.current}&verse=${currentSelected}`,
+        setShareMenuVerse(null);
+        setShareMenuAutoFocus(false);
+        setCommentsMenuVerse(null);
+        setCommentsMenuAutoFocus(false);
+        setOriginalsMenuVerse((prev) =>
+          prev === currentSelected ? null : currentSelected,
         );
+        setOriginalsMenuAutoFocus(true);
         return;
       }
 
@@ -705,6 +739,8 @@ export default function Reader() {
         event.preventDefault();
         setShareMenuVerse(null);
         setShareMenuAutoFocus(false);
+        setOriginalsMenuVerse(null);
+        setOriginalsMenuAutoFocus(false);
         setCommentsMenuVerse((prev) =>
           prev === currentSelected ? null : currentSelected,
         );
@@ -1138,21 +1174,35 @@ export default function Reader() {
                           />
                         )}
                       </span>
-                      <button
-                        className="flex cursor-pointer items-center rounded-sm border border-dashed border-border bg-background px-[4px] py-0.5 text-sm hover:bg-background/70 sm:py-0"
-                        onClick={(e) => handleExplain(e, verseNumber)}
-                      >
-                        <span className="mr-1 hidden text-[0.65rem] opacity-70 sm:inline">
-                          [4]
-                        </span>
-                        <CopyIcon
-                          className="mr-1 opacity-80 sm:hidden"
-                          width={12}
-                          height={12}
-                        />
-                        <span className="hidden sm:block">Original</span>
-                        <span className="sm:hidden">O.</span>
-                      </button>
+                      <span className="relative inline-flex">
+                        <button
+                          className={`flex cursor-pointer items-center rounded-sm border border-dashed px-[4px] py-0.5 text-sm transition sm:py-0 ${originalsMenuVerse === verseNumber ? "border-primary bg-primary/20 text-primary" : "border-border bg-background hover:bg-background/70"}`}
+                          onClick={(e) =>
+                            handleToggleOriginalsMenu(e, verseNumber)
+                          }
+                        >
+                          <span className="mr-1 hidden text-[0.65rem] opacity-70 sm:inline">
+                            [4]
+                          </span>
+                          <CopyIcon
+                            className="mr-1 opacity-80 sm:hidden"
+                            width={12}
+                            height={12}
+                          />
+                          <span className="hidden sm:block">Originals</span>
+                          <span className="sm:hidden">O.</span>
+                        </button>
+                        {originalsMenuVerse === verseNumber && (
+                          <OriginalsDropdown
+                            autoFocus={originalsMenuAutoFocus}
+                            onAI={() => handleOpenOriginalsAI(verseNumber)}
+                            onTranslator={() =>
+                              handleOpenOriginalsTranslator(verseNumber)
+                            }
+                            onClose={() => setOriginalsMenuVerse(null)}
+                          />
+                        )}
+                      </span>
                       <button
                         className="flex cursor-pointer items-center rounded-sm border border-dashed border-border bg-background px-[4px] py-0.5 text-sm hover:bg-background/70 sm:py-0"
                         onClick={(e) => handleDeepAnalysis(e, verseNumber)}
