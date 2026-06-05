@@ -341,7 +341,6 @@ export default function OriginalsTranslator() {
     null,
   );
   const [showAllRelatedVerses, setShowAllRelatedVerses] = useState(false);
-  const [targetLanguage, setTargetLanguage] = useState("pt-BR");
 
   const { ref: refSelectedVersion, inView: inViewSelectedVersion } = useInView({
     threshold: 1,
@@ -373,11 +372,6 @@ export default function OriginalsTranslator() {
     },
   });
 
-  useEffect(() => {
-    const browserLanguage = navigator.language || navigator.languages?.at(0);
-    if (browserLanguage) setTargetLanguage(browserLanguage);
-  }, []);
-
   const {
     data: translatorData,
     isLoading: isLoadingTranslations,
@@ -390,14 +384,13 @@ export default function OriginalsTranslator() {
       bookAbbr,
       chapterNumber,
       verseNumber,
-      targetLanguage,
     ],
     enabled: !!(version && bookAbbr && chapterNumber && verseNumber),
     staleTime: 1000 * 60 * 60 * 24,
     gcTime: 1000 * 60 * 60 * 24 * 3,
     queryFn: async () => {
       const translatorResponse = await fetch(
-        `/api/versions/${version}/${bookAbbr}/${chapterNumber}/${verseNumber}/translator?tl=${encodeURIComponent(targetLanguage)}`,
+        `/api/versions/${version}/${bookAbbr}/${chapterNumber}/${verseNumber}/translator`,
       );
       await ThrowByResponse.throwsIfNotOk(translatorResponse);
       return (await translatorResponse.json()) as OriginalTranslatorResponse;

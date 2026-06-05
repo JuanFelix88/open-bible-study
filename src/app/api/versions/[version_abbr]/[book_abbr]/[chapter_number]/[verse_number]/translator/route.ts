@@ -19,7 +19,8 @@ export async function GET(
     if (!paramsResult.ok) return paramsResult.error;
 
     const { versionAbbr, bookAbbr, chapterNumber, verseNumber } = paramsResult.data;
-    const targetLanguage = req.nextUrl.searchParams.get("tl") || "pt-BR";
+    const selectedVersion = await BibleVersionsRepository.getVersionFromName(versionAbbr);
+    const targetLanguage = req.nextUrl.searchParams.get("tl") || selectedVersion.language;
 
     const { data: original, error: originalError } =
       await FnNormalizer.getFromPromise(

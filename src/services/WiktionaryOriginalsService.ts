@@ -14,9 +14,9 @@ import {
 const WIKTIONARY_API_URL = "https://en.wiktionary.org/w/api.php";
 const WIKTIONARY_PAGE_URL = "https://en.wiktionary.org/wiki";
 const REVALIDATE_SECONDS = 60 * 60 * 24 * 30;
-const WIKTIONARY_CONCURRENCY = 1;
+const WIKTIONARY_CONCURRENCY = 4;
 const MAX_DEFINITIONS = 5;
-const WIKTIONARY_REQUEST_INTERVAL_MS = 180;
+const WIKTIONARY_REQUEST_INTERVAL_MS = 220;
 const WIKTIONARY_RETRY_DELAYS_MS = [750, 1_500, 3_000];
 
 const POS_HEADINGS = [
