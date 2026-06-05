@@ -7,6 +7,7 @@ import { SingleEvent } from "@/entities/SingleEvent";
 import { useDialog } from "@/hooks/useDialog";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Fragment,
@@ -36,6 +37,11 @@ import { Version } from "@/entities/Version";
 import ShareDropdown from "../components/ShareDropdown";
 import CommentsDropdown from "../components/CommentsDropdown";
 import OriginalsDropdown from "../components/OriginalsDropdown";
+
+const BibleRefChapterContext = dynamic(
+  () => import("../components/BibleRefChapterContext"),
+  { ssr: false },
+);
 
 interface VerseInParagraph {
   text: string;
@@ -1036,6 +1042,13 @@ export default function Reader() {
 
       {/* Verses */}
       <div className={chapterTransition ? "animate-chapter-fade" : ""}>
+        <div className="mb-4">
+          <BibleRefChapterContext
+            bookAbbr={bookAbbr}
+            chapterNumber={chapterNumber}
+            enabled={Boolean(chapter && !isLoadingChapter)}
+          />
+        </div>
         {verseParagraphs.map((paragraph) => (
           <div
             key={paragraph.key}

@@ -201,6 +201,10 @@ function buildBibleRefUrl(book: BibleRefBookMapItem, chapter: number, verse: num
   return `${BIBLE_REF_BASE_URL}/${book.bibleRefPath}/${chapter}/${verseBookSlug}-${chapter}-${verse}.html`;
 }
 
+function buildBibleRefChapterUrl(book: BibleRefBookMapItem, chapter: number) {
+  return `${BIBLE_REF_BASE_URL}/${book.bibleRefPath}/${chapter}/${book.bibleRefPath}-chapter-${chapter}.html`;
+}
+
 function extractCommentaryMarkdown(html: string) {
   const commentarySection = extractBetween(
     html,
@@ -218,6 +222,19 @@ function extractSummaryScriptUrls(html: string) {
   );
 }
 
+function extractChapterContextSummaryScriptUrl(html: string) {
+  const summarySection = extractBetween(
+    html,
+    /<div class="content-summary summary-chapter"[^>]*>/i,
+    /<div class="expand"/i,
+  );
+  const match = summarySection.match(/src="https:\/\/www\.bibleref\.com\/(summaries\/[^"]+\.js)"/i);
+
+  if (match?.[1]) return `${BIBLE_REF_BASE_URL}/${match[1]}`;
+
+  return extractSummaryScriptUrls(html).find((summaryUrl) => /-\d+-context\.js$/i.test(summaryUrl)) ?? "";
+}
+
 function parseDocumentWriteHtml(script: string) {
   const match = script.match(/document\.write\("([\s\S]*)"\);?\s*$/);
   if (!match) return "";
@@ -230,7 +247,10 @@ function parseDocumentWriteHtml(script: string) {
 }
 
 function stripSummaryTitle(summary: string) {
-  return summary.replace(/^\*\*(Context|Chapter) Summary\*\*\s*/i, "").trim();
+  return summary
+    .replace(/^\*\*(Context|Chapter) Summary\*\*\s*/i, "")
+    .replace(/^\*\*Chapter Context\*\*\s*/i, "")
+    .trim();
 }
 
 function splitTranslationChunks(value: string) {
@@ -316,7 +336,7 @@ async function fetchSummaryMarkdown(url: string) {
   return stripSummaryTitle(htmlToMarkdown(parseDocumentWriteHtml(script)));
 }
 
-async function validateLocalReference(book: BibleRefBookMapItem, chapter: number, verse: number) {
+async function validateLocalChapterReference(book: BibleRefBookMapItem, chapter: number) {
   const books = await BooksAndChapters.getBooks();
   const localBook = books.find(
     (candidate) => normalizeLookupKey(candidate.abbr) === normalizeLookupKey(book.abbr),
@@ -326,6 +346,11 @@ async function validateLocalReference(book: BibleRefBookMapItem, chapter: number
     throw new NotFoundError("Book or chapter not found.");
   }
 
+  return localBook;
+}
+
+async function validateLocalReference(book: BibleRefBookMapItem, chapter: number, verse: number) {
+  const localBook = await validateLocalChapterReference(book, chapter);
   const chapters = await BooksAndChapters.getChapters(localBook.abbr);
   const verseText = chapters.at(chapter - 1)?.at(verse - 1);
 
@@ -337,6 +362,54 @@ async function validateLocalReference(book: BibleRefBookMapItem, chapter: number
 export class BibleRefContextService {
   public static isNotFound(error: unknown) {
     return error instanceof NotFoundError;
+  }
+
+  public static async getChapterContext(bookParam: string, chapter: number): Promise<BibleRefContext> {
+    if (!bookParam || chapter < 1) {
+      throw new NotFoundError("Invalid reference.");
+    }
+
+    const book = resolveBibleRefBook(bookParam);
+    if (!book) throw new NotFoundError("Book not found.");
+
+    await validateLocalChapterReference(book, chapter);
+
+    const sourceUrl = buildBibleRefChapterUrl(book, chapter);
+    const response = await fetch(sourceUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 BibleStudyContextBridge/1.0" },
+      next: { revalidate: REVALIDATE_SECONDS },
+    });
+
+    if (response.status === 404) {
+      throw new NotFoundError("BibleRef chapter context not found.");
+    }
+
+    if (!response.ok) {
+      throw new Error(`BibleRef returned ${response.status}`);
+    }
+
+    const html = await response.text();
+    const chapterContextSummaryUrl = extractChapterContextSummaryScriptUrl(html);
+    const chapterContext = chapterContextSummaryUrl
+      ? await fetchSummaryMarkdown(chapterContextSummaryUrl)
+      : "";
+
+    if (!chapterContext) {
+      throw new NotFoundError("BibleRef chapter context not found.");
+    }
+
+    const translatedChapterContext = await translateTextToPortuguese(chapterContext);
+    const reference = `${book.name} ${chapter}`;
+    const sections = [
+      translatedChapterContext,
+      `---\nReference [BibleRef.com](${sourceUrl}).`,
+    ];
+
+    return {
+      reference,
+      sourceUrl,
+      markdown: sections.join("\n\n"),
+    };
   }
 
   public static async getContext(bookParam: string, chapter: number, verse: number): Promise<BibleRefContext> {
