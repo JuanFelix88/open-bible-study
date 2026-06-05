@@ -5,6 +5,7 @@ import { Chapter } from "@/entities/Chapter";
 import { LinkToChapter } from "@/entities/LinkToChapter";
 import { Nullable } from "@/entities/Nullable";
 import { RawChapterVersion } from "@/entities/RawBibleVersion";
+import { HeadingsRepository } from "@/repositories/HeadingsRepository";
 import { ParagraphsRepository } from "@/repositories/ParagraphsRepository";
 import { StaticClass } from "@/entities/StaticClass";
 import { Verse } from "@/entities/Verse";
@@ -123,6 +124,14 @@ export class BibleVersionsRepository extends StaticClass {
       throw new Error("Chapter number must be greater than 0.");
     }
 
+    const versionMeta = BibleVersions.versions.find(
+      ({ abbreviation }) => abbreviation.toLowerCase() === versionAbbr,
+    );
+
+    if (!versionMeta) {
+      throw new Error(`Version ${versionAbbr.toUpperCase()} not found.`);
+    }
+
     const book = await this.getBookWithVersion(versionAbbr, bookAbbr);
 
     const allBooks = await BooksAndChapters.getBooks();
@@ -165,6 +174,11 @@ export class BibleVersionsRepository extends StaticClass {
           paragraphStarts: ParagraphsRepository.getParagraphStarts(
             book.abbrev,
             chapterNumber,
+          ),
+          headings: HeadingsRepository.getHeadings(
+            book.abbrev,
+            chapterNumber,
+            versionMeta.language,
           ),
         },
       },

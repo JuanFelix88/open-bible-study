@@ -1,6 +1,7 @@
 "use client";
 import { BookInfo } from "@/entities/BookInfo";
 import type { Chapter } from "@/entities/Chapter";
+import type { HeadingMetadataItem } from "@/entities/HeadingMetadata";
 import { Reference } from "@/entities/Reference";
 import { SingleEvent } from "@/entities/SingleEvent";
 import { useDialog } from "@/hooks/useDialog";
@@ -80,6 +81,18 @@ function buildVerseParagraphs(
   });
 
   return paragraphs;
+}
+
+function buildHeadingsByVerse(headings: HeadingMetadataItem[] = []) {
+  const headingsByVerse = new Map<number, HeadingMetadataItem[]>();
+
+  for (const heading of headings) {
+    const verseHeadings = headingsByVerse.get(heading.verse) ?? [];
+    verseHeadings.push(heading);
+    headingsByVerse.set(heading.verse, verseHeadings);
+  }
+
+  return headingsByVerse;
 }
 
 function isEditableKeyboardTarget(target: EventTarget | null) {
@@ -745,6 +758,10 @@ export default function Reader() {
       ),
     [chapter],
   );
+  const headingsByVerse = useMemo(
+    () => buildHeadingsByVerse(chapter?.book.chapter.headings ?? []),
+    [chapter?.book.chapter.headings],
+  );
 
   useEffect(() => {
     if (!bookName) return;
@@ -884,7 +901,7 @@ export default function Reader() {
         {verseParagraphs.map((paragraph) => (
           <div
             key={paragraph.key}
-            className="mb-5 text-lg leading-8 text-text/95 indent-8"
+            className="mb-5 text-lg leading-8 tracking-[0.015em] text-text/95 indent-8"
           >
             {paragraph.verses.map((verse, verseOffset) => {
               const verseNumber = verse.number;
@@ -902,9 +919,18 @@ export default function Reader() {
                 : false;
               const isSelected = selectedVerse === verseNumber;
               const isFirstInParagraph = verseOffset === 0;
+              const headings = headingsByVerse.get(verseNumber) ?? [];
 
               return (
                 <Fragment key={verseNumber}>
+                  {headings.map((heading, headingIndex) => (
+                    <h2
+                      key={`heading-${verseNumber}-${headingIndex}`}
+                      className={`indent-0 ${verseNumber === 1 && paragraph.key === "paragraph-1" ? "mt-0" : "mt-4"} mb-1 block text-xl font-bold italic leading-7 tracking-tight text-text`}
+                    >
+                      {heading.title}
+                    </h2>
+                  ))}
                   {marker && (
                     <span className="mx-1 inline-flex translate-y-[-1px] items-center gap-1 rounded-full border border-dashed border-primary/60 px-1.5 py-0.5 text-xs leading-none text-primary indent-0">
                       <MarkerIcon width={11} height={11} />
@@ -927,19 +953,20 @@ export default function Reader() {
                     <span className={isFirstInParagraph ? "ml-1" : ""}>
                       {verse.text}
                     </span>
-                    {hasReferences && (
-                      <span
-                        className={
-                          isSelected
-                            ? "ml-1 inline-flex translate-y-[2px] rounded-full text-primary"
-                            : "ml-1 inline-flex translate-y-[2px] rounded-full text-text/60"
-                        }
-                        title="Verse has references"
-                      >
-                        <DocumentIcon width={14} height={14} />
-                      </span>
-                    )}
                   </span>
+                  {hasReferences && (
+                    <span
+                      className={
+                        isSelected
+                          ? "mx-1 inline-flex translate-y-[2px] rounded-full text-primary indent-0"
+                          : "mx-1 inline-flex translate-y-[2px] rounded-full text-text/60 indent-0"
+                      }
+                      title="Verse has references"
+                      aria-label={`Verse ${verseNumber} has references`}
+                    >
+                      <DocumentIcon width={14} height={14} />
+                    </span>
+                  )}
                   {isSelected && (
                     <span className="control-buttons my-2 flex w-full max-w-full flex-wrap gap-2 rounded-sm border border-dashed border-primary bg-secondary p-1 indent-0 shadow-lg shadow-background/30">
                       <button

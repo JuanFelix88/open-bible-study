@@ -9,6 +9,8 @@
     "lint:fix": "next lint --fix",
     "parts": "node scripts/versions-partition.mjs",
     "paragraphs": "node scripts/convert-helloao-paragraphs.mjs",
+    "headings": "node scripts/convert-bsb-headings.mjs",
+    "headings:chunks": "node scripts/extract-bsb-headings.mjs",
     "orig": "node scripts/convert-original.mjs"
   },
   "dependencies": {
