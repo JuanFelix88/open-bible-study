@@ -9,6 +9,7 @@ export interface Chapter {
     chapter: {
       number: number;
       verses: string[];
+      paragraphStarts?: number[];
     };
   };
   previous: Nullable<LinkToChapter>;

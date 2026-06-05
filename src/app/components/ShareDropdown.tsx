@@ -17,7 +17,7 @@ export default function ShareDropdown({
   onClose,
   autoFocus = false,
 }: ShareDropdownProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLSpanElement>(null);
   const firstButtonRef = useRef<HTMLButtonElement>(null);
   const secondButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -27,7 +27,7 @@ export default function ShareDropdown({
     }
   }, [autoFocus]);
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+  function handleKeyDown(e: React.KeyboardEvent<HTMLSpanElement>) {
     e.stopPropagation();
 
     if (e.key === "Escape") {
@@ -68,11 +68,11 @@ export default function ShareDropdown({
   }
 
   return (
-    <div
+    <span
       ref={containerRef}
       role="menu"
       aria-label="Share options"
-      className="absolute left-0 top-full mt-1 z-30 flex flex-col min-w-[150px] rounded-sm border border-dashed border-primary bg-background shadow-md animate-fade-in-from-bottom"
+      className="absolute left-0 top-full mt-1 z-30 flex min-w-[150px] flex-col rounded-sm border border-dashed border-primary bg-background shadow-md animate-fade-in-from-bottom"
       onClick={(e) => e.stopPropagation()}
       onKeyDown={handleKeyDown}
     >
@@ -94,6 +94,6 @@ export default function ShareDropdown({
         <DocumentIcon width={11} height={11} className="opacity-70 shrink-0" />
         Link + text
       </button>
-    </div>
+    </span>
   );
 }

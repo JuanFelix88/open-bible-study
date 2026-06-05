@@ -5,6 +5,7 @@ import { Chapter } from "@/entities/Chapter";
 import { LinkToChapter } from "@/entities/LinkToChapter";
 import { Nullable } from "@/entities/Nullable";
 import { RawChapterVersion } from "@/entities/RawBibleVersion";
+import { ParagraphsRepository } from "@/repositories/ParagraphsRepository";
 import { StaticClass } from "@/entities/StaticClass";
 import { Verse } from "@/entities/Verse";
 import { FnNormalizer } from "@/utils/FnNormalizer";
@@ -161,6 +162,10 @@ export class BibleVersionsRepository extends StaticClass {
         chapter: {
           number: chapterNumber,
           verses: book.chapters.at(chapterNumber - 1) ?? [],
+          paragraphStarts: ParagraphsRepository.getParagraphStarts(
+            book.abbrev,
+            chapterNumber,
+          ),
         },
       },
       previous,
