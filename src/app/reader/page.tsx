@@ -136,6 +136,9 @@ export default function Reader() {
   const [markerName, setMarkerName] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [chapterTransition, setChapterTransition] = useState(false);
+  const [currentHeadingTitle, setCurrentHeadingTitle] = useState<string | null>(
+    null,
+  );
 
   const { data: books, isLoading: isLoadingBooks } = useQuery({
     queryKey: ["books"],
@@ -764,6 +767,51 @@ export default function Reader() {
   );
 
   useEffect(() => {
+    const headings = chapter?.book.chapter.headings ?? [];
+    setCurrentHeadingTitle(headings.at(0)?.title ?? null);
+  }, [chapter?.book.chapter.headings]);
+
+  useEffect(() => {
+    if (!chapter?.book.chapter.headings?.length) return;
+
+    let animationFrame = 0;
+
+    const updateCurrentHeading = () => {
+      const headingElements = Array.from(
+        document.querySelectorAll<HTMLHeadingElement>("[data-reader-heading]"),
+      );
+
+      if (headingElements.length === 0) return;
+
+      const headerOffset = 96;
+      const currentHeading =
+        headingElements.findLast(
+          (heading) => heading.getBoundingClientRect().top <= headerOffset,
+        ) ?? headingElements[0];
+      const title = currentHeading.dataset.readerHeadingTitle ?? null;
+
+      setCurrentHeadingTitle((previousTitle) =>
+        previousTitle === title ? previousTitle : title,
+      );
+    };
+
+    const scheduleUpdate = () => {
+      cancelAnimationFrame(animationFrame);
+      animationFrame = requestAnimationFrame(updateCurrentHeading);
+    };
+
+    scheduleUpdate();
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+    };
+  }, [chapter?.book.chapter.headings]);
+
+  useEffect(() => {
     if (!bookName) return;
     if (!chapterText) return;
     document.title = `${bookName} ${chapterText}${selectedVerse ? ":" : ""}${
@@ -823,6 +871,11 @@ export default function Reader() {
                 />
               )}
               <h3 className="text-xs font-bold text-text/50">{versionText}</h3>
+              {currentHeadingTitle && (
+                <p className="mt-0.5 max-w-[min(68vw,560px)] truncate text-sm font-semibold italic leading-tight text-text/75">
+                  {currentHeadingTitle}
+                </p>
+              )}
             </div>
             <div className="flex ml-auto">
               <ReaderMenu
@@ -926,6 +979,8 @@ export default function Reader() {
                   {headings.map((heading, headingIndex) => (
                     <h2
                       key={`heading-${verseNumber}-${headingIndex}`}
+                      data-reader-heading="true"
+                      data-reader-heading-title={heading.title}
                       className={`indent-0 ${verseNumber === 1 && paragraph.key === "paragraph-1" ? "mt-0" : "mt-4"} mb-1 block text-xl font-bold italic leading-7 tracking-tight text-text`}
                     >
                       {heading.title}
