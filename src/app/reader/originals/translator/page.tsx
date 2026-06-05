@@ -320,6 +320,136 @@ function TokenTranslations({
   );
 }
 
+type OriginalTranslatorStreamMeta = Omit<OriginalTranslatorResponse, "tokens"> & {
+  tokens: string[];
+};
+
+function createPlaceholderToken(token: string, tokenIndex: number): OriginalTranslatorToken {
+  return {
+    token_index: tokenIndex,
+    token,
+    translations: [],
+  };
+}
+
+function useStreamingOriginalsTranslator(url: string | null) {
+  const [data, setData] = useState<OriginalTranslatorResponse | null>(null);
+  const [resolvedTokenIndexes, setResolvedTokenIndexes] = useState<Set<number>>(
+    () => new Set(),
+  );
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!url) return;
+
+    const controller = new AbortController();
+    let cancelled = false;
+
+    setData(null);
+    setResolvedTokenIndexes(new Set());
+    setIsLoading(true);
+    setIsFetching(true);
+    setError(null);
+
+    (async () => {
+      try {
+        const response = await fetch(url, { signal: controller.signal });
+        await ThrowByResponse.throwsIfNotOk(response);
+
+        if (!response.body) {
+          throw new Error("Translator stream is not available.");
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done || cancelled) break;
+
+          buffer += decoder.decode(value, { stream: true });
+
+          let idx: number;
+          while ((idx = buffer.indexOf("\n\n")) !== -1) {
+            const block = buffer.slice(0, idx);
+            buffer = buffer.slice(idx + 2);
+
+            const lines = block.split("\n");
+            let eventType = "message";
+            let eventData = "";
+
+            for (const line of lines) {
+              if (line.startsWith("event: ")) eventType = line.slice(7);
+              if (line.startsWith("data: ")) eventData = line.slice(6);
+            }
+
+            if (eventData === "[DONE]") {
+              if (!cancelled) setIsFetching(false);
+              continue;
+            }
+
+            if (eventType === "meta") {
+              const parsed = JSON.parse(eventData) as OriginalTranslatorStreamMeta;
+              if (cancelled) continue;
+
+              setData({
+                text: parsed.text,
+                version: parsed.version,
+                language: parsed.language,
+                targetLanguage: parsed.targetLanguage,
+                tokens: parsed.tokens.map(createPlaceholderToken),
+              });
+              setIsLoading(false);
+              continue;
+            }
+
+            if (eventType === "token") {
+              const token = JSON.parse(eventData) as OriginalTranslatorToken;
+              if (cancelled) continue;
+
+              setData((prev) => {
+                if (!prev) return prev;
+
+                const nextTokens = [...prev.tokens];
+                nextTokens[token.token_index] = token;
+                return { ...prev, tokens: nextTokens };
+              });
+              setResolvedTokenIndexes((prev) => {
+                const next = new Set(prev);
+                next.add(token.token_index);
+                return next;
+              });
+              continue;
+            }
+
+            if (eventType === "error") {
+              const parsed = JSON.parse(eventData) as { message?: string };
+              throw new Error(parsed.message ?? "Translator stream error.");
+            }
+          }
+        }
+      } catch (streamError) {
+        if (!cancelled && !controller.signal.aborted) {
+          setError(streamError as Error);
+          setIsLoading(false);
+        }
+      } finally {
+        if (!cancelled) setIsFetching(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [url]);
+
+  return { data, resolvedTokenIndexes, isLoading, isFetching, error };
+}
+
 export default function OriginalsTranslator() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -372,30 +502,18 @@ export default function OriginalsTranslator() {
     },
   });
 
+  const translatorUrl =
+    version && bookAbbr && chapterNumber && verseNumber
+      ? `/api/versions/${version}/${bookAbbr}/${chapterNumber}/${verseNumber}/translator?stream=1`
+      : null;
+
   const {
     data: translatorData,
+    resolvedTokenIndexes,
     isLoading: isLoadingTranslations,
     isFetching: isFetchingTranslations,
     error: translatorError,
-  } = useQuery({
-    queryKey: [
-      "originals-translator",
-      version,
-      bookAbbr,
-      chapterNumber,
-      verseNumber,
-    ],
-    enabled: !!(version && bookAbbr && chapterNumber && verseNumber),
-    staleTime: 1000 * 60 * 60 * 24,
-    gcTime: 1000 * 60 * 60 * 24 * 3,
-    queryFn: async () => {
-      const translatorResponse = await fetch(
-        `/api/versions/${version}/${bookAbbr}/${chapterNumber}/${verseNumber}/translator`,
-      );
-      await ThrowByResponse.throwsIfNotOk(translatorResponse);
-      return (await translatorResponse.json()) as OriginalTranslatorResponse;
-    },
-  });
+  } = useStreamingOriginalsTranslator(translatorUrl);
 
   const tokens = useMemo(
     () => translatorData?.tokens ?? [],
@@ -405,6 +523,8 @@ export default function OriginalsTranslator() {
 
   const selectedToken =
     selectedTokenIndex !== null ? tokens.at(selectedTokenIndex) : undefined;
+  const isSelectedTokenResolved =
+    selectedTokenIndex !== null && resolvedTokenIndexes.has(selectedTokenIndex);
   const selectedTokenText = selectedToken?.token.trim() ?? "";
   const relatedVersesSearchVersion = translatorData?.version ?? "";
   const template = getTemplate(translatorData?.language);
@@ -412,7 +532,11 @@ export default function OriginalsTranslator() {
   const { data: relatedVersesRaw, isFetching: isFetchingRelatedVerses } =
     useQuery({
       queryKey: ["relative-verses", relatedVersesSearchVersion, selectedTokenText],
-      enabled: !!(relatedVersesSearchVersion && selectedTokenText),
+      enabled: !!(
+        relatedVersesSearchVersion &&
+        selectedTokenText &&
+        isSelectedTokenResolved
+      ),
       staleTime: 1000 * 60 * 60,
       gcTime: 1000 * 60 * 60 * 3,
       queryFn: async () => {
@@ -575,20 +699,20 @@ export default function OriginalsTranslator() {
   ]);
 
   useEffect(() => {
-    if (!selectedTokenText) return;
+    if (!selectedTokenText || !isSelectedTokenResolved) return;
     if (ReaderAnalysisUtils.tokenMatchesWord(selectedTokenText, selectedWordParam)) return;
 
     router.replace(buildTranslatorUrlWithSelectedWord(selectedTokenText), {
       scroll: false,
     });
-  }, [selectedTokenText, selectedWordParam, router]);
+  }, [selectedTokenText, selectedWordParam, isSelectedTokenResolved, router]);
 
   useEffect(() => {
     setShowAllRelatedVerses(false);
   }, [selectedTokenIndex]);
 
   const chapterText = chapterNumber?.toString() ?? "...";
-  const isLoading = isLoadingTranslations || isFetchingTranslations;
+  const isLoading = isLoadingTranslations;
 
   return (
     <div className="flex min-h-screen w-screen max-w-[750px] flex-col bg-background px-7 py-7 pb-15 text-text">
@@ -651,21 +775,25 @@ export default function OriginalsTranslator() {
           <span className="px-1 py-0.5 text-text/20">{translatorData.text}</span>
         )}
 
-        {tokens.map((token) => (
-          <Fragment key={`${token.token_index}-${token.token}`}>
-            <span hidden={token.token_index === 0}> </span>
-            <span
-              className={`cursor-pointer rounded-sm px-1 py-0.5 ${
-                selectedTokenIndex === token.token_index
-                  ? "bg-secondary text-text underline decoration-primary decoration-dashed underline-offset-2"
-                  : "text-text hover:bg-surface"
-              }`}
-              onClick={() => handleSelectToken(token.token_index)}
-            >
-              {token.token}
-            </span>
-          </Fragment>
-        ))}
+        {tokens.map((token) => {
+          const isTokenResolved = resolvedTokenIndexes.has(token.token_index);
+
+          return (
+            <Fragment key={`${token.token_index}-${token.token}`}>
+              <span hidden={token.token_index === 0}> </span>
+              <span
+                className={`cursor-pointer rounded-sm px-1 py-0.5 ${
+                  selectedTokenIndex === token.token_index
+                    ? "bg-secondary text-text underline decoration-primary decoration-dashed underline-offset-2"
+                    : "text-text hover:bg-surface"
+                } ${isTokenResolved ? "" : "animate-pulse text-text/30"}`}
+                onClick={() => handleSelectToken(token.token_index)}
+              >
+                {token.token}
+              </span>
+            </Fragment>
+          );
+        })}
       </div>
 
       {isLoading && (
@@ -677,6 +805,19 @@ export default function OriginalsTranslator() {
           />
           <span className="animate-pulse text-sm text-text/50">
             Breaking and translating original words...
+          </span>
+        </div>
+      )}
+
+      {!isLoading && isFetchingTranslations && tokens.length > 0 && (
+        <div className="flex animate-show-from-bottom-slow items-center gap-2 py-3">
+          <LoadingIcon
+            width={14}
+            height={14}
+            className="animate-spin text-text/40 opacity-70"
+          />
+          <span className="text-xs text-text/45">
+            Streaming lexical data {resolvedTokenIndexes.size}/{tokens.length}...
           </span>
         </div>
       )}
@@ -694,12 +835,23 @@ export default function OriginalsTranslator() {
 
       {selectedToken && (
         <div className="mt-4 flex w-full flex-col">
-          <TokenTranslations
-            language={translatorData?.language}
-            selectedToken={selectedToken}
-          />
+          {isSelectedTokenResolved ? (
+            <TokenTranslations
+              language={translatorData?.language}
+              selectedToken={selectedToken}
+            />
+          ) : (
+            <div className="flex animate-show-from-bottom-slow items-center gap-2 rounded-md border border-dashed border-border bg-surface px-3 py-3 text-sm text-text/50">
+              <LoadingIcon
+                width={14}
+                height={14}
+                className="animate-spin opacity-70"
+              />
+              <span>Loading this token enrichment...</span>
+            </div>
+          )}
 
-          {selectedTokenText && relatedVersesSearchVersion && (
+          {isSelectedTokenResolved && selectedTokenText && relatedVersesSearchVersion && (
             <div
               className="mt-5 animate-show-from-bottom-slow border-t border-dashed border-border/70 pt-4"
               key={`${selectedTokenIndex}-related-verses`}

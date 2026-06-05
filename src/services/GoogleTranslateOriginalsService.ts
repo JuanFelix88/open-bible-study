@@ -254,6 +254,49 @@ export async function mapWithConcurrency<T, R>(
   return results;
 }
 
+export async function translateOriginalToken({
+  token,
+  tokenIndex,
+  sourceLanguage,
+  targetLanguage = "pt-BR",
+}: {
+  token: string;
+  tokenIndex: number;
+  sourceLanguage: Language;
+  targetLanguage?: string;
+}): Promise<OriginalTranslatorToken> {
+  const googleSourceLanguage = getGoogleSourceLanguage(sourceLanguage);
+  const googleTargetLanguage = getGoogleTargetLanguage(targetLanguage);
+  const cacheKey = `${googleSourceLanguage}:${googleTargetLanguage}:${token}`;
+
+  try {
+    let request = translationCache.get(cacheKey);
+    if (!request) {
+      request = translateToken({
+        token,
+        tokenIndex,
+        sourceLanguage: googleSourceLanguage,
+        targetLanguage: googleTargetLanguage,
+      });
+      translationCache.set(cacheKey, request);
+    }
+
+    const translated = await request;
+    return {
+      ...translated,
+      token_index: tokenIndex,
+    };
+  } catch (error) {
+    translationCache.delete(cacheKey);
+    return {
+      token_index: tokenIndex,
+      token,
+      translations: [],
+      error: (error as Error)?.message ?? "Unable to translate token.",
+    };
+  }
+}
+
 export async function translateOriginalTokens({
   tokens,
   sourceLanguage,
@@ -263,37 +306,12 @@ export async function translateOriginalTokens({
   sourceLanguage: Language;
   targetLanguage?: string;
 }): Promise<OriginalTranslatorToken[]> {
-  const googleSourceLanguage = getGoogleSourceLanguage(sourceLanguage);
-  const googleTargetLanguage = getGoogleTargetLanguage(targetLanguage);
-
-  return mapWithConcurrency(tokens, TRANSLATION_CONCURRENCY, async (token, index) => {
-    const cacheKey = `${googleSourceLanguage}:${googleTargetLanguage}:${token}`;
-
-    try {
-      let request = translationCache.get(cacheKey);
-      if (!request) {
-        request = translateToken({
-          token,
-          tokenIndex: index,
-          sourceLanguage: googleSourceLanguage,
-          targetLanguage: googleTargetLanguage,
-        });
-        translationCache.set(cacheKey, request);
-      }
-
-      const translated = await request;
-      return {
-        ...translated,
-        token_index: index,
-      };
-    } catch (error) {
-      translationCache.delete(cacheKey);
-      return {
-        token_index: index,
-        token,
-        translations: [],
-        error: (error as Error)?.message ?? "Unable to translate token.",
-      };
-    }
-  });
+  return mapWithConcurrency(tokens, TRANSLATION_CONCURRENCY, (token, index) =>
+    translateOriginalToken({
+      token,
+      tokenIndex: index,
+      sourceLanguage,
+      targetLanguage,
+    }),
+  );
 }

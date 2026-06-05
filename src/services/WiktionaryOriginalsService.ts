@@ -16,7 +16,6 @@ const WIKTIONARY_PAGE_URL = "https://en.wiktionary.org/wiki";
 const REVALIDATE_SECONDS = 60 * 60 * 24 * 30;
 const WIKTIONARY_CONCURRENCY = 4;
 const MAX_DEFINITIONS = 5;
-const WIKTIONARY_REQUEST_INTERVAL_MS = 220;
 const WIKTIONARY_RETRY_DELAYS_MS = [750, 1_500, 3_000];
 
 const POS_HEADINGS = [
@@ -118,7 +117,6 @@ const PT_BR_MORPHOLOGY_LABELS: Record<string, string> = {
 };
 
 const wiktionaryCache = new Map<string, Promise<OriginalLexicalInsight>>();
-let nextWiktionaryRequestAt = 0;
 
 interface WiktionaryPage {
   title: string;
@@ -182,22 +180,11 @@ function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function throttleWiktionaryRequest() {
-  const now = Date.now();
-  const waitMs = Math.max(0, nextWiktionaryRequestAt - now);
-  nextWiktionaryRequestAt = Math.max(now, nextWiktionaryRequestAt) +
-    WIKTIONARY_REQUEST_INTERVAL_MS;
-
-  if (waitMs > 0) await wait(waitMs);
-}
-
 async function wiktionaryApi(params: Record<string, string>): Promise<unknown> {
   const url = new URL(WIKTIONARY_API_URL);
   Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
 
   for (let attempt = 0; attempt <= WIKTIONARY_RETRY_DELAYS_MS.length; attempt += 1) {
-    await throttleWiktionaryRequest();
-
     const response = await fetch(url, {
       headers: { "User-Agent": "BibleStudyOriginalsWiktionary/1.0" },
       next: { revalidate: REVALIDATE_SECONDS },
@@ -630,6 +617,49 @@ async function lookupWiktionaryToken({
   };
 }
 
+export async function enrichOriginalTokenWithWiktionary({
+  token,
+  language,
+  targetLanguage = "pt-BR",
+}: {
+  token: OriginalTranslatorToken;
+  language: Language;
+  targetLanguage?: string;
+}): Promise<OriginalTranslatorToken> {
+  const cacheKey = `${language}:${targetLanguage}:${token.token}`;
+
+  try {
+    let request = wiktionaryCache.get(cacheKey);
+    if (!request) {
+      request = lookupWiktionaryToken({
+        token: token.token,
+        language,
+        targetLanguage,
+      });
+      wiktionaryCache.set(cacheKey, request);
+    }
+
+    return {
+      ...token,
+      lexical: await request,
+    };
+  } catch (error) {
+    wiktionaryCache.delete(cacheKey);
+    return {
+      ...token,
+      lexical: {
+        found: false,
+        query: token.token,
+        title: token.token,
+        url: buildWiktionaryUrl(token.token),
+        definitions: [],
+        morphology: [],
+        error: (error as Error)?.message ?? "Unable to fetch Wiktionary data.",
+      },
+    };
+  }
+}
+
 export async function enrichOriginalTokensWithWiktionary({
   tokens,
   language,
@@ -639,38 +669,7 @@ export async function enrichOriginalTokensWithWiktionary({
   language: Language;
   targetLanguage?: string;
 }): Promise<OriginalTranslatorToken[]> {
-  return mapWithConcurrency(tokens, WIKTIONARY_CONCURRENCY, async (token) => {
-    const cacheKey = `${language}:${targetLanguage}:${token.token}`;
-
-    try {
-      let request = wiktionaryCache.get(cacheKey);
-      if (!request) {
-        request = lookupWiktionaryToken({
-          token: token.token,
-          language,
-          targetLanguage,
-        });
-        wiktionaryCache.set(cacheKey, request);
-      }
-
-      return {
-        ...token,
-        lexical: await request,
-      };
-    } catch (error) {
-      wiktionaryCache.delete(cacheKey);
-      return {
-        ...token,
-        lexical: {
-          found: false,
-          query: token.token,
-          title: token.token,
-          url: buildWiktionaryUrl(token.token),
-          definitions: [],
-          morphology: [],
-          error: (error as Error)?.message ?? "Unable to fetch Wiktionary data.",
-        },
-      };
-    }
-  });
+  return mapWithConcurrency(tokens, WIKTIONARY_CONCURRENCY, (token) =>
+    enrichOriginalTokenWithWiktionary({ token, language, targetLanguage }),
+  );
 }
