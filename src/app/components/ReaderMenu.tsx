@@ -8,6 +8,8 @@ import HomeIcon from "./icons/HomeIcon";
 import ShareIcon from "./icons/ShareIcon";
 import CheckIcon from "./icons/CheckIcon";
 import LinkIcon from "./icons/LinkIcon";
+import MusicIcon from "./icons/MusicIcon";
+import { useWorshipPad } from "@/contexts/WorshipPadContext";
 
 interface ReaderMenuProps {
   versionAbbr: string;
@@ -30,6 +32,11 @@ export default function ReaderMenu({
   const [copied, setCopied] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const {
+    isEnabled: isWorshipPadEnabled,
+    isPlaying: isWorshipPadPlaying,
+    toggle: toggleWorshipPad,
+  } = useWorshipPad();
 
   useEffect(() => {
     if (!open) return;
@@ -132,6 +139,17 @@ export default function ReaderMenu({
         navigate(
           `/reader/compare?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=1`,
         ),
+    },
+    {
+      label:
+        isWorshipPadEnabled || isWorshipPadPlaying
+          ? "Disable Worship Pad"
+          : "Enable Worship Pad",
+      icon: <MusicIcon width={18} height={18} />,
+      action: () => {
+        setOpen(false);
+        toggleWorshipPad();
+      },
     },
     {
       label: "Home",
