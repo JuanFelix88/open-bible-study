@@ -9,6 +9,7 @@ const TRANSLATION_CONCURRENCY = 5;
 const GOOGLE_TRANSLATE_ENDPOINT = "https://translate.googleapis.com/translate_a/single";
 
 const translationCache = new Map<string, Promise<OriginalTranslatorToken>>();
+const plainTranslationCache = new Map<string, Promise<string>>();
 
 function getGoogleSourceLanguage(language: Language): string {
   const languageMap: Partial<Record<Language, string>> = {
@@ -21,7 +22,7 @@ function getGoogleSourceLanguage(language: Language): string {
   return languageMap[language] ?? "auto";
 }
 
-function getGoogleTargetLanguage(language: string): string {
+export function getGoogleTargetLanguage(language: string): string {
   const normalized = language.trim().toLowerCase();
   if (normalized === "pt-br" || normalized === "pt_br") return "pt";
   return normalized || "pt";
@@ -162,7 +163,75 @@ async function translateToken({
   };
 }
 
-async function mapWithConcurrency<T, R>(
+export async function translatePlainText({
+  text,
+  sourceLanguage = "en",
+  targetLanguage = "pt-BR",
+}: {
+  text: string;
+  sourceLanguage?: string;
+  targetLanguage?: string;
+}): Promise<string> {
+  const trimmedText = text.trim();
+  if (!trimmedText) return "";
+
+  const googleTargetLanguage = getGoogleTargetLanguage(targetLanguage);
+  const normalizedSourceLanguage = sourceLanguage.trim().toLowerCase() || "auto";
+
+  if (normalizedSourceLanguage === googleTargetLanguage) return trimmedText;
+  if (targetLanguage.toLowerCase() === "en" && normalizedSourceLanguage === "en") {
+    return trimmedText;
+  }
+
+  const cacheKey = `${normalizedSourceLanguage}:${googleTargetLanguage}:${trimmedText}`;
+  let request = plainTranslationCache.get(cacheKey);
+  if (request) return request;
+
+  request = (async () => {
+    const url = new URL(GOOGLE_TRANSLATE_ENDPOINT);
+    url.searchParams.set("client", "gtx");
+    url.searchParams.set("sl", normalizedSourceLanguage);
+    url.searchParams.set("tl", googleTargetLanguage);
+    url.searchParams.set("dt", "t");
+    url.searchParams.set("q", trimmedText);
+
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 BibleStudyOriginalsTranslator/1.0",
+      },
+      next: { revalidate: REVALIDATE_SECONDS },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Google Translate returned ${response.status}`);
+    }
+
+    const data = (await response.json()) as unknown;
+    if (!Array.isArray(data) || !Array.isArray(data[0])) return trimmedText;
+
+    const translated = data[0]
+      .map((sentence: unknown) =>
+        Array.isArray(sentence) && typeof sentence[0] === "string"
+          ? sentence[0]
+          : "",
+      )
+      .join("")
+      .trim();
+
+    return translated || trimmedText;
+  })();
+
+  plainTranslationCache.set(cacheKey, request);
+
+  try {
+    return await request;
+  } catch (error) {
+    plainTranslationCache.delete(cacheKey);
+    throw error;
+  }
+}
+
+export async function mapWithConcurrency<T, R>(
   items: T[],
   concurrency: number,
   mapper: (item: T, index: number) => Promise<R>,

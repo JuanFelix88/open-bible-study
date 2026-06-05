@@ -4,6 +4,7 @@ import {
   tokenizeOriginalVerse,
   translateOriginalTokens,
 } from "@/services/GoogleTranslateOriginalsService";
+import { enrichOriginalTokensWithWiktionary } from "@/services/WiktionaryOriginalsService";
 import { FnNormalizer } from "@/utils/FnNormalizer";
 import { ResponseError } from "@/utils/ResponseError";
 import { extractVerseParams } from "@/utils/RouteHelpers";
@@ -54,13 +55,18 @@ export async function GET(
       sourceLanguage: original.versionMeta.language,
       targetLanguage,
     });
+    const enrichedTokens = await enrichOriginalTokensWithWiktionary({
+      tokens: translatedTokens,
+      language: original.versionMeta.language,
+      targetLanguage,
+    });
 
     const payload: OriginalTranslatorResponse = {
       text: originalText,
       version: original.versionMeta.abbreviation,
       language: original.versionMeta.language,
       targetLanguage,
-      tokens: translatedTokens,
+      tokens: enrichedTokens,
     };
 
     return NextResponse.json(payload);

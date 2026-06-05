@@ -6,6 +6,7 @@ import LoadingIcon from "@/app/components/icons/LoadingIcon";
 import { Chapter } from "@/entities/Chapter";
 import { Language } from "@/entities/Language";
 import {
+  OriginalLexicalEntrySummary,
   OriginalTokenTranslationOption,
   OriginalTranslatorResponse,
   OriginalTranslatorToken,
@@ -107,6 +108,148 @@ function buildOptionMeta(option: OriginalTokenTranslationOption) {
     .join(" · ");
 }
 
+function getTranslatedValue(value?: string, translatedValue?: string) {
+  return translatedValue || value || "";
+}
+
+function EntryDefinitions({ entry }: { entry: OriginalLexicalEntrySummary }) {
+  const definitions = entry.translatedDefinitions?.length
+    ? entry.translatedDefinitions
+    : entry.definitions;
+
+  if (definitions.length === 0) return null;
+
+  return (
+    <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-text/75">
+      {definitions.map((definition, index) => (
+        <li key={`${entry.title}-definition-${index}`}>{definition}</li>
+      ))}
+    </ol>
+  );
+}
+
+function WiktionaryLexicalInsight({
+  selectedToken,
+}: {
+  selectedToken: OriginalTranslatorToken;
+}) {
+  const lexical = selectedToken.lexical;
+  if (!lexical) return null;
+
+  if (!lexical.found) {
+    return (
+      <div className="mt-4 rounded-md border border-dashed border-border bg-surface/40 px-3 py-2 text-sm text-text/55">
+        Wiktionary did not return lexical data for this token.
+      </div>
+    );
+  }
+
+  const partOfSpeech = getTranslatedValue(
+    lexical.partOfSpeech,
+    lexical.translatedPartOfSpeech,
+  );
+  const semanticType = getTranslatedValue(
+    lexical.semanticType,
+    lexical.translatedSemanticType,
+  );
+  const morphology = lexical.morphology
+    .map((item) => getTranslatedValue(item.label, item.translatedLabel))
+    .filter(Boolean);
+
+  return (
+    <section className="mt-4 rounded-md border border-dashed border-info/40 bg-surface/50 p-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-bold uppercase tracking-wide text-info">
+          Wiktionary lexical data
+        </span>
+        <a
+          className="text-xs text-text/45 underline decoration-dashed underline-offset-2 hover:text-info"
+          href={lexical.url}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {lexical.title}
+        </a>
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-2">
+        {partOfSpeech && (
+          <span className="rounded-full bg-background px-2 py-0.5 text-xs text-text/70">
+            {partOfSpeech}
+          </span>
+        )}
+        {semanticType && (
+          <span className="rounded-full bg-background px-2 py-0.5 text-xs text-text/70">
+            {semanticType}
+          </span>
+        )}
+        {lexical.transliteration && (
+          <span className="rounded-full bg-background px-2 py-0.5 text-xs text-text/70">
+            {lexical.transliteration}
+          </span>
+        )}
+      </div>
+
+      {morphology.length > 0 && (
+        <div className="mt-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-text/45">
+            Morphology
+          </p>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {morphology.map((item) => (
+              <span
+                key={item}
+                className="rounded-sm border border-border bg-background px-2 py-0.5 text-xs text-text/70"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <EntryDefinitions entry={lexical} />
+
+      {lexical.lemma && (
+        <div className="mt-3 rounded-md border border-border/60 bg-background/50 p-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wide text-primary">
+              Lemma
+            </span>
+            <a
+              className="text-sm font-semibold text-text underline decoration-dashed underline-offset-2 hover:text-primary"
+              href={lexical.lemma.url}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {lexical.lemma.title}
+            </a>
+            {getTranslatedValue(
+              lexical.lemma.partOfSpeech,
+              lexical.lemma.translatedPartOfSpeech,
+            ) && (
+              <span className="rounded-full bg-surface px-2 py-0.5 text-xs text-text/55">
+                {getTranslatedValue(
+                  lexical.lemma.partOfSpeech,
+                  lexical.lemma.translatedPartOfSpeech,
+                )}
+              </span>
+            )}
+          </div>
+          <EntryDefinitions entry={lexical.lemma} />
+        </div>
+      )}
+
+      {(lexical.translatedEtymology || lexical.etymology) && (
+        <p className="mt-3 text-xs text-text/50">
+          <strong>Etymology:</strong>{" "}
+          {lexical.translatedEtymology || lexical.etymology}
+        </p>
+      )}
+    </section>
+  );
+}
+
 function TokenTranslations({
   language,
   selectedToken,
@@ -136,6 +279,8 @@ function TokenTranslations({
           </p>
         )}
       </div>
+
+      <WiktionaryLexicalInsight selectedToken={selectedToken} />
 
       <div className="mt-4">
         <div className="mb-2 flex items-center justify-between gap-2">
@@ -196,6 +341,7 @@ export default function OriginalsTranslator() {
     null,
   );
   const [showAllRelatedVerses, setShowAllRelatedVerses] = useState(false);
+  const [targetLanguage, setTargetLanguage] = useState("pt-BR");
 
   const { ref: refSelectedVersion, inView: inViewSelectedVersion } = useInView({
     threshold: 1,
@@ -227,19 +373,31 @@ export default function OriginalsTranslator() {
     },
   });
 
+  useEffect(() => {
+    const browserLanguage = navigator.language || navigator.languages?.at(0);
+    if (browserLanguage) setTargetLanguage(browserLanguage);
+  }, []);
+
   const {
     data: translatorData,
     isLoading: isLoadingTranslations,
     isFetching: isFetchingTranslations,
     error: translatorError,
   } = useQuery({
-    queryKey: ["originals-translator", version, bookAbbr, chapterNumber, verseNumber],
+    queryKey: [
+      "originals-translator",
+      version,
+      bookAbbr,
+      chapterNumber,
+      verseNumber,
+      targetLanguage,
+    ],
     enabled: !!(version && bookAbbr && chapterNumber && verseNumber),
     staleTime: 1000 * 60 * 60 * 24,
     gcTime: 1000 * 60 * 60 * 24 * 3,
     queryFn: async () => {
       const translatorResponse = await fetch(
-        `/api/versions/${version}/${bookAbbr}/${chapterNumber}/${verseNumber}/translator`,
+        `/api/versions/${version}/${bookAbbr}/${chapterNumber}/${verseNumber}/translator?tl=${encodeURIComponent(targetLanguage)}`,
       );
       await ThrowByResponse.throwsIfNotOk(translatorResponse);
       return (await translatorResponse.json()) as OriginalTranslatorResponse;
