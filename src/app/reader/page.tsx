@@ -34,6 +34,7 @@ import ReaderSearch from "../components/ReaderSearch";
 import { StringCompare } from "@/utils/StringCompare";
 import { Version } from "@/entities/Version";
 import ShareDropdown from "../components/ShareDropdown";
+import CommentsDropdown from "../components/CommentsDropdown";
 
 interface VerseInParagraph {
   text: string;
@@ -128,6 +129,10 @@ export default function Reader() {
 
   const [shareMenuVerse, setShareMenuVerse] = useState<number | null>(null);
   const [shareMenuAutoFocus, setShareMenuAutoFocus] = useState(false);
+  const [commentsMenuVerse, setCommentsMenuVerse] = useState<number | null>(
+    null,
+  );
+  const [commentsMenuAutoFocus, setCommentsMenuAutoFocus] = useState(false);
 
   const [candidateToMarker, setCandidateToMarker] = useState<number | null>(
     null,
@@ -298,13 +303,42 @@ export default function Reader() {
     });
   }
 
+  function handleOpenBibleRefComments(verseNumber: number) {
+    startNavigation(() => {
+      router.push(
+        `/reader/comments/bibleref?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`,
+      );
+    });
+  }
+
+  function handleOpenEnduringWordComments(verseNumber: number) {
+    startNavigation(() => {
+      router.push(
+        `/reader/comments/enduringword?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`,
+      );
+    });
+  }
+
   function handleToggleShareMenu(ev: SingleEvent, verseNumber: number) {
     ev.stopPropagation();
+    setCommentsMenuVerse(null);
+    setCommentsMenuAutoFocus(false);
     setShareMenuVerse((prev) => {
       if (prev === verseNumber) return null;
       return verseNumber;
     });
     setShareMenuAutoFocus(false);
+  }
+
+  function handleToggleCommentsMenu(ev: SingleEvent, verseNumber: number) {
+    ev.stopPropagation();
+    setShareMenuVerse(null);
+    setShareMenuAutoFocus(false);
+    setCommentsMenuVerse((prev) => {
+      if (prev === verseNumber) return null;
+      return verseNumber;
+    });
+    setCommentsMenuAutoFocus(false);
   }
 
   function handleShareLinkOnly(ev: SingleEvent, verseNumber: number) {
@@ -546,6 +580,8 @@ export default function Reader() {
   useEffect(() => {
     setShareMenuVerse(null);
     setShareMenuAutoFocus(false);
+    setCommentsMenuVerse(null);
+    setCommentsMenuAutoFocus(false);
   }, [selectedVerse]);
 
   useEffect(() => {
@@ -640,6 +676,8 @@ export default function Reader() {
 
       if (event.key === "3") {
         event.preventDefault();
+        setCommentsMenuVerse(null);
+        setCommentsMenuAutoFocus(false);
         setShareMenuVerse((prev) =>
           prev === currentSelected ? null : currentSelected,
         );
@@ -664,6 +702,17 @@ export default function Reader() {
       }
 
       if (event.key === "6") {
+        event.preventDefault();
+        setShareMenuVerse(null);
+        setShareMenuAutoFocus(false);
+        setCommentsMenuVerse((prev) =>
+          prev === currentSelected ? null : currentSelected,
+        );
+        setCommentsMenuAutoFocus(true);
+        return;
+      }
+
+      if (event.key === "7") {
         event.preventDefault();
         const marker = readingMarkers.find((m) =>
           m.compareTo(
@@ -1119,12 +1168,43 @@ export default function Reader() {
                         <span className="hidden sm:block">Deep</span>
                         <span className="sm:hidden">D.</span>
                       </button>
+                      <span className="relative inline-flex">
+                        <button
+                          className={`flex cursor-pointer items-center rounded-sm border border-dashed px-[4px] py-0.5 text-sm transition sm:py-0 ${commentsMenuVerse === verseNumber ? "border-primary bg-primary/20 text-primary" : "border-border bg-background hover:bg-background/70"}`}
+                          onClick={(e) =>
+                            handleToggleCommentsMenu(e, verseNumber)
+                          }
+                        >
+                          <span className="mr-1 hidden text-[0.65rem] opacity-70 sm:inline">
+                            [6]
+                          </span>
+                          <DocumentIcon
+                            className="mr-1 opacity-80 sm:hidden"
+                            width={12}
+                            height={12}
+                          />
+                          <span className="hidden sm:block">Comments</span>
+                          <span className="sm:hidden">C.</span>
+                        </button>
+                        {commentsMenuVerse === verseNumber && (
+                          <CommentsDropdown
+                            autoFocus={commentsMenuAutoFocus}
+                            onBibleRef={() =>
+                              handleOpenBibleRefComments(verseNumber)
+                            }
+                            onEnduringWord={() =>
+                              handleOpenEnduringWordComments(verseNumber)
+                            }
+                            onClose={() => setCommentsMenuVerse(null)}
+                          />
+                        )}
+                      </span>
                       <button
                         className="flex cursor-pointer items-center rounded-sm border border-dashed border-border bg-background px-[4px] py-0.5 text-sm hover:bg-background/70 sm:py-0"
                         onClick={(e) => handleMarkerCandidate(e, verseNumber)}
                       >
                         <span className="mr-1 hidden text-[0.65rem] opacity-70 sm:inline">
-                          [6]
+                          [7]
                         </span>
                         <MarkerIcon
                           className="mr-1 opacity-80 sm:hidden"
