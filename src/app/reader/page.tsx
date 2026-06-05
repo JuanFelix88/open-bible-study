@@ -1,13 +1,21 @@
 "use client";
 import { BookInfo } from "@/entities/BookInfo";
 import type { Chapter } from "@/entities/Chapter";
+import type { HeadingMetadataItem } from "@/entities/HeadingMetadata";
 import { Reference } from "@/entities/Reference";
 import { SingleEvent } from "@/entities/SingleEvent";
 import { useDialog } from "@/hooks/useDialog";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import { MouseEvent, useEffect, useRef, useState, useTransition } from "react";
+import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import LoadingIcon from "../components/icons/LoadingIcon";
 import { useInView } from "react-intersection-observer";
 import ArrowLeftIcon from "../components/icons/ArrowLeftIcon";
@@ -27,6 +35,16 @@ import { StringCompare } from "@/utils/StringCompare";
 import { Version } from "@/entities/Version";
 import ShareDropdown from "../components/ShareDropdown";
 
+interface VerseInParagraph {
+  text: string;
+  number: number;
+}
+
+interface VerseParagraph {
+  key: string;
+  verses: VerseInParagraph[];
+}
+
 function referencesIncludesVerse(
   references: Reference[] | undefined,
   bookAbbr: string,
@@ -45,6 +63,48 @@ function referencesIncludesVerse(
   );
 }
 
+function buildVerseParagraphs(
+  verses: string[],
+  paragraphStarts: number[] = [],
+): VerseParagraph[] {
+  const starts = new Set([1, ...paragraphStarts.filter((verse) => verse > 0)]);
+  const paragraphs: VerseParagraph[] = [];
+
+  verses.forEach((text, index) => {
+    const number = index + 1;
+
+    if (paragraphs.length === 0 || starts.has(number)) {
+      paragraphs.push({ key: `paragraph-${number}`, verses: [] });
+    }
+
+    paragraphs[paragraphs.length - 1]?.verses.push({ text, number });
+  });
+
+  return paragraphs;
+}
+
+function buildHeadingsByVerse(headings: HeadingMetadataItem[] = []) {
+  const headingsByVerse = new Map<number, HeadingMetadataItem[]>();
+
+  for (const heading of headings) {
+    const verseHeadings = headingsByVerse.get(heading.verse) ?? [];
+    verseHeadings.push(heading);
+    headingsByVerse.set(heading.verse, verseHeadings);
+  }
+
+  return headingsByVerse;
+}
+
+function isEditableKeyboardTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+
+  return Boolean(
+    target.closest(
+      'input, textarea, select, button, [contenteditable="true"], [role="textbox"]',
+    ),
+  );
+}
+
 export default function Reader() {
   const { ref: refHeader, inView: inViewHeader } = useInView({});
   const pickerOpenRef = useRef<null | (() => void)>(null);
@@ -56,7 +116,7 @@ export default function Reader() {
     ? parseInt(searchParams.get("chapter")!, 10)
     : null;
   const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
-  const refSelected = useRef<HTMLDivElement>(null);
+  const refSelected = useRef<HTMLSpanElement>(null);
   const router = useRouter();
   const { setDialog } = useDialog();
   const [isNavigating, startNavigation] = useTransition();
@@ -76,6 +136,9 @@ export default function Reader() {
   const [markerName, setMarkerName] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [chapterTransition, setChapterTransition] = useState(false);
+  const [currentHeadingTitle, setCurrentHeadingTitle] = useState<string | null>(
+    null,
+  );
 
   const { data: books, isLoading: isLoadingBooks } = useQuery({
     queryKey: ["books"],
@@ -151,16 +214,10 @@ export default function Reader() {
     },
   });
 
-  function handleClickVerse(
-    ev: MouseEvent<HTMLParagraphElement, globalThis.MouseEvent>,
-  ) {
-    if (!(ev.target instanceof HTMLElement)) return;
-
-    const newSelected = parseInt(ev.target.id, 10) || null;
-
-    setSelectedVerse(newSelected);
+  function handleSelectVerse(verseNumber: number) {
+    setSelectedVerse(verseNumber);
     router.replace(
-      `/reader?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${ev.target.id}`,
+      `/reader?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`,
       {
         scroll: false,
       },
@@ -174,7 +231,7 @@ export default function Reader() {
     );
 
     router.prefetch(
-      `/reader/references?version=${versionAbbr}&book=${bookAbbr}&chapter=${chapterNumber}&verse=${ev.target.id}`,
+      `/reader/references?version=${versionAbbr}&book=${bookAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`,
     );
   }
 
@@ -498,7 +555,7 @@ export default function Reader() {
       `/reader?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${selectedVerse}`,
       { scroll: false },
     );
-  }, [selectedVerse, chapter, bookAbbr, versionAbbr, chapterNumber]);
+  }, [selectedVerse, chapter, bookAbbr, versionAbbr, chapterNumber, router]);
 
   useEffect(() => {
     if (selectedVerse === null) return;
@@ -514,8 +571,11 @@ export default function Reader() {
     const handleKeyDown = (event: KeyboardEvent) => {
       const currentChapter = chapterRef.current;
       if (!currentChapter) return;
+      if (isEditableKeyboardTarget(event.target)) return;
 
-      if (event.key === "ArrowRight" && event.ctrlKey) {
+      const isCtrlOnly = event.ctrlKey && !event.metaKey && !event.altKey;
+
+      if (event.key === "ArrowRight" && isCtrlOnly) {
         event.preventDefault();
         if (currentChapter.next) {
           setSelectedVerse(null);
@@ -527,7 +587,7 @@ export default function Reader() {
         return;
       }
 
-      if (event.key === "ArrowLeft" && event.ctrlKey) {
+      if (event.key === "ArrowLeft" && isCtrlOnly) {
         event.preventDefault();
         if (currentChapter.previous) {
           setSelectedVerse(null);
@@ -536,6 +596,10 @@ export default function Reader() {
             `/reader?book=${currentChapter.previous.abbrev}&version=${versionAbbrRef.current}&chapter=${currentChapter.previous.numChapter}`,
           );
         }
+        return;
+      }
+
+      if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) {
         return;
       }
 
@@ -599,6 +663,23 @@ export default function Reader() {
         return;
       }
 
+      if (event.key === "6") {
+        event.preventDefault();
+        const marker = readingMarkers.find((m) =>
+          m.compareTo(
+            bookAbbrRef.current,
+            chapterNumberRef.current,
+            currentSelected,
+          ),
+        );
+
+        setMarkerName(marker?.name ?? "");
+        setCandidateToMarker((prev) =>
+          prev === currentSelected ? null : currentSelected,
+        );
+        return;
+      }
+
       if (event.key === "ArrowUp") {
         event.preventDefault();
         setSelectedVerse((prev) => {
@@ -621,7 +702,7 @@ export default function Reader() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [router, setDialog]);
+  }, [readingMarkers, router]);
 
   useEffect(() => {
     if (selectedVerseParam && /[0-9]+/.test(selectedVerseParam)) {
@@ -641,7 +722,7 @@ export default function Reader() {
         `/reader?book=${chapter.next.abbrev}&version=${versionAbbr}&chapter=${chapter.next.numChapter}`,
       );
     }
-  }, [chapter]);
+  }, [chapter, router, versionAbbr]);
 
   useEffect(() => {
     const markersStr = localStorage.getItem("markers");
@@ -672,6 +753,63 @@ export default function Reader() {
     versions?.find((v) =>
       StringCompare.isEqualIgnoringCase(v.abbreviation, versionAbbr),
     )?.license || "";
+  const verseParagraphs = useMemo(
+    () =>
+      buildVerseParagraphs(
+        chapter?.book.chapter.verses ?? [],
+        chapter?.book.chapter.paragraphStarts ?? [],
+      ),
+    [chapter],
+  );
+  const headingsByVerse = useMemo(
+    () => buildHeadingsByVerse(chapter?.book.chapter.headings ?? []),
+    [chapter?.book.chapter.headings],
+  );
+
+  useEffect(() => {
+    const headings = chapter?.book.chapter.headings ?? [];
+    setCurrentHeadingTitle(headings.at(0)?.title ?? null);
+  }, [chapter?.book.chapter.headings]);
+
+  useEffect(() => {
+    if (!chapter?.book.chapter.headings?.length) return;
+
+    let animationFrame = 0;
+
+    const updateCurrentHeading = () => {
+      const headingElements = Array.from(
+        document.querySelectorAll<HTMLHeadingElement>("[data-reader-heading]"),
+      );
+
+      if (headingElements.length === 0) return;
+
+      const headerOffset = 96;
+      const currentHeading =
+        headingElements.findLast(
+          (heading) => heading.getBoundingClientRect().top <= headerOffset,
+        ) ?? headingElements[0];
+      const title = currentHeading.dataset.readerHeadingTitle ?? null;
+
+      setCurrentHeadingTitle((previousTitle) =>
+        previousTitle === title ? previousTitle : title,
+      );
+    };
+
+    const scheduleUpdate = () => {
+      cancelAnimationFrame(animationFrame);
+      animationFrame = requestAnimationFrame(updateCurrentHeading);
+    };
+
+    scheduleUpdate();
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+    };
+  }, [chapter?.book.chapter.headings]);
 
   useEffect(() => {
     if (!bookName) return;
@@ -679,7 +817,7 @@ export default function Reader() {
     document.title = `${bookName} ${chapterText}${selectedVerse ? ":" : ""}${
       selectedVerse ?? ""
     }`;
-  }, [bookName, chapterNumber, selectedVerse]);
+  }, [bookName, chapterText, selectedVerse]);
 
   return (
     <div className="flex min-h-screen flex-col px-7 pr-2 py-5 sm:py-7 pb-16 sm:pb-36 bg-background relative text-text max-w-[750px] w-full">
@@ -733,6 +871,11 @@ export default function Reader() {
                 />
               )}
               <h3 className="text-xs font-bold text-text/50">{versionText}</h3>
+              {currentHeadingTitle && (
+                <p className="mt-0.5 max-w-[min(68vw,560px)] truncate text-sm font-semibold italic leading-tight text-text/75">
+                  {currentHeadingTitle}
+                </p>
+              )}
             </div>
             <div className="flex ml-auto">
               <ReaderMenu
@@ -808,245 +951,253 @@ export default function Reader() {
 
       {/* Verses */}
       <div className={chapterTransition ? "animate-chapter-fade" : ""}>
-        {chapter?.book.chapter.verses.map((verse, verseIndex) => (
-          <div key={verseIndex} className="flex flex-col">
-            {readingMarkers.some((m) =>
-              m.compareTo(bookAbbr, chapterNumber, verseIndex + 1),
-            ) && (
-              <div className="flex flex-row w-full items-center mt-4 mb-1 -ml-2 pr-4">
-                <MarkerIcon
-                  className="sm:hidden opacity-80"
-                  width={16}
-                  height={16}
-                />
-                <span className="min-w-fit mr-2">
-                  {
-                    readingMarkers.find((m) =>
-                      m.compareTo(bookAbbr, chapterNumber, verseIndex + 1),
-                    )?.name
-                  }
-                </span>
-                <hr className="border-b border-dashed border-b-primary w-full" />
-              </div>
-            )}
-            <div className="flex flex-row ">
-              <div
-                key={verseIndex}
-                id={(verseIndex + 1).toString()}
-                ref={selectedVerse === verseIndex + 1 ? refSelected : null}
-                className={
-                  selectedVerse === verseIndex + 1
-                    ? "cursor-cell text-text/95 w-full mt-1 text-lg select-none rounded-md px-1 py-[2px] bg-secondary/30 underline underline-offset-2 decoration-dashed decoration-primary relative"
-                    : "cursor-cell text-text/95 w-full mt-1 text-lg hover:bg-surface select-none rounded-md px-1 py-[2px] hide-buttons"
-                }
-                onClick={handleClickVerse}
-              >
-                <sup className="font-bold border rounded-sm px-[2px]  border-dashed border-gray-400">
-                  {verseIndex + 1}
-                </sup>{" "}
-                {verse}
-                <div className="control-buttons absolute left-0 -bottom-9 z-20 rounded-sm bg-secondary border-primary border border-dashed p-1 w-full gap-2 flex flex-wrap">
-                  <button
-                    className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                    onClick={(e) => handleOpenReferences(e, verseIndex)}
-                  >
-                    <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                      [1]
-                    </span>
-                    <RefIcon
-                      className="sm:hidden mr-1 opacity-80"
-                      width={12}
-                      height={12}
-                    />
-                    <span className="sm:block hidden">Refs</span>
-                    <span className="sm:hidden">R.</span>
-                  </button>
-                  <button
-                    className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                    onClick={(e) => handleCompare(e, verseIndex)}
-                  >
-                    <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                      [2]
-                    </span>
-                    <CompareIcon
-                      className="sm:hidden mr-1 opacity-80"
-                      width={12}
-                      height={12}
-                    />
-                    <span className="sm:block hidden">Versions</span>
-                    <span className="sm:hidden">V.</span>
-                  </button>
-                  <div className="relative">
-                    <button
-                      className={`border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed text-sm flex cursor-pointer transition ${shareMenuVerse === verseIndex + 1 ? "bg-primary/20 border-primary text-primary" : "border-border bg-background hover:bg-background/70"}`}
-                      onClick={(e) => handleToggleShareMenu(e, verseIndex + 1)}
+        {verseParagraphs.map((paragraph) => (
+          <div
+            key={paragraph.key}
+            className="mb-5 text-lg leading-8 tracking-[0.015em] text-text/95 indent-8"
+          >
+            {paragraph.verses.map((verse, verseOffset) => {
+              const verseNumber = verse.number;
+              const verseIndex = verseNumber - 1;
+              const marker = readingMarkers.find((m) =>
+                m.compareTo(bookAbbr, chapterNumber, verseNumber),
+              );
+              const hasReferences = chapter
+                ? referencesIncludesVerse(
+                    references,
+                    chapter.book.abbrev,
+                    chapter.book.chapter.number,
+                    verseNumber,
+                  )
+                : false;
+              const isSelected = selectedVerse === verseNumber;
+              const isFirstInParagraph = verseOffset === 0;
+              const headings = headingsByVerse.get(verseNumber) ?? [];
+
+              return (
+                <Fragment key={verseNumber}>
+                  {headings.map((heading, headingIndex) => (
+                    <h2
+                      key={`heading-${verseNumber}-${headingIndex}`}
+                      data-reader-heading="true"
+                      data-reader-heading-title={heading.title}
+                      className={`indent-0 ${verseNumber === 1 && paragraph.key === "paragraph-1" ? "mt-0" : "mt-4"} mb-1 block text-xl font-bold italic leading-7 tracking-tight text-text`}
                     >
-                      <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                        [3]
-                      </span>
-                      <ShareIcon
-                        className="sm:hidden mr-1 opacity-80"
-                        width={12}
-                        height={12}
-                      />
-                      <span className="sm:block hidden">Share</span>
-                      <span className="sm:hidden">S.</span>
-                    </button>
-                    {shareMenuVerse === verseIndex + 1 && (
-                      <ShareDropdown
-                        autoFocus={shareMenuAutoFocus}
-                        onLinkOnly={() =>
-                          handleShareLinkOnly(
-                            { stopPropagation: () => {} } as SingleEvent,
-                            verseIndex + 1,
-                          )
-                        }
-                        onLinkAndText={() =>
-                          handleShareLinkAndText(
-                            { stopPropagation: () => {} } as SingleEvent,
-                            verseIndex + 1,
-                          )
-                        }
-                        onClose={() => setShareMenuVerse(null)}
-                      />
-                    )}
-                  </div>
-                  {/* <button
-                  className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                  onClick={(e) => handleCopyVerse(e, verseIndex + 1)}
-                >
-                  <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                    [4]
+                      {heading.title}
+                    </h2>
+                  ))}
+                  {marker && (
+                    <span className="mx-1 inline-flex translate-y-[-1px] items-center gap-1 rounded-full border border-dashed border-primary/60 px-1.5 py-0.5 text-xs leading-none text-primary indent-0">
+                      <MarkerIcon width={11} height={11} />
+                      <span>{marker.name}</span>
+                    </span>
+                  )}
+                  <span
+                    id={verseNumber.toString()}
+                    ref={isSelected ? refSelected : null}
+                    className={
+                      isSelected
+                        ? "relative cursor-cell select-none rounded-md bg-secondary/30 px-1 py-[1px] text-text/95 underline decoration-primary decoration-dashed underline-offset-2 box-decoration-clone"
+                        : "relative cursor-cell select-none rounded-md px-1 py-[1px] text-text/95 hover:bg-surface/70 box-decoration-clone"
+                    }
+                    onClick={() => handleSelectVerse(verseNumber)}
+                  >
+                    <sup className="mr-1 rounded-sm border border-dashed border-gray-400 px-[2px] text-[0.65em] font-bold leading-none">
+                      {verseNumber}
+                    </sup>
+                    <span className={isFirstInParagraph ? "ml-1" : ""}>
+                      {verse.text}
+                    </span>
                   </span>
-                  <CopyIcon
-                    className="sm:hidden mr-1 opacity-80"
-                    width={12}
-                    height={12}
-                  />
-                  Copy
-                </button> */}
-                  <button
-                    className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                    onClick={(e) => handleExplain(e, verseIndex + 1)}
-                  >
-                    <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                      [4]
+                  {hasReferences && (
+                    <span
+                      className={
+                        isSelected
+                          ? "mx-1 inline-flex translate-y-[2px] rounded-full text-primary indent-0"
+                          : "mx-1 inline-flex translate-y-[2px] rounded-full text-text/60 indent-0"
+                      }
+                      title="Verse has references"
+                      aria-label={`Verse ${verseNumber} has references`}
+                    >
+                      <DocumentIcon width={14} height={14} />
                     </span>
-                    <CopyIcon
-                      className="sm:hidden mr-1 opacity-80"
-                      width={12}
-                      height={12}
-                    />
-                    <span className="sm:block hidden">Original</span>
-                    <span className="sm:hidden">O.</span>
-                  </button>
-                  <button
-                    className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                    onClick={(e) => handleDeepAnalysis(e, verseIndex + 1)}
-                  >
-                    <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                      [5]
-                    </span>
-                    <AIIcon
-                      className="sm:hidden mr-1 opacity-80"
-                      width={12}
-                      height={12}
-                    />
-                    <span className="sm:block hidden">Deep</span>
-                    <span className="sm:hidden">D.</span>
-                  </button>
-                  <button
-                    className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                    onClick={(e) => handleMarkerCandidate(e, verseIndex + 1)}
-                  >
-                    <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                      [6]
-                    </span>
-                    <MarkerIcon
-                      className="sm:hidden mr-1 opacity-80"
-                      width={12}
-                      height={12}
-                    />
-                    <span className="sm:block hidden">Marker</span>
-                    <span className="sm:hidden">M.</span>
-                  </button>
-                  <button
-                    className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
-                    onClick={() => setSelectedVerse(null)}
-                  >
-                    <span className="opacity-70 hidden sm:inline mr-1 text-[0.65rem]">
-                      [Esc]
-                    </span>
-                    <span className="hidden sm:inline">Unselect</span>
-                    <span className="sm:hidden mx-1">X</span>
-                  </button>
-                </div>
-                {isSettingMarker && candidateToMarker === verseIndex + 1 && (
-                  <div
-                    className="control-buttons absolute left-0 -bottom-33 z-20 flex-col w-full"
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                  >
-                    <div className="rounded-sm bg-secondary border-primary border border-dashed p-1 w-full gap-2 flex flex-row">
-                      <input
-                        type="text"
-                        autoFocus
-                        value={markerName}
-                        onChange={(e) => setMarkerName(e.target.value)}
-                        placeholder="Marker name"
-                        className="mt-1 w-full p-2 py-1 border-2 border-border bg-background brightness-[1.13] rounded-md"
-                      />
-                    </div>
-                    <div className="rounded-sm bg-secondary border-primary border border-dashed p-1 w-full gap-2 flex flex-row mt-1">
+                  )}
+                  {isSelected && (
+                    <span className="control-buttons my-2 flex w-full max-w-full flex-wrap gap-2 rounded-sm border border-dashed border-primary bg-secondary p-1 indent-0 shadow-lg shadow-background/30">
                       <button
-                        onClick={handleSaveMarker}
-                        className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                        className="flex cursor-pointer items-center rounded-sm border border-dashed border-border bg-background px-[4px] py-0.5 text-sm hover:bg-background/70 sm:py-0"
+                        onClick={(e) => handleOpenReferences(e, verseIndex)}
                       >
-                        <MarkerIcon
-                          className="sm:hidden mr-1 opacity-80"
+                        <span className="mr-1 hidden text-[0.65rem] opacity-70 sm:inline">
+                          [1]
+                        </span>
+                        <RefIcon
+                          className="mr-1 opacity-80 sm:hidden"
                           width={12}
                           height={12}
                         />
-                        Set marker
+                        <span className="hidden sm:block">Refs</span>
+                        <span className="sm:hidden">R.</span>
                       </button>
                       <button
-                        hidden={
-                          !readingMarkers.some((m) =>
-                            m.compareTo(
-                              bookAbbr,
-                              chapterNumber,
-                              verseIndex + 1,
-                            ),
-                          )
-                        }
-                        onClick={() => handleRemoveMarker()}
-                        className="border rounded-sm py-0.5 sm:py-0 items-center px-[4px] border-dashed border-border text-sm bg-background flex cursor-pointer hover:bg-background/70"
+                        className="flex cursor-pointer items-center rounded-sm border border-dashed border-border bg-background px-[4px] py-0.5 text-sm hover:bg-background/70 sm:py-0"
+                        onClick={(e) => handleCompare(e, verseIndex)}
                       >
-                        Remove marker
+                        <span className="mr-1 hidden text-[0.65rem] opacity-70 sm:inline">
+                          [2]
+                        </span>
+                        <CompareIcon
+                          className="mr-1 opacity-80 sm:hidden"
+                          width={12}
+                          height={12}
+                        />
+                        <span className="hidden sm:block">Versions</span>
+                        <span className="sm:hidden">V.</span>
                       </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-start flex-col min-w-[20px] py-2 pl-1">
-                {referencesIncludesVerse(
-                  references,
-                  chapter.book.abbrev,
-                  chapter.book.chapter.number,
-                  verseIndex + 1,
-                ) && (
-                  <div
-                    className={
-                      selectedVerse === verseIndex + 1
-                        ? "flex rounded-full text-primary animate-fade-in-from-bottom"
-                        : "flex rounded-full text-text/70 animate-fade-in-from-bottom"
-                    }
-                  >
-                    <DocumentIcon width={16} height={16} />
-                  </div>
-                )}
-              </div>
-            </div>
+                      <span className="relative inline-flex">
+                        <button
+                          className={`flex cursor-pointer items-center rounded-sm border border-dashed px-[4px] py-0.5 text-sm transition sm:py-0 ${shareMenuVerse === verseNumber ? "border-primary bg-primary/20 text-primary" : "border-border bg-background hover:bg-background/70"}`}
+                          onClick={(e) => handleToggleShareMenu(e, verseNumber)}
+                        >
+                          <span className="mr-1 hidden text-[0.65rem] opacity-70 sm:inline">
+                            [3]
+                          </span>
+                          <ShareIcon
+                            className="mr-1 opacity-80 sm:hidden"
+                            width={12}
+                            height={12}
+                          />
+                          <span className="hidden sm:block">Share</span>
+                          <span className="sm:hidden">S.</span>
+                        </button>
+                        {shareMenuVerse === verseNumber && (
+                          <ShareDropdown
+                            autoFocus={shareMenuAutoFocus}
+                            onLinkOnly={() =>
+                              handleShareLinkOnly(
+                                { stopPropagation: () => {} } as SingleEvent,
+                                verseNumber,
+                              )
+                            }
+                            onLinkAndText={() =>
+                              handleShareLinkAndText(
+                                { stopPropagation: () => {} } as SingleEvent,
+                                verseNumber,
+                              )
+                            }
+                            onClose={() => setShareMenuVerse(null)}
+                          />
+                        )}
+                      </span>
+                      <button
+                        className="flex cursor-pointer items-center rounded-sm border border-dashed border-border bg-background px-[4px] py-0.5 text-sm hover:bg-background/70 sm:py-0"
+                        onClick={(e) => handleExplain(e, verseNumber)}
+                      >
+                        <span className="mr-1 hidden text-[0.65rem] opacity-70 sm:inline">
+                          [4]
+                        </span>
+                        <CopyIcon
+                          className="mr-1 opacity-80 sm:hidden"
+                          width={12}
+                          height={12}
+                        />
+                        <span className="hidden sm:block">Original</span>
+                        <span className="sm:hidden">O.</span>
+                      </button>
+                      <button
+                        className="flex cursor-pointer items-center rounded-sm border border-dashed border-border bg-background px-[4px] py-0.5 text-sm hover:bg-background/70 sm:py-0"
+                        onClick={(e) => handleDeepAnalysis(e, verseNumber)}
+                      >
+                        <span className="mr-1 hidden text-[0.65rem] opacity-70 sm:inline">
+                          [5]
+                        </span>
+                        <AIIcon
+                          className="mr-1 opacity-80 sm:hidden"
+                          width={12}
+                          height={12}
+                        />
+                        <span className="hidden sm:block">Deep</span>
+                        <span className="sm:hidden">D.</span>
+                      </button>
+                      <button
+                        className="flex cursor-pointer items-center rounded-sm border border-dashed border-border bg-background px-[4px] py-0.5 text-sm hover:bg-background/70 sm:py-0"
+                        onClick={(e) => handleMarkerCandidate(e, verseNumber)}
+                      >
+                        <span className="mr-1 hidden text-[0.65rem] opacity-70 sm:inline">
+                          [6]
+                        </span>
+                        <MarkerIcon
+                          className="mr-1 opacity-80 sm:hidden"
+                          width={12}
+                          height={12}
+                        />
+                        <span className="hidden sm:block">Marker</span>
+                        <span className="sm:hidden">M.</span>
+                      </button>
+                      <button
+                        className="flex cursor-pointer items-center rounded-sm border border-dashed border-border bg-background px-[4px] py-0.5 text-sm hover:bg-background/70 sm:py-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedVerse(null);
+                        }}
+                      >
+                        <span className="mr-1 hidden text-[0.65rem] opacity-70 sm:inline">
+                          [Esc]
+                        </span>
+                        <span className="hidden sm:inline">Unselect</span>
+                        <span className="mx-1 sm:hidden">X</span>
+                      </button>
+                    </span>
+                  )}
+                  {isSelected && isSettingMarker && candidateToMarker === verseNumber && (
+                    <span
+                      className="control-buttons my-2 flex w-full max-w-full flex-col indent-0"
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <span className="flex w-full flex-row gap-2 rounded-sm border border-dashed border-primary bg-secondary p-1">
+                        <input
+                          type="text"
+                          autoFocus
+                          value={markerName}
+                          onChange={(e) => setMarkerName(e.target.value)}
+                          placeholder="Marker name"
+                          className="mt-1 w-full rounded-md border-2 border-border bg-background p-2 py-1 brightness-[1.13]"
+                        />
+                      </span>
+                      <span className="mt-1 flex w-full flex-row gap-2 rounded-sm border border-dashed border-primary bg-secondary p-1">
+                        <button
+                          onClick={handleSaveMarker}
+                          className="flex cursor-pointer items-center rounded-sm border border-dashed border-border bg-background px-[4px] py-0.5 text-sm hover:bg-background/70 sm:py-0"
+                        >
+                          <MarkerIcon
+                            className="mr-1 opacity-80 sm:hidden"
+                            width={12}
+                            height={12}
+                          />
+                          Set marker
+                        </button>
+                        <button
+                          hidden={
+                            !readingMarkers.some((m) =>
+                              m.compareTo(
+                                bookAbbr,
+                                chapterNumber,
+                                verseNumber,
+                              ),
+                            )
+                          }
+                          onClick={() => handleRemoveMarker()}
+                          className="flex cursor-pointer items-center rounded-sm border border-dashed border-border bg-background px-[4px] py-0.5 text-sm hover:bg-background/70 sm:py-0"
+                        >
+                          Remove marker
+                        </button>
+                      </span>
+                    </span>
+                  )}{" "}
+                </Fragment>
+              );
+            })}
           </div>
         ))}
       </div>
