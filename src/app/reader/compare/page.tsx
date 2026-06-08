@@ -4,17 +4,19 @@ import LinkIcon from "@/app/components/icons/LinkIcon";
 import { ChapterWithDiffs } from "@/entities/ChapterWithDiffs";
 import { Params } from "@/utils/Params";
 import { StringCompare } from "@/utils/StringCompare";
+import { usePreferredBibleVersion } from "@/hooks/usePreferredBibleVersion";
 import { ThrowByResponse } from "@/utils/ThrowByResponse";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
 import { Fragment } from "react/jsx-dev-runtime";
 
 export default function Compare() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { setPreferredVersion } = usePreferredBibleVersion();
   const [version] = Params.getParamFromSearchParams("version", searchParams);
   const bookAbbr = searchParams.get("book") || "";
   const chapterNumber = searchParams.get("chapter")
@@ -50,16 +52,19 @@ export default function Compare() {
     router.back();
   }
 
-  function handleOnKeyDown(e: KeyboardEvent) {
-    if (e.key === "Escape") {
-      router.back();
-    }
-  }
+  const handleOnKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        router.back();
+      }
+    },
+    [router],
+  );
 
   useEffect(() => {
     window.addEventListener("keydown", handleOnKeyDown);
     return () => window.removeEventListener("keydown", handleOnKeyDown);
-  }, []);
+  }, [handleOnKeyDown]);
 
   const chapterText = chapterNumber?.toString() ?? "...";
   const selectedVersion = verseVersions?.find((v) =>
@@ -176,6 +181,7 @@ export default function Compare() {
             <Link
               className="text-[0.75rem] bg-surface p-1 px-3 rounded hover:bg-info/30 cursor-pointer"
               href={`/reader?version=${verse.version}&book=${bookAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`}
+              onClick={() => setPreferredVersion(verse.version)}
             >
               <LinkIcon
                 width={13}

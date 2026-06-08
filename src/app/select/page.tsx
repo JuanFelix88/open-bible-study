@@ -8,12 +8,12 @@ import { useState } from "react";
 import BibleIcon from "../favicon.ico";
 import Image from "next/image";
 import Link from "next/link";
-
-const DEFAULT_VERSION = "KJA";
+import { usePreferredBibleVersion } from "@/hooks/usePreferredBibleVersion";
 
 export default function Welcome() {
   const router = useRouter();
   const [selectedBook, setSelectedBook] = useState<string | null>(null);
+  const { preferredVersion } = usePreferredBibleVersion();
   const [, setSelectedChapter] = useState<number | null>(null);
 
   const { data: books, isLoading: isLoadingBooks } = useQuery({
@@ -42,7 +42,7 @@ export default function Welcome() {
     if (!selectedBook) return;
 
     router.push(
-      `/reader?book=${selectedBook}&version=${DEFAULT_VERSION}&chapter=${chapterNumber}`,
+      `/reader?book=${selectedBook}&version=${preferredVersion}&chapter=${chapterNumber}`,
     );
   };
 
@@ -136,7 +136,7 @@ export default function Welcome() {
       <div className="mt-12 text-center text-text/60 text-sm max-w-2xl">
         <p>
           Reading from:{" "}
-          <span className="text-primary font-semibold">{DEFAULT_VERSION}</span>
+          <span className="text-primary font-semibold">{preferredVersion}</span>
         </p>
       </div>
     </div>

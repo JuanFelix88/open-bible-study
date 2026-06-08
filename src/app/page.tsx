@@ -12,12 +12,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import BookChapterPicker from "./components/BookChapterPicker";
 import ReaderSearch from "./components/ReaderSearch";
-
-const DEFAULT_VERSION = "KJA";
+import { usePreferredBibleVersion } from "@/hooks/usePreferredBibleVersion";
 
 export default function Home() {
   const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
+  const { preferredVersion } = usePreferredBibleVersion();
 
   function handleOpenBook() {
     const savedPage = localStorage.getItem("o-poder-progress") || "1";
@@ -184,7 +184,7 @@ export default function Home() {
         isLoading={isLoadingBooks}
         currentBookAbbr=""
         currentChapter={null}
-        versionAbbr={DEFAULT_VERSION}
+        versionAbbr={preferredVersion}
         bookName=""
         selectedVerse={null}
         fullscreen
@@ -225,7 +225,7 @@ export default function Home() {
       </Link>
 
       <ReaderSearch
-        versionAbbr={DEFAULT_VERSION}
+        versionAbbr={preferredVersion}
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
       />

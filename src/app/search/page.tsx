@@ -13,11 +13,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import LinkIcon from "../components/icons/LinkIcon";
+import { usePreferredBibleVersion } from "@/hooks/usePreferredBibleVersion";
 
 const displayVersionRegex =
   /^(?<book>[0-9]? ?[A-Za-zÀ-ÿ0-9]{1,}) (?<chapter>[0-9]{1,}):?(?<verse>[0-9]{1,})?$/;
-
-const DEFAULT_VERSION = "KJA";
 
 export default function Search() {
   const searchParams = useSearchParams();
@@ -30,6 +29,7 @@ export default function Search() {
   const [searchVersionText, setSearchVersionText] = useState("");
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
   const [searchText, setSearchText] = useState("");
+  const { preferredVersion } = usePreferredBibleVersion();
   const debouncedSearchText = useDebounce(searchText, 100);
   const refSearchText = useRef<HTMLInputElement>(null);
 
@@ -72,15 +72,15 @@ export default function Search() {
   });
 
   useEffect(() => {
-    if (!versions) return;
+    if (!versions || versionAbbrParam) return;
 
     setSelectedVersion(
-      versions?.find((v) =>
-        StringCompare.isEqualIgnoringCase(DEFAULT_VERSION, v.abbreviation),
+      versions.find((v) =>
+        StringCompare.isEqualIgnoringCase(preferredVersion, v.abbreviation),
       ) ?? null,
     );
     setIsSelectingVersion(false);
-  }, [versions]);
+  }, [preferredVersion, versionAbbrParam, versions]);
 
   useEffect(() => {
     if (!versionAbbrParam || !versions) return;
