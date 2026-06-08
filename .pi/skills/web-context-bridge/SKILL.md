@@ -1,6 +1,6 @@
 ---
 name: web-context-bridge
-description: Workflow para criar pontes sólidas entre conteúdo de websites externos e a aplicação: investigar padrões de URL/endpoints, capturar HTML, destilar conteúdo relevante, traduzir com Google Translate não oficial e devolver markdown limpo. Use quando implementar integrações semelhantes ao BibleRef/contexto histórico.
+description: Workflow para criar pontes sólidas entre conteúdo de websites externos e a aplicação investigar padrões de URL/endpoints, capturar HTML, destilar conteúdo relevante, traduzir com Google Translate não oficial e devolver markdown limpo. Use quando implementar integrações semelhantes ao BibleRef/contexto histórico.
 ---
 
 # Web Context Bridge

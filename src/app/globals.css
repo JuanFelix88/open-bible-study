@@ -169,6 +169,21 @@ body {
   animation: show-from-top 0.08s ease-in-out;
 }
 
+@keyframes control-buttons-show-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-control-buttons-show-in {
+  animation: control-buttons-show-in 0.12s ease-out;
+}
+
 .hide-buttons > .control-buttons {
   display: none;
 }

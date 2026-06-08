@@ -335,6 +335,14 @@ export default function Reader() {
     });
   }
 
+  function handleOpenGenevaStudyBibleComments(verseNumber: number) {
+    startNavigation(() => {
+      router.push(
+        `/reader/comments/geneva?book=${bookAbbr}&version=${versionAbbr}&chapter=${chapterNumber}&verse=${verseNumber}`,
+      );
+    });
+  }
+
   function handleToggleShareMenu(ev: SingleEvent, verseNumber: number) {
     ev.stopPropagation();
     setCommentsMenuVerse(null);
@@ -1079,7 +1087,7 @@ export default function Reader() {
                       key={`heading-${verseNumber}-${headingIndex}`}
                       data-reader-heading="true"
                       data-reader-heading-title={heading.title}
-                      className={`indent-0 ${verseNumber === 1 && paragraph.key === "paragraph-1" ? "mt-0" : "mt-4"} mb-1 block text-xl font-bold italic leading-7 tracking-tight text-text`}
+                      className={`indent-0 ${verseNumber === 1 && paragraph.key === "paragraph-1" ? "mt-0" : "mt-[18px]"} mb-1 block pt-[2px] text-2xl font-bold italic leading-8 tracking-tight text-text`}
                     >
                       {heading.title}
                     </h2>
@@ -1095,12 +1103,18 @@ export default function Reader() {
                     ref={isSelected ? refSelected : null}
                     className={
                       isSelected
-                        ? "relative cursor-cell select-none rounded-md bg-secondary/30 px-1 py-[1px] text-text/95 underline decoration-primary decoration-dashed underline-offset-2 box-decoration-clone"
-                        : "relative cursor-cell select-none rounded-md px-1 py-[1px] text-text/95 hover:bg-surface/70 box-decoration-clone"
+                        ? "relative mr-[3px] cursor-cell select-none rounded-md bg-secondary/30 px-1 py-[1px] text-text/95 underline decoration-primary decoration-dashed underline-offset-2 box-decoration-clone"
+                        : "relative mr-[3px] cursor-cell select-none rounded-md px-1 py-[1px] text-text/95 hover:bg-surface/70 box-decoration-clone"
                     }
                     onClick={() => handleSelectVerse(verseNumber)}
                   >
-                    <sup className="mr-1 rounded-sm border border-dashed border-gray-400 px-[2px] text-[0.65em] font-bold leading-none">
+                    <sup
+                      className={
+                        isSelected
+                          ? "mr-1 rounded-sm border border-dashed border-primary bg-primary/10 px-[2px] text-[0.65em] font-bold leading-none text-primary"
+                          : "mr-1 rounded-sm border border-dashed border-gray-400 px-[2px] text-[0.65em] font-bold leading-none"
+                      }
+                    >
                       {verseNumber}
                     </sup>
                     <span className={isFirstInParagraph ? "ml-1" : ""}>
@@ -1121,7 +1135,7 @@ export default function Reader() {
                     </span>
                   )}
                   {isSelected && (
-                    <span className="control-buttons my-2 flex w-full max-w-full flex-wrap gap-2 rounded-sm border border-dashed border-primary bg-secondary p-1 indent-0 shadow-lg shadow-background/30">
+                    <span className="control-buttons animate-control-buttons-show-in my-2 flex w-full max-w-full flex-wrap gap-2 rounded-sm border border-dashed border-primary bg-secondary p-1 indent-0 shadow-lg shadow-background/30">
                       <button
                         className="flex cursor-pointer items-center rounded-sm border border-dashed border-border bg-background px-[4px] py-0.5 text-sm hover:bg-background/70 sm:py-0"
                         onClick={(e) => handleOpenReferences(e, verseIndex)}
@@ -1258,6 +1272,9 @@ export default function Reader() {
                             onEnduringWord={() =>
                               handleOpenEnduringWordComments(verseNumber)
                             }
+                            onGenevaStudyBible={() =>
+                              handleOpenGenevaStudyBibleComments(verseNumber)
+                            }
                             onClose={() => setCommentsMenuVerse(null)}
                           />
                         )}
@@ -1294,7 +1311,7 @@ export default function Reader() {
                   )}
                   {isSelected && isSettingMarker && candidateToMarker === verseNumber && (
                     <span
-                      className="control-buttons my-2 flex w-full max-w-full flex-col indent-0"
+                      className="control-buttons animate-control-buttons-show-in my-2 flex w-full max-w-full flex-col indent-0"
                       onClick={(e) => e.stopPropagation()}
                       onKeyDown={(e) => e.stopPropagation()}
                     >

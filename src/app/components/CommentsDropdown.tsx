@@ -7,6 +7,7 @@ import LinkIcon from "./icons/LinkIcon";
 interface CommentsDropdownProps {
   onBibleRef: () => void;
   onEnduringWord: () => void;
+  onGenevaStudyBible: () => void;
   onClose: () => void;
   autoFocus?: boolean;
 }
@@ -14,18 +15,33 @@ interface CommentsDropdownProps {
 export default function CommentsDropdown({
   onBibleRef,
   onEnduringWord,
+  onGenevaStudyBible,
   onClose,
   autoFocus = false,
 }: CommentsDropdownProps) {
   const containerRef = useRef<HTMLSpanElement>(null);
   const firstButtonRef = useRef<HTMLButtonElement>(null);
   const secondButtonRef = useRef<HTMLButtonElement>(null);
+  const thirdButtonRef = useRef<HTMLButtonElement>(null);
+  const buttonRefs = [firstButtonRef, secondButtonRef, thirdButtonRef];
 
   useEffect(() => {
     if (autoFocus) {
       firstButtonRef.current?.focus();
     }
   }, [autoFocus]);
+
+  function focusAdjacentButton(direction: 1 | -1) {
+    const currentIndex = buttonRefs.findIndex(
+      (buttonRef) => buttonRef.current === document.activeElement,
+    );
+    const nextIndex =
+      currentIndex === -1
+        ? 0
+        : (currentIndex + direction + buttonRefs.length) % buttonRefs.length;
+
+    buttonRefs[nextIndex]?.current?.focus();
+  }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLSpanElement>) {
     e.stopPropagation();
@@ -36,33 +52,21 @@ export default function CommentsDropdown({
       return;
     }
 
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    if (e.key === "ArrowDown") {
       e.preventDefault();
-      const focused = document.activeElement;
-      if (focused === firstButtonRef.current) {
-        secondButtonRef.current?.focus();
-      } else {
-        firstButtonRef.current?.focus();
-      }
+      focusAdjacentButton(1);
+      return;
+    }
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      focusAdjacentButton(-1);
       return;
     }
 
     if (e.key === "Tab") {
       e.preventDefault();
-      const focused = document.activeElement;
-      if (e.shiftKey) {
-        if (focused === firstButtonRef.current) {
-          secondButtonRef.current?.focus();
-        } else {
-          firstButtonRef.current?.focus();
-        }
-      } else {
-        if (focused === firstButtonRef.current) {
-          secondButtonRef.current?.focus();
-        } else {
-          firstButtonRef.current?.focus();
-        }
-      }
+      focusAdjacentButton(e.shiftKey ? -1 : 1);
     }
   }
 
@@ -71,7 +75,7 @@ export default function CommentsDropdown({
       ref={containerRef}
       role="menu"
       aria-label="Commentary sources"
-      className="absolute left-0 top-full mt-1 z-30 flex min-w-[170px] flex-col rounded-sm border border-dashed border-primary bg-background shadow-md animate-fade-in-from-bottom"
+      className="absolute left-0 top-full mt-1 z-30 flex min-w-[190px] flex-col rounded-sm border border-dashed border-primary bg-background shadow-md animate-fade-in-from-bottom"
       onClick={(e) => e.stopPropagation()}
       onKeyDown={handleKeyDown}
     >
@@ -92,6 +96,15 @@ export default function CommentsDropdown({
       >
         <DocumentIcon width={11} height={11} className="opacity-70 shrink-0" />
         EnduringWord.com
+      </button>
+      <button
+        ref={thirdButtonRef}
+        role="menuitem"
+        className="flex items-center gap-1.5 px-2 py-1.5 text-sm hover:bg-surface cursor-pointer text-left w-full border-t border-dashed border-border focus:bg-surface focus:outline-none"
+        onClick={onGenevaStudyBible}
+      >
+        <DocumentIcon width={11} height={11} className="opacity-70 shrink-0" />
+        Geneva Study Bible
       </button>
     </span>
   );
