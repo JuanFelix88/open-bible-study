@@ -1,18 +1,21 @@
 "use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import SearchIcon from "./components/icons/SearchIcon";
-import BibleIcon from "./favicon.ico";
-import CompareIcon from "./components/icons/CompareIcon";
-import { useQuery } from "@tanstack/react-query";
-import { ThrowByResponse } from "@/utils/ThrowByResponse";
-import { Version } from "@/entities/Version";
-import { BookInfo } from "@/entities/BookInfo";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { BookInfo } from "@/entities/BookInfo";
+import { Version } from "@/entities/Version";
+import { usePreferredBibleVersion } from "@/hooks/usePreferredBibleVersion";
+import { ThrowByResponse } from "@/utils/ThrowByResponse";
+import AppActionButton from "./components/AppActionButton";
 import BookChapterPicker from "./components/BookChapterPicker";
 import ReaderSearch from "./components/ReaderSearch";
-import { usePreferredBibleVersion } from "@/hooks/usePreferredBibleVersion";
+import CompareIcon from "./components/icons/CompareIcon";
+import DocumentIcon from "./components/icons/DocumentIcon";
+import SearchIcon from "./components/icons/SearchIcon";
+import BibleIcon from "./favicon.ico";
 
 export default function Home() {
   const router = useRouter();
@@ -29,9 +32,7 @@ export default function Home() {
     staleTime: 5_000,
     queryFn: async () => {
       const versionsResponse = await fetch("/api/versions");
-
       ThrowByResponse.throwsIfNotOk(versionsResponse);
-
       return (await versionsResponse.json()) as Version[];
     },
   });
@@ -40,49 +41,16 @@ export default function Home() {
     queryKey: ["books"],
     queryFn: async () => {
       const booksResponse = await fetch("/api/books");
-
       ThrowByResponse.throwsIfNotOk(booksResponse);
-
       return (await booksResponse.json()) as BookInfo[];
     },
   });
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center py-18 px-12 sm:px-24 bg-background text-text">
-      <style jsx global>{`
-        @keyframes pulse-slow {
-          0%,
-          100% {
-            transform: scale(1);
-            opacity: 0.15;
-          }
-          50% {
-            transform: scale(1.1);
-            opacity: 0.25;
-          }
-        }
-        @keyframes pulse-slower {
-          0%,
-          100% {
-            transform: scale(1);
-            opacity: 0.1;
-          }
-          50% {
-            transform: scale(1.05);
-            opacity: 0.2;
-          }
-        }
-        .animate-pulse-slow {
-          animation: pulse-slow 8s ease-in-out infinite;
-        }
-        .animate-pulse-slower {
-          animation: pulse-slower 12s ease-in-out infinite;
-        }
-      `}</style>
-      {/* Grid background with fade effect */}
-      <div className="fixed inset-0 pointer-events-none">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-5 py-16 text-text sm:px-24">
+      <div className="pointer-events-none fixed inset-0">
         <svg
-          className="absolute inset-0 w-full h-full opacity-[0.04]"
+          className="absolute inset-0 h-full w-full opacity-[0.035]"
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="none"
         >
@@ -103,126 +71,90 @@ export default function Home() {
           </defs>
           <rect width="100%" height="100%" fill="url(#grid)" />
         </svg>
-        {/* Background color overlays to fade grid in corners */}
-        <div
-          className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full blur-3xl"
-          style={{
-            background:
-              "radial-gradient(circle, var(--color-background) 0%, transparent 60%)",
-          }}
-        />
-        <div
-          className="absolute -bottom-40 -left-32 w-[450px] h-[450px] rounded-full blur-3xl"
-          style={{
-            background:
-              "radial-gradient(circle, var(--color-background) 0%, transparent 60%)",
-          }}
-        />
-        <div
-          className="absolute top-1/4 -left-24 w-[350px] h-[350px] rounded-full blur-3xl"
-          style={{
-            background:
-              "radial-gradient(circle, var(--color-background) 0%, transparent 60%)",
-          }}
-        />
-        <div
-          className="absolute bottom-1/4 -right-20 w-[300px] h-[300px] rounded-full blur-3xl"
-          style={{
-            background:
-              "radial-gradient(circle, var(--color-background) 0%, transparent 60%)",
-          }}
-        />
-        {/* Colored glow accents */}
-        <div
-          className="absolute -top-32 -right-32 w-96 h-96 rounded-full blur-3xl animate-pulse-slow"
-          style={{
-            background:
-              "radial-gradient(circle, var(--color-primary) 0%, transparent 70%)",
-          }}
-        />
-        <div
-          className="absolute -bottom-48 -left-24 w-80 h-80 rounded-full blur-3xl animate-pulse-slower"
-          style={{
-            background:
-              "radial-gradient(circle, var(--color-secondary) 0%, transparent 70%)",
-          }}
-        />
       </div>
-      <div className="relative flex justify-center items-center drop-shadow-xl drop-shadow-text/20 mb-2 w-16 h-16 overflow-hidden rounded-[14px]">
-        <Image
-          src={BibleIcon}
-          alt="Bible Icon"
-          width={64}
-          height={64}
-          className="relative z-10"
-        />
-        <div className="absolute inset-0 z-20 pointer-events-none">
-          <div
-            className="absolute top-0 -left-[100%] w-[150%] h-full animate-shine mix-blend-overlay"
-            style={{
-              background:
-                "linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-primary) 30%, transparent), color-mix(in srgb, var(--color-secondary) 80%, transparent), color-mix(in srgb, var(--color-primary) 30%, transparent), transparent)",
-              transform: "skewX(-20deg)",
-            }}
+
+      <main className="relative z-10 flex w-full max-w-sm flex-col items-center">
+        <div className="relative mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-[16px] border border-border/50 bg-surface shadow-lg shadow-text/10">
+          <Image
+            src={BibleIcon}
+            alt="Bible Icon"
+            width={64}
+            height={64}
+            className="h-full w-full"
           />
         </div>
-      </div>
-      <h1 className="text-4xl font-bold text-center">Bible Study</h1>
-      <p className="mt-4 text-lg text-center">Explore texts in depth.</p>
-      <p className="text-center text-text/50 text-sm">Open source project.</p>
 
-      <button
-        type="button"
-        onClick={() => setSearchOpen(true)}
-        className="flex justify-center items-center rounded-md border bg-surface border-border p-2 mt-4 w-full hover:bg-surface/20 max-w-sm cursor-pointer"
-      >
-        <SearchIcon width={16} height={16} className="mr-1 text-text/80" />
-        Search
-      </button>
-      <BookChapterPicker
-        books={books}
-        isLoading={isLoadingBooks}
-        currentBookAbbr=""
-        currentChapter={null}
-        versionAbbr={preferredVersion}
-        bookName=""
-        selectedVerse={null}
-        fullscreen
-        trigger={(open) => (
-          <button
-            type="button"
-            onClick={open}
-            className="flex justify-center items-center rounded-md border bg-surface border-border p-2 mt-1 w-full hover:bg-surface/20 max-w-sm cursor-pointer"
-          >
-            <CompareIcon width={16} height={16} className="mr-1 text-text/80" />
-            Select chapter
-          </button>
-        )}
-      />
-      <button
-        className="flex mt-5 justify-center items-center rounded-md border bg-surface/70 border-border/80 p-2 w-full hover:bg-surface/20 max-w-sm cursor-pointer"
-        onClick={handleOpenBook}
-      >
-        O poder da Oração e do Jejum
-      </button>
+        <h1 className="text-center text-[38px] font-bold tracking-[-0.035em]">
+          Bible Study
+        </h1>
+        <p className="mt-2 text-center text-[17px] text-text-muted">
+          Explore texts in depth.
+        </p>
+        <p className="mt-0.5 text-center text-[13px] text-text/45">
+          Open source project.
+        </p>
 
-      <Link
-        href="/mode/set-theme"
-        className="fixed sm:relative bottom-4 sm:bottom-auto right-4 sm:right-auto sm:top-auto sm:mt-8 z-50 flex items-center gap-2 rounded-full border border-border bg-surface/60 px-3 py-2 text-sm font-semibold hover:bg-surface/90"
-        aria-label="Open theme selector"
-      >
-        <span className="relative flex h-5 w-5 items-center justify-center overflow-hidden rounded-full border border-border bg-background">
-          <span
-            className="absolute inset-0 opacity-90"
-            style={{
-              background:
-                "conic-gradient(from 180deg, var(--color-primary), var(--color-secondary), var(--color-info), var(--color-warning), var(--color-primary))",
-            }}
+        <section
+          aria-label="Main actions"
+          className="mt-7 w-full rounded-[22px] border border-border/65 bg-surface/80 p-1.5 shadow-xl shadow-text/[0.06]"
+        >
+          <AppActionButton
+            onClick={() => setSearchOpen(true)}
+            icon={<SearchIcon width={19} height={19} />}
+            title="Search"
+            description="Find a word or passage"
           />
-          <span className="relative z-10 h-2.5 w-2.5 rounded-full bg-background border border-border" />
-        </span>
-        Theme
-      </Link>
+
+          <div className="ml-[58px] h-px bg-border/55" />
+
+          <BookChapterPicker
+            books={books}
+            isLoading={isLoadingBooks}
+            currentBookAbbr=""
+            currentChapter={null}
+            versionAbbr={preferredVersion}
+            bookName=""
+            selectedVerse={null}
+            fullscreen
+            trigger={(open) => (
+              <AppActionButton
+                onClick={open}
+                icon={<CompareIcon width={19} height={19} />}
+                title="Select chapter"
+                description="Choose a book and chapter"
+              />
+            )}
+          />
+        </section>
+
+        <section aria-label="Continue reading" className="mt-4 w-full">
+          <p className="mb-2 pl-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-text/40">
+            Continue reading
+          </p>
+          <div className="rounded-[22px] border border-border/65 bg-surface/55 p-1.5 shadow-lg shadow-text/[0.04]">
+            <AppActionButton
+              onClick={handleOpenBook}
+              icon={<DocumentIcon width={19} height={19} />}
+              title="O poder da Oração e do Jejum"
+              description="Resume where you stopped"
+            />
+          </div>
+        </section>
+
+        <Link
+          href="/mode/set-theme"
+          className="fixed bottom-4 right-4 z-50 flex min-h-11 items-center gap-2 rounded-full border border-border/70 bg-surface px-3.5 py-2 text-[13px] font-semibold shadow-lg shadow-text/10 transition-[background-color,transform] hover:bg-surface-strong active:scale-95 sm:relative sm:bottom-auto sm:right-auto sm:mt-7"
+          aria-label="Open theme selector"
+        >
+          <span
+            className="relative flex h-5 w-5 overflow-hidden rounded-full border border-text/40 bg-background"
+            aria-hidden="true"
+          >
+            <span className="h-full w-1/2 bg-text" />
+          </span>
+          Theme
+        </Link>
+      </main>
 
       <ReaderSearch
         versionAbbr={preferredVersion}
