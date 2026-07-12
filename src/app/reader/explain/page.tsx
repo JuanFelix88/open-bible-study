@@ -351,7 +351,7 @@ export default function Explain() {
           <div className="flex ml-auto">
             <button
               onClick={handleOnPrevious}
-              className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
+              className="obs-icon-button ml-4 mt-1"
             >
               <ArrowLeftIcon width={30} height={30} />
             </button>
@@ -545,7 +545,7 @@ export default function Explain() {
 
               {hasMoreRelatedVerses && (
                 <button
-                  className="mt-3 text-xs bg-surface p-1.5 px-3 rounded hover:bg-secondary/50 cursor-pointer text-text/80"
+                className="obs-control obs-control-compact mt-3"
                   onClick={() => setShowAllRelatedVerses((prev) => !prev)}
                 >
                   {showAllRelatedVerses

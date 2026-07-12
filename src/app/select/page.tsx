@@ -89,7 +89,7 @@ export default function Welcome() {
                   <button
                     key={book.abbr}
                     onClick={() => handleSelectBook(book.abbr)}
-                    className="px-4 py-3 rounded-md border bg-surface border-border hover:bg-surface/80 hover:border-primary/50 cursor-pointer text-sm font-medium"
+                    className="obs-tile"
                   >
                     {book.name}
                   </button>
@@ -103,7 +103,7 @@ export default function Welcome() {
                 setSelectedBook(null);
                 setSelectedChapter(null);
               }}
-              className="mb-4 flex items-center gap-2 text-primary hover:opacity-70 transition-opacity cursor-pointer"
+              className="obs-control obs-control-compact mb-4"
             >
               <span>←</span>
               <span>Back to Books</span>
@@ -120,7 +120,7 @@ export default function Welcome() {
                     <button
                       key={index}
                       onClick={() => handleSelectChapter(index + 1)}
-                      className="px-3 py-2 rounded-md border bg-surface border-border hover:bg-surface/80 hover:border-primary/50 cursor-pointer text-sm font-medium"
+                      className="obs-tile obs-tile-center"
                     >
                       {index + 1}
                     </button>

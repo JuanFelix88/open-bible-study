@@ -120,7 +120,7 @@ export default function Search() {
         {/* Back Button */}
         <Link
           href="/"
-          className="mb-4 flex items-center gap-2 text-text/70 hover:opacity-70 transition-opacity cursor-pointer"
+          className="obs-control obs-control-compact mb-4 w-fit"
         >
           <span>←</span>
           <span>Back to home</span>
@@ -149,13 +149,13 @@ export default function Search() {
               placeholder='Search version (e.g. "ARA")'
               value={searchVersionText}
               onChange={(e) => setSearchVersionText(e.target.value)}
-              className="mt-2 w-full p-2 border-2 border-border bg-background brightness-[1.13] rounded-md"
+              className="obs-input mt-2"
             />
 
             {filteredVersions?.map((version) => (
               <button
                 key={version.abbreviation}
-                className="mt-3 w-full items-center flex bg-surface rounded p-2 gap-1 hover:bg-info/30 border border-border/80 cursor-pointer"
+                className="obs-tile mt-3 w-full gap-1"
                 onClick={() => {
                   setSelectedVersion(version);
                   setIsSelectingVersion(false);
@@ -183,7 +183,7 @@ export default function Search() {
           <>
             <button
               onClick={() => setIsSelectingVersion(true)}
-              className="border border-border rounded-md p-2 mt-4 text-text bg-surface w-full hover:bg-surface-strong cursor-pointer select-none"
+              className="obs-control mt-4 w-full select-none"
             >
               {selectedVersion ? (
                 <span className="text-primary/90">
@@ -201,7 +201,7 @@ export default function Search() {
               onChange={(e) => setSearchText(e.target.value)}
               type="text"
               placeholder="Search texts..."
-              className="mt-4 w-full p-2 border-2 border-border bg-background brightness-[1.13] rounded-md"
+              className="obs-input mt-4"
             />
 
             {!isLoadingResults && !!selectedVersion && !results?.length && (

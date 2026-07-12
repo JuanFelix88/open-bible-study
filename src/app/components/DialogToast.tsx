@@ -40,7 +40,7 @@ export default function DialogToast() {
         <div className="mt-3 flex justify-end">
           <button
             onClick={() => setDialog(null)}
-            className="rounded-md bg-surface hover:bg-surface/50 text-text/80 text-xs px-3 py-1.5 cursor-pointer"
+            className="obs-control obs-control-compact"
           >
             Close
           </button>

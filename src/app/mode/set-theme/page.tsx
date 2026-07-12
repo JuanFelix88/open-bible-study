@@ -52,7 +52,7 @@ export default function DarkMode() {
 
         <Link
           href="/"
-          className="text-text underline bg-surface p-2 rounded w-fit border border-border hover:bg-surface/60"
+          className="obs-control obs-control-compact w-fit"
         >
           Go to home
         </Link>
@@ -79,7 +79,7 @@ export default function DarkMode() {
                 handleSelectTheme(mode);
               }
             }}
-            className="group text-left rounded-xl border border-border bg-background hover:bg-surface text-text transition-colors overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="obs-font group overflow-hidden rounded-[20px] border border-border/70 bg-background text-left text-text shadow-lg shadow-text/[0.04] transition-colors hover:bg-surface cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30"
           >
             <div className="p-3 flex items-center justify-between gap-3 border-b border-border/60">
               <div className="flex flex-col">
@@ -93,7 +93,7 @@ export default function DarkMode() {
                   e.stopPropagation();
                   handleSelectTheme(mode);
                 }}
-                className="flex cursor-pointer items-center gap-1 text-xs font-semibold rounded-full px-3 py-1.5 border border-border bg-background/60 hover:bg-background/90"
+                className="obs-control obs-control-compact"
                 aria-pressed={currentTheme === mode}
               >
                 {currentTheme === mode ? (

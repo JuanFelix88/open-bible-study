@@ -75,7 +75,7 @@ export default function InstallPage({
               <button
                 onClick={install}
                 disabled={isInstalled || !canInstall}
-                className={`flex w-full items-center justify-center gap-3 rounded-xl px-6 py-4 text-lg font-semibold transition-all ${
+                className={`obs-font flex w-full items-center justify-center gap-3 rounded-[16px] px-6 py-4 text-lg font-semibold transition-all ${
                   isInstalled
                     ? "cursor-default bg-success text-white"
                     : canInstall
@@ -110,7 +110,7 @@ export default function InstallPage({
               <button
                 onClick={handleIOSClick}
                 disabled={isInstalled}
-                className={`flex w-full items-center justify-center gap-3 rounded-xl px-6 py-4 text-lg font-semibold transition-all ${
+                className={`obs-font flex w-full items-center justify-center gap-3 rounded-[16px] px-6 py-4 text-lg font-semibold transition-all ${
                   isInstalled
                     ? "cursor-default bg-success text-white"
                     : "bg-text text-background hover:bg-text-muted hover:scale-[1.02] active:scale-[0.98]"

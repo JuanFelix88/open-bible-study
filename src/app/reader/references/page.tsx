@@ -212,7 +212,7 @@ export default function References() {
           </div>
           <div className="flex ml-auto">
             <Link
-              className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
+              className="obs-icon-button ml-4 mt-1"
               href={`/reader/references/add?book=${bookAbbr}&chapter=${chapterNumber}&verse=${verseNumber}&version=${versionAbbr}`}
               hidden={isLoadingReferencesDetails}
             >
@@ -220,7 +220,7 @@ export default function References() {
             </Link>
             <button
               onClick={handlePrevious}
-              className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
+              className="obs-icon-button ml-4 mt-1"
             >
               <ArrowLeftIcon width={30} height={30} />
             </button>
@@ -303,7 +303,7 @@ export default function References() {
               )}
               <div className="flex w-full pt-2 gap-1.5">
                 <Link
-                  className="text-[0.75rem] bg-surface-strong p-1 px-3 rounded hover:bg-info/30 cursor-pointer"
+                className="obs-control obs-control-compact"
                   href={linkToOpen ?? "#"}
                   hidden={!displayVerse}
                 >
@@ -315,7 +315,7 @@ export default function References() {
                   Open
                 </Link>
                 <Link
-                  className="text-[0.75rem] bg-surface-strong p-1 px-3 rounded hover:bg-info/30 cursor-pointer"
+                  className="obs-control obs-control-compact"
                   href={`/reader/references/edit?id=${id}&book=${bookAbbr}&chapter=${chapterNumber}&verse=${verseNumber}&version=${versionAbbr}`}
                 >
                   <EditIcon
@@ -326,7 +326,7 @@ export default function References() {
                   Edit
                 </Link>
                 <button
-                  className="text-[0.75rem] bg-surface-strong p-1 px-3 rounded hover:bg-info/30 cursor-pointer"
+                  className="obs-control obs-control-compact"
                   onClick={() => handleRemove(id)}
                 >
                   <DeleteIcon
@@ -341,7 +341,7 @@ export default function References() {
           ),
         )}
         <Link
-          className="w-fit mt-2 text-[0.85rem] text-text bg-surface p-1 px-2 rounded hover:bg-surface/60"
+          className="obs-control mt-2 w-fit"
           href={`/reader/references/add?book=${bookAbbr}&chapter=${chapterNumber}&verse=${verseNumber}&version=${versionAbbr}`}
           hidden={isLoadingReferencesDetails}
         >

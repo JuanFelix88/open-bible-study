@@ -94,7 +94,7 @@ export default function ReaderBibleRefComments() {
           <div className="flex ml-auto">
             <button
               onClick={handleOnPrevious}
-              className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
+              className="obs-icon-button ml-4 mt-1"
               aria-label="Voltar"
             >
               <ArrowLeftIcon width={30} height={30} />

@@ -16,7 +16,7 @@ export default function AppActionButton({
   return (
     <button
       type="button"
-      className={`group flex min-h-16 w-full items-center gap-3 rounded-[18px] px-3 py-2.5 text-left outline-none transition-[background-color,transform] duration-150 hover:bg-background/55 active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-primary/45 cursor-pointer ${className}`}
+      className={`obs-font group flex min-h-16 w-full items-center gap-3 rounded-[18px] px-3 py-2.5 text-left outline-none transition-[background-color,transform] duration-150 hover:bg-background/55 active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-primary/45 cursor-pointer ${className}`}
       {...props}
     >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-text text-background shadow-sm">

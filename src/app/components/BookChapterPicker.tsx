@@ -162,7 +162,7 @@ export default function BookChapterPicker({
                   <button
                     type="button"
                     onClick={() => setSelectedBook(null)}
-                    className="flex items-center gap-1 text-sm font-semibold text-primary hover:opacity-70 transition cursor-pointer"
+                  className="obs-control obs-control-compact"
                   >
                     <ArrowLeftIcon width={16} height={16} />
                     Books
@@ -180,7 +180,7 @@ export default function BookChapterPicker({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="text-xs text-text-muted hover:text-text transition cursor-pointer"
+                  className="obs-control obs-control-compact"
                 >
                   Cancel
                 </button>
@@ -195,7 +195,7 @@ export default function BookChapterPicker({
                       onKeyDown={(e) => e.stopPropagation()}
                       onChange={(e) => setBookQuery(e.target.value)}
                       placeholder="Type a book name..."
-                      className="w-full bg-background/60 border border-border/60 rounded-lg px-3 py-2 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      className="obs-input"
                     />
                   </div>
 
@@ -225,10 +225,10 @@ export default function BookChapterPicker({
                             key={book.abbr}
                             type="button"
                             onClick={() => handleSelectBook(book.abbr)}
-                            className={`px-3 py-2.5 rounded-lg text-sm font-medium text-left transition active:scale-[0.97] cursor-pointer ${
+                            className={`obs-tile ${
                               isCurrent
-                                ? "bg-primary/15 border border-primary/30 text-text"
-                                : "bg-background/50 border border-border/50 hover:bg-background/80 hover:border-border text-text"
+                                ? "obs-tile-active"
+                                : ""
                             }`}
                           >
                             {book.name}
@@ -253,7 +253,7 @@ export default function BookChapterPicker({
                       }
                       autoFocus={open && isDesktop}
                       placeholder="Type a chapter number..."
-                      className="w-full bg-background/60 border border-border/60 rounded-lg px-3 py-2 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      className="obs-input"
                     />
                   </div>
 
@@ -274,10 +274,10 @@ export default function BookChapterPicker({
                           key={chap}
                           type="button"
                           onClick={() => handleSelectChapter(chap)}
-                          className={`aspect-square flex items-center justify-center rounded-lg text-sm font-semibold transition active:scale-95 cursor-pointer ${
+                          className={`obs-tile obs-tile-center aspect-square ${
                             isCurrent
-                              ? "bg-primary/20 border border-primary/40 text-text"
-                              : "bg-background/50 border border-border/50 hover:bg-background/80 hover:border-border text-text"
+                              ? "obs-tile-active"
+                              : ""
                           }`}
                         >
                           {chap}

@@ -27,10 +27,10 @@ const ReaderSearchResultItem = memo(function ReaderSearchResultItem({
     <button
       type="button"
       onClick={() => onNavigate(result)}
-      className={`group w-full text-left rounded-xl p-3 cursor-pointer ${
+      className={`obs-tile obs-result-tile group w-full text-left p-3 ${
         isSelected
-          ? "bg-primary/15 ring-1 ring-primary/40"
-          : "bg-background/50 hover:bg-background/80"
+          ? "obs-tile-active ring-1 ring-primary/30"
+          : ""
       }`}
     >
       <div className="flex items-baseline gap-2 mb-1">

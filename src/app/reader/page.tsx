@@ -1371,9 +1371,9 @@ export default function Reader() {
 
       {/* Floating chapter navigation */}
       {chapter && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 rounded-full border border-border bg-surface shadow-lg shadow-background/30 px-1.5 py-1.5">
+        <div className="obs-nav-shell fixed bottom-5 left-1/2 -translate-x-1/2 z-40">
           <button
-            className="flex items-center gap-1 rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-background/60 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+            className="obs-nav-button"
             onClick={handlePreviousChapter}
             disabled={!chapter.previous}
           >
@@ -1384,7 +1384,7 @@ export default function Reader() {
             {chapterText}
           </span>
           <button
-            className="flex items-center gap-1 rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-background/60 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+            className="obs-nav-button"
             onClick={handleNextChapter}
             disabled={!chapter.next}
           >

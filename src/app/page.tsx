@@ -143,7 +143,7 @@ export default function Home() {
 
         <Link
           href="/mode/set-theme"
-          className="fixed bottom-4 right-4 z-50 flex min-h-11 items-center gap-2 rounded-full border border-border/70 bg-surface px-3.5 py-2 text-[13px] font-semibold shadow-lg shadow-text/10 transition-[background-color,transform] hover:bg-surface-strong active:scale-95 sm:relative sm:bottom-auto sm:right-auto sm:mt-7"
+          className="obs-font fixed bottom-4 right-4 z-50 flex min-h-11 items-center gap-2 rounded-full border border-border/70 bg-surface px-3.5 py-2 text-[13px] font-semibold shadow-lg shadow-text/10 transition-[background-color,transform] hover:bg-surface-strong active:scale-95 sm:relative sm:bottom-auto sm:right-auto sm:mt-7"
           aria-label="Open theme selector"
         >
           <span

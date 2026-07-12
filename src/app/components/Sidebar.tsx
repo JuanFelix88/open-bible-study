@@ -74,7 +74,7 @@ export default function Sidebar({
             <h2 className="text-lg font-semibold text-text">{title}</h2>
             <button
               onClick={onClose}
-              className="rounded-md p-2 text-text-muted hover:bg-surface hover:text-text focus:outline-none focus:ring-2 focus:ring-primary"
+              className="obs-icon-button"
               aria-label="Close sidebar"
             >
               <CloseIcon className="h-5 w-5" />

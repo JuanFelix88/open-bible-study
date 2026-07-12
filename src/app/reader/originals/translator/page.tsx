@@ -730,7 +730,7 @@ export default function OriginalsTranslator() {
           <div className="ml-auto flex">
             <button
               onClick={handleOnPrevious}
-              className="ml-4 mt-1 cursor-pointer rounded-md p-2 opacity-80 hover:bg-surface"
+              className="obs-icon-button ml-4 mt-1"
             >
               <ArrowLeftIcon width={30} height={30} />
             </button>
@@ -905,7 +905,7 @@ export default function OriginalsTranslator() {
 
               {hasMoreRelatedVerses && (
                 <button
-                  className="mt-3 cursor-pointer rounded bg-surface p-1.5 px-3 text-xs text-text/80 hover:bg-secondary/50"
+                  className="obs-control obs-control-compact mt-3"
                   onClick={() => setShowAllRelatedVerses((prev) => !prev)}
                 >
                   {showAllRelatedVerses

@@ -216,7 +216,7 @@ export default function ReaderSearch({
         className="relative z-10 w-[95vw] max-w-lg flex flex-col max-h-[75vh] animate-fade-in-from-bottom"
         onKeyDown={handleDialogKeyDown}
       >
-        <div className="flex items-center gap-2 rounded-t-2xl border border-border bg-surface px-4 py-3 shadow-xl shadow-background/40">
+        <div className="obs-search-shell obs-search-shell-connected">
           <SearchIcon
             width={18}
             height={18}
@@ -234,12 +234,12 @@ export default function ReaderSearch({
             }}
             aria-label="Search verses"
             placeholder="Search verses…"
-            className="flex-1 bg-transparent text-text text-base outline-none placeholder:text-text/40"
+            className="obs-input flex-1"
           />
           <button
             aria-label="Close search"
             onClick={onClose}
-            className="text-text/50 hover:text-text cursor-pointer p-1"
+            className="obs-icon-button obs-icon-button-compact"
           >
             <CloseIcon width={18} height={18} />
           </button>
@@ -247,7 +247,7 @@ export default function ReaderSearch({
 
         <div
           ref={resultsScrollRef}
-          className="overflow-y-auto rounded-b-2xl border border-t-0 border-border bg-surface shadow-xl shadow-background/40 reader-search-scroll"
+          className="overflow-y-auto rounded-b-[20px] border border-t-0 border-border/70 bg-surface shadow-xl shadow-background/40 reader-search-scroll"
         >
           {!hasQuery && (
             <div className="px-4 py-8 text-center">

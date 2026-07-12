@@ -186,7 +186,7 @@ export default function ReferenceMutation() {
           </div>
           <div className="flex ml-auto">
             <button
-              className="cursor-pointer ml-4 mt-1 p-2 rounded-md hover:bg-surface opacity-80"
+              className="obs-icon-button ml-4 mt-1"
               onClick={() => router.back()}
             >
               <ArrowLeftIcon width={30} height={30} />
@@ -204,7 +204,7 @@ export default function ReferenceMutation() {
             Basic information of reference
           </span>
           <button
-            className="cursor-pointer text-[0.85rem] text-text bg-surface p-1 px-2 pr-4 rounded hover:bg-surface/60 w-fit mt-3"
+            className="obs-control mt-3 w-fit justify-start"
             onClick={handleOpenEditSelectedVerse}
           >
             <EditIcon width={13} height={13} className="inline -mt-0.5 mr-1" />
@@ -218,7 +218,7 @@ export default function ReferenceMutation() {
             onChange={(e) => setNoteText(e.target.value)}
             value={noteText}
             placeholder="Reference notes..."
-            className="mt-5 p-2 border-2 border-border bg-background brightness-[1.13] rounded-md"
+            className="obs-input mt-5 min-h-28 resize-y"
           ></textarea>
 
           <button
@@ -257,7 +257,7 @@ export default function ReferenceMutation() {
                     note: noteText || undefined,
                   })
             }
-            className="cursor-pointer text-sm bg-surface text-gray/90 p-2 px-2 pr-4 rounded hover:bg-surface/60 w-fit mt-5"
+            className="obs-control obs-control-primary mt-5 w-fit"
           >
             {isLoadingSendForm && (
               <span className="animate-pulse opacity-70 mr-2">Saving...</span>
@@ -277,7 +277,7 @@ export default function ReferenceMutation() {
             onChange={(e) => setSearchText(e.target.value)}
             value={searchText}
             placeholder='Search verse (e.g. "John 3:16")'
-            className="mt-2 p-2 border-2 border-border bg-background brightness-[1.13] rounded-md"
+            className="obs-input mt-2"
           />
           <div className="flex flex-col gap-2 mt-5">
             {isLoading && (
@@ -314,7 +314,7 @@ export default function ReferenceMutation() {
                 <p className="text-lg">{result.text}</p>
                 <div className="flex w-full pt-3 gap-1.5">
                   <button
-                    className="cursor-pointer text-[0.75rem] bg-surface-strong p-1 px-2 rounded hover:bg-info/30"
+                    className="obs-control obs-control-compact"
                     onClick={() =>
                       handleSelectVerse(
                         result.bookAbbr,

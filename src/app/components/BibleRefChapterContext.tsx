@@ -63,7 +63,7 @@ export default function BibleRefChapterContext({
         aria-expanded={isExpanded}
         disabled={!canToggle}
         onClick={() => setIsExpanded((current) => !current)}
-        className={`inline-flex select-none items-center gap-1 py-1 text-left text-sm italic text-text-muted transition ${canToggle ? "cursor-pointer hover:text-text/70" : "cursor-default opacity-70"}`}
+        className={`obs-control obs-control-compact select-none italic ${canToggle ? "" : "cursor-default opacity-70"}`}
       >
         <span>Chapter context</span>
         <ChevronDownIcon
