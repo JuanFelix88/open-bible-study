@@ -12,14 +12,29 @@ const html = `<div class="entry-content single-content"><!-- INSERT_GCP_COMMENTA
 <p class="ew-bible-text" data-ref="JHN-3-36">Bible text</p><p>Commentary text.</p>
 </div><!-- .entry-content -->`;
 
-async function withFetch(source, translate, run) {
-  globalThis.fetch = async (url) => String(url).includes("translate.googleapis.com") ? translate() : source();
+async function withFetch(source, translate, run, portuguese = () => new Response("", { status: 404 })) {
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    if (target.includes("translate.googleapis.com")) return translate();
+    if (target.includes("/bible-commentary/pt/")) return portuguese();
+    return source();
+  };
   console.error = () => {};
   try { await run(); } finally { globalThis.fetch = originalFetch; console.error = originalError; }
 }
 
 const source = () => new Response(html);
 
+test("Portuguese source is preferred and accented entities are decoded", async () => {
+  const pt = html.replace("Category", "Categoria").replace("Heading", "Salva&ccedil;&atilde;o de &Eacute;dipo").replace("Commentary text.", "Coment&aacute;rio em portugu&ecirc;s.");
+  await withFetch(() => { throw new Error("English source should not be fetched"); }, () => { throw new Error("Translation should not be fetched"); }, async () => {
+    const result = await service.getCommentary("Jo", 3, 36);
+    assert.equal(result.translated, true);
+    assert.match(result.markdown, /Salvação de Édipo/);
+    assert.match(result.markdown, /Comentário em português/);
+    assert.match(result.sourceUrl, /\/pt\/john-3\/\#section-1$/);
+  }, () => new Response(pt));
+});
 test("John is validated independently of Job and translation succeeds", async () => {
   await withFetch(source, () => Response.json([[["Comentário traduzido", "text"]]]), async () => {
     const result = await service.getCommentary("Jo", 3, 36);

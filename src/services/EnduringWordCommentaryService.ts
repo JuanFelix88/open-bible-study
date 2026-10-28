@@ -126,6 +126,11 @@ function normalizeLookupKey(value: string) {
 
 function decodeHtmlEntities(value: string) {
   const namedEntities: Record<string, string> = {
+    aacute: "á", acirc: "â", agrave: "à", atilde: "ã", auml: "ä",
+    ccedil: "ç", eacute: "é", ecirc: "ê", egrave: "è", euml: "ë",
+    iacute: "í", icirc: "î", igrave: "ì", iuml: "ï", ntilde: "ñ",
+    oacute: "ó", ocirc: "ô", ograve: "ò", otilde: "õ", ouml: "ö",
+    uacute: "ú", ucirc: "û", ugrave: "ù", uuml: "ü",
     amp: "&",
     apos: "'",
     bull: "•",
@@ -136,6 +141,7 @@ function decodeHtmlEntities(value: string) {
     lsquo: "‘",
     lt: "<",
     mdash: "—",
+    middot: "·",
     ndash: "–",
     nbsp: " ",
     quot: '"',
@@ -154,7 +160,9 @@ function decodeHtmlEntities(value: string) {
       return String.fromCodePoint(parseInt(normalizedCode.slice(1), 10));
     }
 
-    return namedEntities[normalizedCode] ?? entity;
+    const decoded = namedEntities[normalizedCode];
+    if (!decoded) return entity;
+    return /^[A-Z]/.test(code) && decoded.length === 1 ? decoded.toUpperCase() : decoded;
   });
 }
 
@@ -432,7 +440,32 @@ export class EnduringWordCommentaryService {
 
     await validateLocalReference(book, chapter, verse);
 
-    const sourceUrl = buildEnduringWordUrl(book, chapter);
+    let sourceUrl = buildEnduringWordUrl(book, chapter);
+    const portugueseUrl = sourceUrl.replace("/bible-commentary/", "/bible-commentary/pt/");
+    try {
+      const response = await fetch(portugueseUrl, {
+        headers: { "User-Agent": "Mozilla/5.0 BibleStudyEnduringWordBridge/1.0" },
+        next: { revalidate: REVALIDATE_SECONDS },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (response.ok && new URL(response.url || portugueseUrl).pathname === new URL(portugueseUrl).pathname) {
+        const section = findSectionForVerse(extractCommentarySections(await response.text()), verse);
+        if (section) {
+          const range = formatRange(chapter, section);
+          sourceUrl = `${portugueseUrl}#${section.id}`;
+          return {
+            reference: `${book.name} ${range}`,
+            range,
+            sourceUrl,
+            sectionId: section.id,
+            markdown: `${section.markdown}\n\n---\nReference [EnduringWord.com](${sourceUrl}).`,
+            translated: true,
+          };
+        }
+      }
+    } catch (error) {
+      console.error("Enduring Word Portuguese commentary unavailable:", error);
+    }
     const response = await fetch(sourceUrl, {
       headers: { "User-Agent": "Mozilla/5.0 BibleStudyEnduringWordBridge/1.0" },
       next: { revalidate: REVALIDATE_SECONDS },
