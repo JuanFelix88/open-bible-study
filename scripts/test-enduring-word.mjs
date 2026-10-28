@@ -15,7 +15,10 @@ const html = `<div class="entry-content single-content"><!-- INSERT_GCP_COMMENTA
 async function withFetch(source, translate, run, portuguese = () => new Response("", { status: 404 })) {
   globalThis.fetch = async (url) => {
     const target = String(url);
-    if (target.includes("translate.googleapis.com")) return translate();
+    if (target.includes("translate.googleapis.com")) {
+      assert.equal(new URL(target).searchParams.get("client"), "dict-chrome-ex");
+      return translate();
+    }
     if (target.includes("/bible-commentary/pt/")) return portuguese();
     return source();
   };

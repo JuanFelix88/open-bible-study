@@ -1,3 +1,4 @@
+import { fetchGoogleTranslation } from "./GoogleTranslateClient";
 import { BooksAndChapters } from "@/definitions/BooksAndChapters";
 import { postProcessTranslation } from "@/utils/TranslationPostProcessors";
 
@@ -357,25 +358,18 @@ async function translateTextToPortuguese(value: string) {
 
   for (const chunk of chunks) {
     const url = new URL("https://translate.googleapis.com/translate_a/single");
-    url.searchParams.set("client", "gtx");
     url.searchParams.set("sl", "en");
     url.searchParams.set("tl", "pt");
     url.searchParams.set("dt", "t");
     url.searchParams.set("q", chunk);
 
-    const response = await fetch(url, {
+    const data = await fetchGoogleTranslation(url, {
       headers: {
         "User-Agent": "Mozilla/5.0 BibleStudyEnduringWordBridge/1.0",
       },
       next: { revalidate: REVALIDATE_SECONDS },
-      signal: AbortSignal.timeout(10000),
     });
 
-    if (!response.ok) {
-      throw new Error(`Google Translate returned ${response.status}`);
-    }
-
-    const data = (await response.json()) as unknown;
     if (!Array.isArray(data) || !Array.isArray(data[0])) {
       throw new Error("Unexpected Google Translate response");
     }

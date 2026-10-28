@@ -1,3 +1,4 @@
+import { fetchGoogleTranslation } from "./GoogleTranslateClient";
 import { Language } from "@/entities/Language";
 import {
   OriginalTokenTranslationOption,
@@ -133,7 +134,6 @@ async function translateToken({
   targetLanguage: string;
 }): Promise<OriginalTranslatorToken> {
   const url = new URL(GOOGLE_TRANSLATE_ENDPOINT);
-  url.searchParams.set("client", "gtx");
   url.searchParams.set("sl", sourceLanguage);
   url.searchParams.set("tl", targetLanguage);
   url.searchParams.append("dt", "t");
@@ -142,18 +142,12 @@ async function translateToken({
   url.searchParams.append("dt", "rm");
   url.searchParams.set("q", token);
 
-  const response = await fetch(url, {
+  const data = await fetchGoogleTranslation(url, {
     headers: {
       "User-Agent": "Mozilla/5.0 BibleStudyOriginalsTranslator/1.0",
     },
     next: { revalidate: REVALIDATE_SECONDS },
   });
-
-  if (!response.ok) {
-    throw new Error(`Google Translate returned ${response.status}`);
-  }
-
-  const data = (await response.json()) as unknown;
 
   return {
     token_index: tokenIndex,
@@ -189,24 +183,18 @@ export async function translatePlainText({
 
   request = (async () => {
     const url = new URL(GOOGLE_TRANSLATE_ENDPOINT);
-    url.searchParams.set("client", "gtx");
     url.searchParams.set("sl", normalizedSourceLanguage);
     url.searchParams.set("tl", googleTargetLanguage);
     url.searchParams.set("dt", "t");
     url.searchParams.set("q", trimmedText);
 
-    const response = await fetch(url, {
+    const data = await fetchGoogleTranslation(url, {
       headers: {
         "User-Agent": "Mozilla/5.0 BibleStudyOriginalsTranslator/1.0",
       },
       next: { revalidate: REVALIDATE_SECONDS },
     });
 
-    if (!response.ok) {
-      throw new Error(`Google Translate returned ${response.status}`);
-    }
-
-    const data = (await response.json()) as unknown;
     if (!Array.isArray(data) || !Array.isArray(data[0])) return trimmedText;
 
     const translated = data[0]
