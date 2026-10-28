@@ -39,12 +39,15 @@ export async function GET(
     return new NextResponse(commentary.markdown, {
       status: 200,
       headers: {
-        "Cache-Control": "s-maxage=604800, stale-while-revalidate=86400",
+        "Cache-Control": commentary.translated
+          ? "s-maxage=604800, stale-while-revalidate=86400"
+          : "no-store",
         "Content-Type": "text/markdown; charset=utf-8",
         "X-EnduringWord-Source": commentary.sourceUrl,
         "X-EnduringWord-Reference": encodeURIComponent(commentary.reference),
         "X-EnduringWord-Range": commentary.range,
         "X-EnduringWord-Section": commentary.sectionId,
+        "X-EnduringWord-Translated": String(commentary.translated),
       },
     });
   } catch (error) {

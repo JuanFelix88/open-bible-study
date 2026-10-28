@@ -14,6 +14,7 @@ import Markdown from "react-markdown";
 type EnduringWordCommentsData = {
   markdown: string;
   range: string;
+  translated: boolean;
 };
 
 type CommentRange = {
@@ -99,16 +100,22 @@ export default function ReaderEnduringWordComments() {
   } = useQuery({
     queryKey: ["enduringword-comments", bookAbbr, chapterNumber, verseNumber],
     enabled: !!(bookAbbr && chapterNumber && verseNumber),
-    staleTime: 1000 * 60 * 60 * 24 * 7,
+    staleTime: (query) => query.state.data?.translated ? 1000 * 60 * 60 * 24 * 7 : 0,
     gcTime: 1000 * 60 * 60 * 24 * 14,
     queryFn: async () => {
       const commentsResponse = await fetch(
         `/comments/enduringword/${encodeURIComponent(bookAbbr)}/${chapterNumber}/${verseNumber}`,
       );
-      await ThrowByResponse.throwsIfNotOk(commentsResponse);
+      if (commentsResponse.status === 404) {
+        throw new Error("Não encontramos comentários para este versículo no Enduring Word.");
+      }
+      if (!commentsResponse.ok) {
+        throw new Error("Não foi possível carregar os comentários. Tente novamente mais tarde.");
+      }
       return {
         markdown: await commentsResponse.text(),
         range: commentsResponse.headers.get("X-EnduringWord-Range") ?? "",
+        translated: commentsResponse.headers.get("X-EnduringWord-Translated") === "true",
       } satisfies EnduringWordCommentsData;
     },
   });
@@ -227,7 +234,7 @@ export default function ReaderEnduringWordComments() {
 
       {commentsError && !isLoading && (
         <div className="mt-5 rounded-md border border-danger/40 bg-danger/10 p-4 text-sm text-text/80 animate-show-from-bottom-slow">
-          Não encontramos comentários para este versículo no Enduring Word.
+          {commentsError.message}
         </div>
       )}
 

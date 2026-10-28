@@ -23,6 +23,7 @@ type EnduringWordCommentary = {
   sourceUrl: string;
   sectionId: string;
   markdown: string;
+  translated: boolean;
 };
 
 const ENDURING_WORD_BASE_URL = "https://enduringword.com";
@@ -359,6 +360,7 @@ async function translateTextToPortuguese(value: string) {
         "User-Agent": "Mozilla/5.0 BibleStudyEnduringWordBridge/1.0",
       },
       next: { revalidate: REVALIDATE_SECONDS },
+      signal: AbortSignal.timeout(10000),
     });
 
     if (!response.ok) {
@@ -384,7 +386,7 @@ async function translateTextToPortuguese(value: string) {
 async function validateLocalReference(book: EnduringWordBookMapItem, chapter: number, verse: number) {
   const books = await BooksAndChapters.getBooks();
   const localBook = books.find(
-    (candidate) => normalizeLookupKey(candidate.abbr) === normalizeLookupKey(book.abbr),
+    (candidate) => candidate.abbr.toLowerCase() === book.abbr.toLowerCase(),
   );
 
   if (!localBook || chapter > localBook.numChapters) {
@@ -446,6 +448,9 @@ export class EnduringWordCommentaryService {
 
     const html = await response.text();
     const sections = extractCommentarySections(html);
+    if (sections.length === 0) {
+      throw new Error("Could not extract Enduring Word commentary sections.");
+    }
     const section = findSectionForVerse(sections, verse);
 
     if (!section) {
@@ -453,9 +458,19 @@ export class EnduringWordCommentaryService {
     }
 
     const range = formatRange(chapter, section);
-    const translatedCommentary = await translateTextToPortuguese(section.markdown);
+    let translatedCommentary: string;
+    let translated = true;
+    try {
+      translatedCommentary = await translateTextToPortuguese(section.markdown);
+      if (!translatedCommentary) throw new Error("Empty translation");
+    } catch (error) {
+      console.error("Enduring Word translation unavailable:", error);
+      translated = false;
+      translatedCommentary = section.markdown;
+    }
     const reference = `${book.name} ${range}`;
     const markdown = [
+      translated ? "" : "> Tradução indisponível no momento. Comentário exibido em inglês.",
       translatedCommentary,
       `---\nReference [EnduringWord.com](${sourceUrl}#${section.id}).`,
     ]
@@ -468,6 +483,7 @@ export class EnduringWordCommentaryService {
       sourceUrl: `${sourceUrl}#${section.id}`,
       sectionId: section.id,
       markdown,
+      translated,
     };
   }
 }
